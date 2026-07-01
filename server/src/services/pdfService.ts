@@ -1,0 +1,73 @@
+import fs from "node:fs/promises";
+import path from "node:path";
+import puppeteer, { type Browser } from "puppeteer";
+import { isImageMime } from "@sigram/shared";
+import { renderInformeVisitaHtml } from "../templates/informe-visita.js";
+import type { adjuntos, obras, visitas } from "../db/schema.js";
+import { env } from "../env.js";
+
+type ObraRow = typeof obras.$inferSelect;
+type VisitaRow = typeof visitas.$inferSelect;
+type AdjuntoRow = typeof adjuntos.$inferSelect;
+
+let browserPromise: Promise<Browser> | null = null;
+
+function getBrowser(): Promise<Browser> {
+  if (!browserPromise) {
+    browserPromise = puppeteer.launch({ headless: true });
+  }
+  return browserPromise;
+}
+
+export async function closeBrowser(): Promise<void> {
+  if (browserPromise) {
+    const browser = await browserPromise;
+    await browser.close();
+    browserPromise = null;
+  }
+}
+
+// Chrome bloquea cargar recursos file:// desde un documento inyectado con
+// page.setContent() (origen opaco), así que las fotos se incrustan como
+// base64 en el propio HTML en vez de referenciarse por ruta de disco.
+async function toDataUri(rutaRelativa: string, mimeType: string): Promise<string | undefined> {
+  try {
+    const absolute = path.join(env.uploadsDir, ...rutaRelativa.split("/"));
+    const buffer = await fs.readFile(absolute);
+    return `data:${mimeType};base64,${buffer.toString("base64")}`;
+  } catch {
+    return undefined;
+  }
+}
+
+export async function generateInformeVisitaPdf(params: {
+  obra: ObraRow;
+  visita: VisitaRow;
+  adjuntos: AdjuntoRow[];
+  numeroVisita: number;
+}): Promise<Buffer> {
+  const adjuntosConDataUri = await Promise.all(
+    params.adjuntos.map(async (adjunto) => {
+      if (!isImageMime(adjunto.mimeType)) return adjunto;
+      const rutaImagen = adjunto.rutaThumbnail ?? adjunto.rutaServidor;
+      const mimeThumb = adjunto.rutaThumbnail ? "image/jpeg" : adjunto.mimeType;
+      const dataUri = await toDataUri(rutaImagen, mimeThumb);
+      return { ...adjunto, dataUri };
+    })
+  );
+
+  const html = renderInformeVisitaHtml({ ...params, adjuntos: adjuntosConDataUri });
+  const browser = await getBrowser();
+  const page = await browser.newPage();
+  try {
+    await page.setContent(html, { waitUntil: "load" });
+    const pdf = await page.pdf({
+      format: "A4",
+      printBackground: true,
+      margin: { top: "20mm", bottom: "20mm", left: "16mm", right: "16mm" },
+    });
+    return Buffer.from(pdf);
+  } finally {
+    await page.close();
+  }
+}
