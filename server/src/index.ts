@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import path from "node:path";
 import express, { type ErrorRequestHandler } from "express";
 import cors from "cors";
 import { ZodError } from "zod";
@@ -34,6 +35,17 @@ app.use("/api/obras", obrasRouter);
 app.use("/api", visitasRouter);
 app.use("/api", adjuntosRouter);
 app.use("/api", pdfRouter);
+
+// En producción el cliente se sirve desde este mismo servidor (una sola URL,
+// necesario para desplegar en un hosting con una única web service). En
+// desarrollo local no existe client/dist y esto simplemente no hace nada.
+const clientDist = path.resolve(env.rootDir, "..", "client", "dist");
+if (fs.existsSync(clientDist)) {
+  app.use(express.static(clientDist));
+  app.get(/^\/(?!api\/|uploads\/).*/, (_req, res) => {
+    res.sendFile(path.join(clientDist, "index.html"));
+  });
+}
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof ZodError) {

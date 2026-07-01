@@ -1,4 +1,3 @@
-import { fileURLToPath } from "node:url";
 import { sqlClient } from "./client.js";
 
 // Bootstrap idempotente del esquema. Para una app local de un solo usuario,
@@ -65,16 +64,4 @@ export async function ensureSchema(): Promise<void> {
   await sqlClient.execute(
     "CREATE INDEX IF NOT EXISTS idx_adjuntos_visita_id ON adjuntos(visita_id);"
   );
-}
-
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  ensureSchema()
-    .then(() => {
-      console.log("Esquema listo.");
-      process.exit(0);
-    })
-    .catch((err) => {
-      console.error(err);
-      process.exit(1);
-    });
 }

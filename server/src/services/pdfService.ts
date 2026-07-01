@@ -14,7 +14,13 @@ let browserPromise: Promise<Browser> | null = null;
 
 function getBrowser(): Promise<Browser> {
   if (!browserPromise) {
-    browserPromise = puppeteer.launch({ headless: true });
+    browserPromise = puppeteer.launch({
+      headless: true,
+      // Necesario en contenedores Docker: el sandbox de Chrome requiere
+      // capacidades del kernel que no suele haber en contenedores, y el
+      // tamaño por defecto de /dev/shm ahí es demasiado pequeño.
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+    });
   }
   return browserPromise;
 }
