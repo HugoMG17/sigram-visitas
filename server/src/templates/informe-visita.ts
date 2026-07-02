@@ -94,10 +94,10 @@ export function renderInformeVisitaHtml(params: {
               <div class="punto">
                 <div class="punto-cabecera">
                   <span class="punto-dot ${solucionado ? "dot-verde" : "dot-amarillo"}"></span>
-                  <strong>Punto ${index + 1}</strong>
+                  <strong>${esc(punto.titulo) || `Punto ${index + 1}`}</strong>
                   <span class="punto-estado">${ESTADO_PUNTO_LABELS[punto.estado as keyof typeof ESTADO_PUNTO_LABELS] ?? punto.estado}</span>
                 </div>
-                <p class="punto-descripcion">${esc(punto.descripcion)}</p>
+                ${punto.descripcion ? `<p class="punto-descripcion">${esc(punto.descripcion)}</p>` : ""}
                 ${renderGaleria(adjuntosPorPunto.get(punto.id) ?? [])}
               </div>`;
           })

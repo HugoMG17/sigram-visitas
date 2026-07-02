@@ -44,7 +44,8 @@ export const visitaUpsertSchema = z.object({
 
 export const puntoUpsertSchema = z.object({
   visitaId: uuidSchema,
-  descripcion: z.string().min(1),
+  titulo: z.string().min(1),
+  descripcion: z.string().optional(),
   estado: estadoPuntoSchema,
 });
 

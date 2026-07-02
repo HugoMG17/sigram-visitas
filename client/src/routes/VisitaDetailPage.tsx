@@ -84,7 +84,7 @@ export function VisitaDetailPage() {
           </div>
         </div>
         <p className="muted" style={{ margin: 0 }}>
-          {format(new Date(visita.fecha), "dd/MM/yyyy HH:mm")}
+          {format(new Date(visita.fecha), "dd/MM/yyyy")}
         </p>
         {(visita.tiempoAtmosferico || visita.asistentes) && (
           <p className="muted" style={{ margin: 0 }}>
@@ -110,8 +110,8 @@ export function VisitaDetailPage() {
         {puntos.length === 0 && (
           <p className="muted">Todavía no hay puntos registrados en esta visita.</p>
         )}
-        {puntos.map((punto, index) => (
-          <PuntoCard key={punto.id} punto={punto} numero={index + 1} />
+        {puntos.map((punto) => (
+          <PuntoCard key={punto.id} punto={punto} />
         ))}
       </div>
 

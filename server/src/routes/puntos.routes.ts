@@ -34,11 +34,12 @@ puntosRouter.put(
     }
 
     const [existing] = await db.select().from(puntos).where(eq(puntos.id, id));
+    const values = { ...data, descripcion: data.descripcion ?? "" };
 
     if (existing) {
       await db
         .update(puntos)
-        .set({ ...data, updatedAt: now, deletedAt: null })
+        .set({ ...values, updatedAt: now, deletedAt: null })
         .where(eq(puntos.id, id));
     } else {
       const maxOrden = await db
@@ -47,7 +48,7 @@ puntosRouter.put(
         .where(eq(puntos.visitaId, data.visitaId))
         .orderBy(asc(puntos.orden));
       const orden = maxOrden.length ? Math.max(...maxOrden.map((p) => p.orden)) + 1 : 0;
-      await db.insert(puntos).values({ id, ...data, orden, createdAt: now, updatedAt: now });
+      await db.insert(puntos).values({ id, ...values, orden, createdAt: now, updatedAt: now });
     }
 
     const [row] = await db.select().from(puntos).where(eq(puntos.id, id));

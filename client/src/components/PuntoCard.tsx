@@ -7,7 +7,7 @@ import { runSync } from "../sync/syncEngine";
 import { AttachmentCapture } from "./AttachmentCapture";
 import { AdjuntoImage } from "./AdjuntoImage";
 
-export function PuntoCard({ punto, numero }: { punto: LocalPunto; numero: number }) {
+export function PuntoCard({ punto }: { punto: LocalPunto }) {
   const adjuntos = useLiveQuery(() => listAdjuntosDePunto(punto.id), [punto.id]) ?? [];
 
   const toggleMutation = useMutation({
@@ -40,7 +40,7 @@ export function PuntoCard({ punto, numero }: { punto: LocalPunto; numero: number
               flexShrink: 0,
             }}
           />
-          <strong>Punto {numero}</strong>
+          <strong>{punto.titulo}</strong>
         </div>
         <div className="row" style={{ gap: "0.4rem" }}>
           <button
@@ -63,7 +63,9 @@ export function PuntoCard({ punto, numero }: { punto: LocalPunto; numero: number
         </div>
       </div>
 
-      <p style={{ margin: 0, whiteSpace: "pre-wrap" }}>{punto.descripcion}</p>
+      {punto.descripcion && (
+        <p style={{ margin: 0, whiteSpace: "pre-wrap" }}>{punto.descripcion}</p>
+      )}
 
       <AttachmentCapture
         visitaId={punto.visitaId}

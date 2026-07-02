@@ -53,7 +53,8 @@ export type EstadoPunto = "pendiente" | "solucionado";
 export interface Punto {
   id: string;
   visitaId: string;
-  descripcion: string;
+  titulo: string;
+  descripcion?: string;
   estado: EstadoPunto;
   orden: number;
   createdAt: string;

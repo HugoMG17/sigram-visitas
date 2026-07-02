@@ -41,6 +41,7 @@ export const puntos = sqliteTable("puntos", {
   visitaId: text("visita_id")
     .notNull()
     .references(() => visitas.id, { onDelete: "cascade" }),
+  titulo: text("titulo"),
   descripcion: text("descripcion").notNull(),
   estado: text("estado").notNull(),
   orden: integer("orden").notNull().default(0),

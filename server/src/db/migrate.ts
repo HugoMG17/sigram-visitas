@@ -49,6 +49,7 @@ export async function ensureSchema(): Promise<void> {
     CREATE TABLE IF NOT EXISTS puntos (
       id TEXT PRIMARY KEY,
       visita_id TEXT NOT NULL REFERENCES visitas(id) ON DELETE CASCADE,
+      titulo TEXT,
       descripcion TEXT NOT NULL,
       estado TEXT NOT NULL,
       orden INTEGER NOT NULL DEFAULT 0,
@@ -84,6 +85,17 @@ export async function ensureSchema(): Promise<void> {
 
   await migrateAdjuntosDriveColumns();
   await migrateAdjuntosPuntoColumn();
+  await migratePuntosTituloColumn();
+}
+
+// Las bases de datos creadas antes del título de punto no tienen esa
+// columna; al ser nueva y admitir NULL, basta con un ALTER TABLE ADD COLUMN
+// idempotente (sin reconstruir la tabla).
+async function migratePuntosTituloColumn(): Promise<void> {
+  const info = await sqlClient.execute("PRAGMA table_info(puntos);");
+  const hasTitulo = info.rows.some((row) => row.name === "titulo");
+  if (hasTitulo) return;
+  await sqlClient.execute("ALTER TABLE puntos ADD COLUMN titulo TEXT;");
 }
 
 // Las bases de datos creadas antes de los "puntos" no tienen punto_id en

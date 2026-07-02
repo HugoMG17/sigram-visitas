@@ -74,7 +74,7 @@ export function ObraDetailPage() {
             <div>
               <strong>{visita.titulo || "Visita de obra"}</strong>
               <p className="muted" style={{ margin: "0.25rem 0 0" }}>
-                {format(new Date(visita.fecha), "dd/MM/yyyy HH:mm")}
+                {format(new Date(visita.fecha), "dd/MM/yyyy")}
               </p>
             </div>
           </div>
