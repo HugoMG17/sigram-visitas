@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import express, { type ErrorRequestHandler } from "express";
 import cors from "cors";
+import rateLimit from "express-rate-limit";
 import session from "express-session";
 import passport from "passport";
 import { ZodError } from "zod";
@@ -21,13 +22,33 @@ fs.mkdirSync(env.uploadsDir, { recursive: true });
 
 const app = express();
 
-// origin: true refleja el origen exacto de cada petición en vez de "*": hace
-// falta para que el navegador permita peticiones con credenciales (cookie de
-// sesión) en dev, donde cliente (:5173) y servidor (:4000) son orígenes
-// distintos. Con "*" el navegador bloquea cualquier request con
-// withCredentials, aunque el servidor la aceptara.
-app.use(cors({ origin: true, credentials: true }));
+// En producción cliente y servidor comparten origen (misma URL de Render),
+// así que solo hace falta aceptar peticiones con credenciales de esa URL
+// concreta -- reflejar "cualquier origen" (origin: true) era necesario en
+// dev (cliente en :5173, servidor en :4000, orígenes distintos) pero es una
+// puerta abierta de más en producción con usuarios reales.
+app.use(
+  cors({
+    origin: env.publicUrl ? env.publicUrl.replace(/\/$/, "") : true,
+    credentials: true,
+  })
+);
 app.use(express.json());
+
+// Límite básico por IP para las rutas de la API: evita que un script pueda
+// machacar la base de datos (Turso) o el servidor (Puppeteer/sharp) creando
+// obras/visitas/adjuntos sin control. El límite es generoso a propósito para
+// no molestar el uso normal (sincronizar muchos pendientes de golpe tras
+// estar offline hace bastantes peticiones pequeñas).
+app.use(
+  "/api",
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 600,
+    standardHeaders: true,
+    legacyHeaders: false,
+  })
+);
 
 if (env.authEnabled) {
   configurePassport();
