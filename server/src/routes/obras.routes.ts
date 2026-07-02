@@ -58,9 +58,9 @@ obrasRouter.put(
     const [existing] = await db.select().from(obras).where(eq(obras.id, id));
 
     if (existing) {
-      // No se deja editar una obra ajena; se responde 404 (no 403) para no
-      // confirmar a un tercero que el id existe.
-      if (email && existing.ownerEmail && existing.ownerEmail !== email) {
+      // No se deja editar una obra ajena ni una sin dueño asignado; se
+      // responde 404 (no 403) para no confirmar a un tercero que el id existe.
+      if (email && existing.ownerEmail !== email) {
         res.status(404).json({ error: "Obra no encontrada" });
         return;
       }
@@ -83,7 +83,7 @@ obrasRouter.delete(
     const id = idParamSchema.parse(req.params.id);
     const email = currentUserEmail(req);
     const [existing] = await db.select().from(obras).where(eq(obras.id, id));
-    if (existing && email && existing.ownerEmail && existing.ownerEmail !== email) {
+    if (existing && email && existing.ownerEmail !== email) {
       res.status(404).json({ error: "Obra no encontrada" });
       return;
     }
