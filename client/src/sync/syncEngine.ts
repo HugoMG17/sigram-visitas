@@ -189,7 +189,11 @@ export async function runSync(): Promise<void> {
   }
 }
 
-const LAST_USER_EMAIL_KEY = "sigram:lastUserEmail";
+// v2: se cambia el nombre de la clave a propósito para forzar una limpieza
+// única en todos los dispositivos ya usados, incluidos los que quedaron con
+// datos de otra cuenta mezclados por el bug de la v1 (que no limpiaba si
+// nunca se había registrado un email antes).
+const LAST_USER_EMAIL_KEY = "sigram:lastUserEmail:v2";
 
 // Un mismo navegador (p.ej. un ordenador compartido del estudio) podría
 // iniciar sesión con dos cuentas de Google distintas en momentos distintos.
@@ -205,8 +209,13 @@ async function resetLocalDataIfUserChanged(): Promise<void> {
   }
   if (!status.authenticated || !status.email) return;
 
+  // Sin "!==" con el email guardado (incluido el caso de que no hubiera
+  // ninguno registrado todavía): un dispositivo que ya tenía datos en Dexie
+  // de antes de que existiera este control -- p.ej. de cuando este mismo
+  // navegador se usó con otra cuenta antes de este cambio -- no debe seguir
+  // enseñando esos datos solo porque nunca se llegó a anotar el email.
   const lastEmail = localStorage.getItem(LAST_USER_EMAIL_KEY);
-  if (lastEmail && lastEmail !== status.email) {
+  if (lastEmail !== status.email) {
     await Promise.all([db.obras.clear(), db.visitas.clear(), db.puntos.clear(), db.adjuntos.clear()]);
   }
   localStorage.setItem(LAST_USER_EMAIL_KEY, status.email);
