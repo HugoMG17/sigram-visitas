@@ -195,19 +195,33 @@ export async function runSync(): Promise<void> {
 // nunca se había registrado un email antes).
 const LAST_USER_EMAIL_KEY = "sigram:lastUserEmail:v2";
 
+async function hasPendingLocalChanges(): Promise<boolean> {
+  const tables = [db.obras, db.visitas, db.puntos, db.adjuntos];
+  for (const table of tables) {
+    const count = await table.where("syncStatus").anyOf(["pending", "error"]).count();
+    if (count > 0) return true;
+  }
+  return false;
+}
+
 // Un mismo navegador (p.ej. un ordenador compartido del estudio) podría
 // iniciar sesión con dos cuentas de Google distintas en momentos distintos.
 // Si detectamos que el usuario autenticado cambió respecto al último que
 // sincronizó en este dispositivo, se vacía Dexie antes de traer datos
 // nuevos, para no mezclar obras de dos arquitectos distintos.
-async function resetLocalDataIfUserChanged(): Promise<void> {
+//
+// Devuelve si es seguro continuar con la sincronización: si hay cambios
+// sin subir todavía (creados offline, nunca llegaron al servidor) no se
+// borran a ciegas -- se pide confirmación, porque vaciar Dexie los
+// destruiría para siempre sin que existiera copia en ningún otro sitio.
+async function resetLocalDataIfUserChanged(): Promise<boolean> {
   let status;
   try {
     status = await fetchAuthStatus();
   } catch {
-    return; // sin conexión al arrancar: no se puede comprobar, no se toca nada
+    return true; // sin conexión al arrancar: no se puede comprobar, se sigue como estaba
   }
-  if (!status.authenticated || !status.email) return;
+  if (!status.authenticated || !status.email) return true;
 
   // Sin "!==" con el email guardado (incluido el caso de que no hubiera
   // ninguno registrado todavía): un dispositivo que ya tenía datos en Dexie
@@ -215,10 +229,20 @@ async function resetLocalDataIfUserChanged(): Promise<void> {
   // navegador se usó con otra cuenta antes de este cambio -- no debe seguir
   // enseñando esos datos solo porque nunca se llegó a anotar el email.
   const lastEmail = localStorage.getItem(LAST_USER_EMAIL_KEY);
-  if (lastEmail !== status.email) {
-    await Promise.all([db.obras.clear(), db.visitas.clear(), db.puntos.clear(), db.adjuntos.clear()]);
+  if (lastEmail === status.email) return true;
+
+  if (await hasPendingLocalChanges()) {
+    const seguir = window.confirm(
+      "Este dispositivo tiene cambios sin sincronizar (creados sin conexión) de otra cuenta de Google. " +
+        "Si continúas con esta cuenta, esos cambios se perderán porque nunca llegaron al servidor.\n\n" +
+        "Pulsa Cancelar y vuelve a entrar con la cuenta anterior para sincronizarlos antes de cambiar de usuario."
+    );
+    if (!seguir) return false; // no se borra nada ni se sincroniza hasta que se resuelva
   }
+
+  await Promise.all([db.obras.clear(), db.visitas.clear(), db.puntos.clear(), db.adjuntos.clear()]);
   localStorage.setItem(LAST_USER_EMAIL_KEY, status.email);
+  return true;
 }
 
 export function initSyncEngine(): void {
@@ -226,5 +250,7 @@ export function initSyncEngine(): void {
   if (!intervalHandle) {
     intervalHandle = setInterval(() => void runSync(), 30_000);
   }
-  void resetLocalDataIfUserChanged().then(() => runSync());
+  void resetLocalDataIfUserChanged().then((safe) => {
+    if (safe) void runSync();
+  });
 }
