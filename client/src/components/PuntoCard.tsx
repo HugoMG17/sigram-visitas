@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useMutation } from "@tanstack/react-query";
+import { ESTADO_PUNTO_LABELS } from "@sigram/shared";
 import type { LocalPunto } from "../db/db";
 import { listAdjuntosDePunto, deleteAdjuntoLocal } from "../db/repositories/adjuntoRepo";
 import {
@@ -53,6 +54,9 @@ export function PuntoCard({ punto }: { punto: LocalPunto }) {
             }}
           />
           <strong>{punto.titulo}</strong>
+          <span className="muted" style={{ fontSize: "0.8rem" }}>
+            Estado: {ESTADO_PUNTO_LABELS[punto.estado]}
+          </span>
         </div>
         <div className="row" style={{ gap: "0.4rem" }}>
           <button
