@@ -27,6 +27,15 @@ function formatFecha(iso: string): string {
   });
 }
 
+function formatFechaSolo(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleDateString("es-ES", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
 const DOC_ICONS: Record<string, string> = {
   plano: "📐",
   documento: "📄",
@@ -162,7 +171,7 @@ export function renderInformeVisitaHtml(params: {
   <div class="notas">
     <h2>${esc(visita.titulo) || "Visita de obra"}</h2>
     <div class="meta-visita">
-      ${formatFecha(visita.fecha)}
+      ${formatFechaSolo(visita.fecha)}
       ${visita.tiempoAtmosferico ? ` · Tiempo: ${esc(visita.tiempoAtmosferico)}` : ""}
       ${visita.asistentes ? ` · Asistentes: ${esc(visita.asistentes)}` : ""}
     </div>
