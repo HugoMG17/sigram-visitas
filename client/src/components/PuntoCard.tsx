@@ -1,14 +1,20 @@
+import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useMutation } from "@tanstack/react-query";
 import type { LocalPunto } from "../db/db";
 import { listAdjuntosDePunto, deleteAdjuntoLocal } from "../db/repositories/adjuntoRepo";
-import { setPuntoEstadoLocal, softDeletePuntoLocal } from "../db/repositories/puntoRepo";
+import {
+  setPuntoDescripcionLocal,
+  setPuntoEstadoLocal,
+  softDeletePuntoLocal,
+} from "../db/repositories/puntoRepo";
 import { runSync } from "../sync/syncEngine";
 import { AttachmentCapture } from "./AttachmentCapture";
 import { AdjuntoImage } from "./AdjuntoImage";
 
 export function PuntoCard({ punto }: { punto: LocalPunto }) {
   const adjuntos = useLiveQuery(() => listAdjuntosDePunto(punto.id), [punto.id]) ?? [];
+  const [descripcion, setDescripcion] = useState(punto.descripcion ?? "");
 
   const toggleMutation = useMutation({
     networkMode: "always",
@@ -20,6 +26,12 @@ export function PuntoCard({ punto }: { punto: LocalPunto }) {
   const deleteMutation = useMutation({
     networkMode: "always",
     mutationFn: () => softDeletePuntoLocal(punto.id),
+    onSuccess: () => void runSync(),
+  });
+
+  const descripcionMutation = useMutation({
+    networkMode: "always",
+    mutationFn: (valor: string) => setPuntoDescripcionLocal(punto.id, valor),
     onSuccess: () => void runSync(),
   });
 
@@ -63,9 +75,16 @@ export function PuntoCard({ punto }: { punto: LocalPunto }) {
         </div>
       </div>
 
-      {punto.descripcion && (
-        <p style={{ margin: 0, whiteSpace: "pre-wrap" }}>{punto.descripcion}</p>
-      )}
+      <textarea
+        className="input"
+        style={{ width: "100%", minHeight: "3rem", resize: "vertical" }}
+        placeholder="Añade una descripción (opcional)"
+        value={descripcion}
+        onChange={(e) => setDescripcion(e.target.value)}
+        onBlur={() => {
+          if (descripcion !== (punto.descripcion ?? "")) descripcionMutation.mutate(descripcion);
+        }}
+      />
 
       <AttachmentCapture
         visitaId={punto.visitaId}

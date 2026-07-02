@@ -40,6 +40,17 @@ export async function setPuntoEstadoLocal(
   });
 }
 
+export async function setPuntoDescripcionLocal(id: string, descripcion: string): Promise<void> {
+  const existing = await db.puntos.get(id);
+  if (!existing) return;
+  await db.puntos.put({
+    ...existing,
+    descripcion,
+    updatedAt: new Date().toISOString(),
+    syncStatus: "pending",
+  });
+}
+
 export async function softDeletePuntoLocal(id: string): Promise<void> {
   const existing = await db.puntos.get(id);
   if (!existing) return;
