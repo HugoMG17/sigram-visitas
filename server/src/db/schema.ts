@@ -46,8 +46,12 @@ export const adjuntos = sqliteTable("adjuntos", {
   nombreArchivo: text("nombre_archivo").notNull(),
   caption: text("caption"),
   orden: integer("orden").notNull().default(0),
-  rutaServidor: text("ruta_archivo").notNull(),
+  // Un adjunto vive en disco local (rutaServidor) O en Drive (driveFileId),
+  // según si el login con Google estaba activo al subirlo.
+  rutaServidor: text("ruta_archivo"),
   rutaThumbnail: text("ruta_thumbnail"),
+  driveFileId: text("drive_file_id"),
+  driveThumbnailId: text("drive_thumbnail_id"),
   width: integer("width"),
   height: integer("height"),
   createdAt: text("created_at").notNull(),

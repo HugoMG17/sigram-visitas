@@ -54,13 +54,58 @@ export async function ensureSchema(): Promise<void> {
       nombre_archivo TEXT NOT NULL,
       caption TEXT,
       orden INTEGER NOT NULL DEFAULT 0,
-      ruta_archivo TEXT NOT NULL,
+      ruta_archivo TEXT,
       ruta_thumbnail TEXT,
+      drive_file_id TEXT,
+      drive_thumbnail_id TEXT,
       width INTEGER,
       height INTEGER,
       created_at TEXT NOT NULL
     );
   `);
+  await sqlClient.execute(
+    "CREATE INDEX IF NOT EXISTS idx_adjuntos_visita_id ON adjuntos(visita_id);"
+  );
+
+  await migrateAdjuntosDriveColumns();
+}
+
+// Las bases de datos creadas antes de soportar Drive tienen ruta_archivo
+// NOT NULL y les faltan las columnas drive_*. SQLite no permite quitar un
+// NOT NULL con ALTER COLUMN, así que se reconstruye la tabla si hace falta.
+async function migrateAdjuntosDriveColumns(): Promise<void> {
+  const info = await sqlClient.execute("PRAGMA table_info(adjuntos);");
+  const columns = info.rows.map((row) => String(row.name));
+  const rutaArchivoCol = info.rows.find((row) => row.name === "ruta_archivo");
+  const rutaArchivoIsNotNull = rutaArchivoCol ? Number(rutaArchivoCol.notnull) === 1 : false;
+  const hasDriveColumns = columns.includes("drive_file_id");
+
+  if (hasDriveColumns && !rutaArchivoIsNotNull) return;
+
+  await sqlClient.execute(`
+    CREATE TABLE adjuntos_new (
+      id TEXT PRIMARY KEY,
+      visita_id TEXT NOT NULL REFERENCES visitas(id) ON DELETE CASCADE,
+      tipo TEXT NOT NULL,
+      mime_type TEXT NOT NULL,
+      nombre_archivo TEXT NOT NULL,
+      caption TEXT,
+      orden INTEGER NOT NULL DEFAULT 0,
+      ruta_archivo TEXT,
+      ruta_thumbnail TEXT,
+      drive_file_id TEXT,
+      drive_thumbnail_id TEXT,
+      width INTEGER,
+      height INTEGER,
+      created_at TEXT NOT NULL
+    );
+  `);
+  await sqlClient.execute(`
+    INSERT INTO adjuntos_new (id, visita_id, tipo, mime_type, nombre_archivo, caption, orden, ruta_archivo, ruta_thumbnail, width, height, created_at)
+    SELECT id, visita_id, tipo, mime_type, nombre_archivo, caption, orden, ruta_archivo, ruta_thumbnail, width, height, created_at FROM adjuntos;
+  `);
+  await sqlClient.execute("DROP TABLE adjuntos;");
+  await sqlClient.execute("ALTER TABLE adjuntos_new RENAME TO adjuntos;");
   await sqlClient.execute(
     "CREATE INDEX IF NOT EXISTS idx_adjuntos_visita_id ON adjuntos(visita_id);"
   );

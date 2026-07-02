@@ -31,3 +31,7 @@ export function adjuntoUrl(rutaRelativa: string): string {
   const base = apiClient.defaults.baseURL?.replace(/\/api$/, "") ?? "";
   return `${base}/uploads/${rutaRelativa}`;
 }
+
+export function adjuntoDriveUrl(id: string, variante: "file" | "thumbnail"): string {
+  return `${apiClient.defaults.baseURL}/adjuntos/${id}/${variante}`;
+}

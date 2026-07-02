@@ -5,6 +5,8 @@ import { isImageMime } from "@sigram/shared";
 import { renderInformeVisitaHtml } from "../templates/informe-visita.js";
 import type { adjuntos, obras, visitas } from "../db/schema.js";
 import { env } from "../env.js";
+import { buildOAuthClient, downloadFromDrive } from "./driveService.js";
+import type { AuthUser } from "../auth/passport.js";
 
 type ObraRow = typeof obras.$inferSelect;
 type VisitaRow = typeof visitas.$inferSelect;
@@ -36,10 +38,19 @@ export async function closeBrowser(): Promise<void> {
 // Chrome bloquea cargar recursos file:// desde un documento inyectado con
 // page.setContent() (origen opaco), así que las fotos se incrustan como
 // base64 en el propio HTML en vez de referenciarse por ruta de disco.
-async function toDataUri(rutaRelativa: string, mimeType: string): Promise<string | undefined> {
+async function toDataUriLocal(rutaRelativa: string, mimeType: string): Promise<string | undefined> {
   try {
     const absolute = path.join(env.uploadsDir, ...rutaRelativa.split("/"));
     const buffer = await fs.readFile(absolute);
+    return `data:${mimeType};base64,${buffer.toString("base64")}`;
+  } catch {
+    return undefined;
+  }
+}
+
+async function toDataUriDrive(auth: ReturnType<typeof buildOAuthClient>, fileId: string): Promise<string | undefined> {
+  try {
+    const { buffer, mimeType } = await downloadFromDrive(auth, fileId);
     return `data:${mimeType};base64,${buffer.toString("base64")}`;
   } catch {
     return undefined;
@@ -51,13 +62,22 @@ export async function generateInformeVisitaPdf(params: {
   visita: VisitaRow;
   adjuntos: AdjuntoRow[];
   numeroVisita: number;
+  user?: AuthUser;
 }): Promise<Buffer> {
+  const auth = params.user ? buildOAuthClient(params.user) : undefined;
   const adjuntosConDataUri = await Promise.all(
     params.adjuntos.map(async (adjunto) => {
       if (!isImageMime(adjunto.mimeType)) return adjunto;
-      const rutaImagen = adjunto.rutaThumbnail ?? adjunto.rutaServidor;
-      const mimeThumb = adjunto.rutaThumbnail ? "image/jpeg" : adjunto.mimeType;
-      const dataUri = await toDataUri(rutaImagen, mimeThumb);
+      let dataUri: string | undefined;
+      if (adjunto.driveThumbnailId || adjunto.driveFileId) {
+        if (auth) {
+          dataUri = await toDataUriDrive(auth, adjunto.driveThumbnailId ?? adjunto.driveFileId!);
+        }
+      } else if (adjunto.rutaThumbnail || adjunto.rutaServidor) {
+        const rutaImagen = (adjunto.rutaThumbnail ?? adjunto.rutaServidor)!;
+        const mimeThumb = adjunto.rutaThumbnail ? "image/jpeg" : adjunto.mimeType;
+        dataUri = await toDataUriLocal(rutaImagen, mimeThumb);
+      }
       return { ...adjunto, dataUri };
     })
   );

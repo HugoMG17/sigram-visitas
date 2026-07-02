@@ -15,6 +15,22 @@ function isImageMime(mimeType: string): boolean {
   return mimeType.startsWith("image/");
 }
 
+export interface Thumbnail {
+  buffer: Buffer;
+  width?: number;
+  height?: number;
+}
+
+export async function generateThumbnail(buffer: Buffer): Promise<Thumbnail> {
+  const metadata = await sharp(buffer).metadata();
+  const thumbBuffer = await sharp(buffer)
+    .rotate()
+    .resize(400, 400, { fit: "inside", withoutEnlargement: true })
+    .jpeg({ quality: 80 })
+    .toBuffer();
+  return { buffer: thumbBuffer, width: metadata.width, height: metadata.height };
+}
+
 function resolveExtension(mimeType: string, originalName: string): string {
   const fromName = path.extname(originalName);
   if (fromName) return fromName;
@@ -49,19 +65,15 @@ export async function saveAttachmentFile(params: {
     return { rutaServidor };
   }
 
-  const metadata = await sharp(params.buffer).metadata();
+  const thumb = await generateThumbnail(params.buffer);
   const thumbPath = path.join(dir, `${params.adjuntoId}_thumb.jpg`);
-  await sharp(params.buffer)
-    .rotate()
-    .resize(400, 400, { fit: "inside", withoutEnlargement: true })
-    .jpeg({ quality: 80 })
-    .toFile(thumbPath);
+  await fs.writeFile(thumbPath, thumb.buffer);
 
   return {
     rutaServidor,
     rutaThumbnail: toPublicPath(thumbPath),
-    width: metadata.width,
-    height: metadata.height,
+    width: thumb.width,
+    height: thumb.height,
   };
 }
 

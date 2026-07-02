@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { adjuntoUrl } from "../api/adjuntos";
+import { adjuntoUrl, adjuntoDriveUrl } from "../api/adjuntos";
 import type { LocalAdjunto } from "../db/db";
 
 export function useAdjuntoUrl(adjunto: LocalAdjunto, preferThumbnail = false): string | undefined {
@@ -16,6 +16,12 @@ export function useAdjuntoUrl(adjunto: LocalAdjunto, preferThumbnail = false): s
   }, [adjunto.blobLocal]);
 
   if (blobUrl) return blobUrl;
+
+  if (adjunto.driveFileId || adjunto.driveThumbnailId) {
+    const variante = preferThumbnail && adjunto.driveThumbnailId ? "thumbnail" : "file";
+    return adjuntoDriveUrl(adjunto.id, variante);
+  }
+
   const ruta = preferThumbnail ? (adjunto.rutaThumbnail ?? adjunto.rutaServidor) : adjunto.rutaServidor;
   return ruta ? adjuntoUrl(ruta) : undefined;
 }

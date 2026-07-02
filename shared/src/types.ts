@@ -58,6 +58,8 @@ export interface Adjunto {
   orden: number;
   rutaServidor?: string;
   rutaThumbnail?: string;
+  driveFileId?: string;
+  driveThumbnailId?: string;
   width?: number;
   height?: number;
   createdAt: string;

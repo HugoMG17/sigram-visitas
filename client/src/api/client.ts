@@ -17,4 +17,21 @@ function resolveApiBaseUrl(): string {
 
 export const apiClient = axios.create({
   baseURL: resolveApiBaseUrl(),
+  withCredentials: true,
 });
+
+// Si el login con Google está activo y la sesión caduca, el servidor
+// responde 401 a las llamadas de API. Se redirige una única vez (el flag
+// evita bucles si varias peticiones fallan a la vez, p. ej. el motor de
+// sincronización reintentando varios adjuntos en paralelo).
+let redirectingToLogin = false;
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 && !redirectingToLogin) {
+      redirectingToLogin = true;
+      window.location.assign("/auth/google");
+    }
+    return Promise.reject(error);
+  }
+);

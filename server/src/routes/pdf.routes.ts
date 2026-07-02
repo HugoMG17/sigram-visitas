@@ -5,6 +5,7 @@ import { adjuntos, obras, visitas } from "../db/schema.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { idParamSchema } from "../validation.js";
 import { generateInformeVisitaPdf } from "../services/pdfService.js";
+import type { AuthUser } from "../auth/passport.js";
 
 export const pdfRouter = Router();
 
@@ -56,6 +57,7 @@ pdfRouter.get(
       visita,
       adjuntos: attachments,
       numeroVisita,
+      user: req.user as AuthUser | undefined,
     });
 
     const fecha = visita.fecha.slice(0, 10);

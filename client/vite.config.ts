@@ -29,9 +29,12 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Las llamadas a /api nunca se precachean como app shell; el offline
-        // de datos lo gestiona Dexie (Fase 3/4), no el cache HTTP de Workbox.
-        navigateFallbackDenylist: [/^\/api/],
+        // /api nunca se sirve como app shell cacheada; el offline de datos lo
+        // gestiona Dexie, no el cache HTTP de Workbox. /auth tampoco: si el
+        // Service Worker intercepta la navegación a /auth/google y sirve el
+        // shell cacheado en su lugar, el login nunca llega a alcanzar al
+        // servidor real (bucle: la SPA se recarga sola sin parar).
+        navigateFallbackDenylist: [/^\/api/, /^\/auth/],
       },
     }),
   ],

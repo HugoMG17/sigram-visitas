@@ -117,8 +117,18 @@ async function pull(): Promise<void> {
   }
 }
 
+let lastRunAt = 0;
+const MIN_INTERVAL_MS = 5_000;
+
 export async function runSync(): Promise<void> {
   if (syncing || !navigator.onLine) return;
+  // Límite de seguridad: pase lo que pase disparando "online"/clics repetidos
+  // (algunas extensiones del navegador emiten ese evento en ráfaga), nunca
+  // se martillea el servidor más de una vez cada pocos segundos.
+  const now = Date.now();
+  if (now - lastRunAt < MIN_INTERVAL_MS) return;
+  lastRunAt = now;
+
   syncing = true;
   try {
     await pushObras();
