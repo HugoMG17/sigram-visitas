@@ -11,7 +11,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-ENV NODE_ENV=production
 
 WORKDIR /app
 
@@ -22,12 +21,18 @@ COPY shared/package.json shared/package.json
 COPY server/package.json server/package.json
 COPY client/package.json client/package.json
 
+# NODE_ENV=production todavía NO está definida aquí a propósito: si lo
+# estuviera, npm ci se saltaría las devDependencies (esbuild, vite, tsc...)
+# que hacen falta para compilar en el siguiente paso.
 RUN npm ci
 
 COPY . .
 
 RUN npm run build -w server
 RUN npm run build -w client
+
+# Ahora sí, para que el servidor arranque en modo producción.
+ENV NODE_ENV=production
 
 EXPOSE 4000
 
