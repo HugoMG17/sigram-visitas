@@ -7,11 +7,11 @@ import { getVisita, saveVisitaLocal } from "../db/repositories/visitaRepo";
 import { runSync } from "../sync/syncEngine";
 import { generateId } from "../utils/id";
 
-function nowLocalDatetime(): string {
+function nowLocalDate(): string {
   const d = new Date();
-  d.setSeconds(0, 0);
+  d.setHours(0, 0, 0, 0);
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().slice(0, 16);
+  return d.toISOString().slice(0, 10);
 }
 
 export function VisitaFormPage() {
@@ -33,7 +33,7 @@ export function VisitaFormPage() {
     asistentes: "",
     ubicacionGps: "",
   });
-  const [fechaLocal, setFechaLocal] = useState(nowLocalDatetime());
+  const [fechaLocal, setFechaLocal] = useState(nowLocalDate());
 
   useEffect(() => {
     if (existing) {
@@ -48,7 +48,7 @@ export function VisitaFormPage() {
       });
       const d = new Date(existing.fecha);
       d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-      setFechaLocal(d.toISOString().slice(0, 16));
+      setFechaLocal(d.toISOString().slice(0, 10));
     }
   }, [existing]);
 
@@ -85,10 +85,10 @@ export function VisitaFormPage() {
         }}
       >
         <div className="field">
-          <label>Fecha y hora *</label>
+          <label>Fecha *</label>
           <input
             className="input"
-            type="datetime-local"
+            type="date"
             required
             value={fechaLocal}
             onChange={(e) => {
