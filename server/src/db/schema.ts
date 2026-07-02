@@ -36,11 +36,25 @@ export const visitas = sqliteTable("visitas", {
   deletedAt: text("deleted_at"),
 });
 
+export const puntos = sqliteTable("puntos", {
+  id: text("id").primaryKey(),
+  visitaId: text("visita_id")
+    .notNull()
+    .references(() => visitas.id, { onDelete: "cascade" }),
+  descripcion: text("descripcion").notNull(),
+  estado: text("estado").notNull(),
+  orden: integer("orden").notNull().default(0),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+  deletedAt: text("deleted_at"),
+});
+
 export const adjuntos = sqliteTable("adjuntos", {
   id: text("id").primaryKey(),
   visitaId: text("visita_id")
     .notNull()
     .references(() => visitas.id, { onDelete: "cascade" }),
+  puntoId: text("punto_id").references(() => puntos.id, { onDelete: "cascade" }),
   tipo: text("tipo").notNull(),
   mimeType: text("mime_type").notNull(),
   nombreArchivo: text("nombre_archivo").notNull(),

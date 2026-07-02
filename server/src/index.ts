@@ -12,6 +12,7 @@ import { requireAuth } from "./middleware/requireAuth.js";
 import { authRouter } from "./routes/auth.routes.js";
 import { obrasRouter } from "./routes/obras.routes.js";
 import { visitasRouter } from "./routes/visitas.routes.js";
+import { puntosRouter } from "./routes/puntos.routes.js";
 import { adjuntosRouter } from "./routes/adjuntos.routes.js";
 import { pdfRouter } from "./routes/pdf.routes.js";
 import { closeBrowser } from "./services/pdfService.js";
@@ -20,7 +21,12 @@ fs.mkdirSync(env.uploadsDir, { recursive: true });
 
 const app = express();
 
-app.use(cors());
+// origin: true refleja el origen exacto de cada petición en vez de "*": hace
+// falta para que el navegador permita peticiones con credenciales (cookie de
+// sesión) en dev, donde cliente (:5173) y servidor (:4000) son orígenes
+// distintos. Con "*" el navegador bloquea cualquier request con
+// withCredentials, aunque el servidor la aceptara.
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
 if (env.authEnabled) {
@@ -66,6 +72,7 @@ app.use(requireAuth);
 app.use("/uploads", express.static(env.uploadsDir));
 app.use("/api/obras", obrasRouter);
 app.use("/api", visitasRouter);
+app.use("/api", puntosRouter);
 app.use("/api", adjuntosRouter);
 app.use("/api", pdfRouter);
 

@@ -12,6 +12,8 @@ export const estadoObraSchema = z.enum([
 
 export const tipoAdjuntoSchema = z.enum(["foto", "plano", "documento", "otro"]);
 
+export const estadoPuntoSchema = z.enum(["pendiente", "solucionado"]);
+
 const uuidSchema = z.string().uuid();
 
 export const obraUpsertSchema = z.object({
@@ -40,8 +42,15 @@ export const visitaUpsertSchema = z.object({
   ubicacionGps: z.string().optional(),
 });
 
+export const puntoUpsertSchema = z.object({
+  visitaId: uuidSchema,
+  descripcion: z.string().min(1),
+  estado: estadoPuntoSchema,
+});
+
 export const adjuntoMetaSchema = z.object({
   id: uuidSchema,
+  puntoId: uuidSchema.optional(),
   tipo: tipoAdjuntoSchema,
   caption: z.string().optional(),
   orden: z.coerce.number().int().optional(),

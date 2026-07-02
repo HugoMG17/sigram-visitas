@@ -2,9 +2,10 @@ import { isAxiosError } from "axios";
 import { apiClient } from "../api/client";
 import { deleteObra, saveObra } from "../api/obras";
 import { deleteVisita, saveVisita } from "../api/visitas";
+import { deletePunto, savePunto } from "../api/puntos";
 import { uploadAdjunto } from "../api/adjuntos";
 import { db } from "../db/db";
-import type { Adjunto, Obra, Visita } from "@sigram/shared";
+import type { Adjunto, Obra, Punto, Visita } from "@sigram/shared";
 
 let syncing = false;
 let intervalHandle: ReturnType<typeof setInterval> | undefined;
@@ -64,16 +65,48 @@ async function pushVisitas(): Promise<void> {
   }
 }
 
+async function pushPuntos(): Promise<void> {
+  const pendientes = await db.puntos.where("syncStatus").anyOf(["pending", "error"]).toArray();
+  for (const punto of pendientes) {
+    const visitaPadre = await db.visitas.get(punto.visitaId);
+    if (!visitaPadre) {
+      await db.puntos.update(punto.id, {
+        syncStatus: "error",
+        syncError: "No se encuentra la visita de este punto en el dispositivo.",
+      });
+      continue;
+    }
+    if (visitaPadre.syncStatus === "pending" || visitaPadre.syncStatus === "error") continue;
+    try {
+      if (punto.deletedAt) {
+        await deletePunto(punto.id);
+      } else {
+        const { id, syncStatus: _s, syncError: _e, orden: _o, createdAt: _c, updatedAt: _u, deletedAt: _d, ...data } =
+          punto;
+        await savePunto(id, data);
+      }
+      await db.puntos.update(punto.id, { syncStatus: "synced", syncError: undefined });
+    } catch (err) {
+      await db.puntos.update(punto.id, { syncStatus: "error", syncError: describeError(err) });
+    }
+  }
+}
+
 async function pushAdjuntos(): Promise<void> {
   const pendientes = await db.adjuntos.where("syncStatus").anyOf(["pending", "error"]).toArray();
   for (const adjunto of pendientes) {
     const visitaPadre = await db.visitas.get(adjunto.visitaId);
     if (visitaPadre?.syncStatus === "pending" || visitaPadre?.syncStatus === "error") continue;
+    if (adjunto.puntoId) {
+      const puntoPadre = await db.puntos.get(adjunto.puntoId);
+      if (puntoPadre?.syncStatus === "pending" || puntoPadre?.syncStatus === "error") continue;
+    }
     if (!adjunto.blobLocal) continue;
     try {
       const subido = await uploadAdjunto({
         id: adjunto.id,
         visitaId: adjunto.visitaId,
+        puntoId: adjunto.puntoId,
         file: adjunto.blobLocal,
         fileName: adjunto.nombreArchivo,
         tipo: adjunto.tipo,
@@ -102,6 +135,16 @@ async function pull(): Promise<void> {
       const localV = await db.visitas.get(rv.id);
       if (!localV || localV.syncStatus === "synced") {
         await db.visitas.put({ ...rv, syncStatus: "synced" });
+      }
+
+      const remotePuntos = await apiClient
+        .get<Punto[]>(`/visitas/${rv.id}/puntos`)
+        .then((r) => r.data);
+      for (const rp of remotePuntos) {
+        const localP = await db.puntos.get(rp.id);
+        if (!localP || localP.syncStatus === "synced") {
+          await db.puntos.put({ ...rp, syncStatus: "synced" });
+        }
       }
 
       const remoteAdjuntos = await apiClient
@@ -133,6 +176,7 @@ export async function runSync(): Promise<void> {
   try {
     await pushObras();
     await pushVisitas();
+    await pushPuntos();
     await pushAdjuntos();
     await pull();
   } catch {

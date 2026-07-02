@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { and, asc, desc, eq, isNull } from "drizzle-orm";
 import { db } from "../db/client.js";
-import { adjuntos, obras, visitas } from "../db/schema.js";
+import { adjuntos, obras, puntos, visitas } from "../db/schema.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { idParamSchema, visitaUpsertSchema } from "../validation.js";
 
@@ -38,7 +38,12 @@ visitasRouter.get(
       .from(adjuntos)
       .where(eq(adjuntos.visitaId, id))
       .orderBy(asc(adjuntos.orden));
-    res.json({ ...visita, obra, adjuntos: attachments });
+    const puntosDeVisita = await db
+      .select()
+      .from(puntos)
+      .where(and(eq(puntos.visitaId, id), isNull(puntos.deletedAt)))
+      .orderBy(asc(puntos.orden));
+    res.json({ ...visita, obra, adjuntos: attachments, puntos: puntosDeVisita });
   })
 );
 

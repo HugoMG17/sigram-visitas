@@ -9,8 +9,14 @@ export async function listAdjuntos(visitaId: string): Promise<LocalAdjunto[]> {
   return all.sort((a, b) => a.orden - b.orden);
 }
 
+export async function listAdjuntosDePunto(puntoId: string): Promise<LocalAdjunto[]> {
+  const all = await db.adjuntos.where("puntoId").equals(puntoId).toArray();
+  return all.sort((a, b) => a.orden - b.orden);
+}
+
 export async function addAdjuntoLocal(params: {
   visitaId: string;
+  puntoId?: string;
   file: File;
   tipo: TipoAdjunto;
   caption?: string;
@@ -25,6 +31,7 @@ export async function addAdjuntoLocal(params: {
   const record: LocalAdjunto = {
     id: generateId(),
     visitaId: params.visitaId,
+    puntoId: params.puntoId,
     tipo: params.tipo,
     mimeType: isImage ? "image/jpeg" : params.file.type,
     nombreArchivo,
@@ -41,7 +48,7 @@ export async function addAdjuntoLocal(params: {
 export async function deleteAdjuntoLocal(id: string): Promise<void> {
   const existing = await db.adjuntos.get(id);
   if (!existing) return;
-  if (existing.rutaServidor) {
+  if (existing.rutaServidor || existing.driveFileId) {
     // Ya estaba sincronizado: borrarlo tambien del servidor (requiere conexion).
     await deleteAdjuntoRemoto(id);
   }

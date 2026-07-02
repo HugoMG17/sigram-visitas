@@ -1,4 +1,4 @@
-import type { Adjunto, Obra, Visita } from "@sigram/shared";
+import type { Adjunto, Obra, Punto, Visita } from "@sigram/shared";
 import { apiClient } from "./client";
 
 export type VisitaInput = Omit<Visita, "id" | "createdAt" | "updatedAt" | "deletedAt">;
@@ -6,6 +6,7 @@ export type VisitaInput = Omit<Visita, "id" | "createdAt" | "updatedAt" | "delet
 export interface VisitaDetail extends Visita {
   obra: Obra;
   adjuntos: Adjunto[];
+  puntos: Punto[];
 }
 
 export async function fetchVisitasDeObra(obraId: string): Promise<Visita[]> {

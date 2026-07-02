@@ -1,5 +1,5 @@
 import Dexie, { type Table } from "dexie";
-import type { Adjunto, Obra, SyncStatus, Visita } from "@sigram/shared";
+import type { Adjunto, Obra, Punto, SyncStatus, Visita } from "@sigram/shared";
 
 export interface LocalObra extends Obra {
   syncStatus: SyncStatus;
@@ -8,6 +8,11 @@ export interface LocalObra extends Obra {
 }
 
 export interface LocalVisita extends Visita {
+  syncStatus: SyncStatus;
+  syncError?: string;
+}
+
+export interface LocalPunto extends Punto {
   syncStatus: SyncStatus;
   syncError?: string;
 }
@@ -22,6 +27,7 @@ export interface LocalAdjunto extends Adjunto {
 export class AppDB extends Dexie {
   obras!: Table<LocalObra, string>;
   visitas!: Table<LocalVisita, string>;
+  puntos!: Table<LocalPunto, string>;
   adjuntos!: Table<LocalAdjunto, string>;
 
   constructor() {
@@ -30,6 +36,12 @@ export class AppDB extends Dexie {
       obras: "id, syncStatus, updatedAt, deletedAt",
       visitas: "id, obraId, syncStatus, updatedAt, fecha, deletedAt",
       adjuntos: "id, visitaId, syncStatus, orden",
+    });
+    this.version(2).stores({
+      obras: "id, syncStatus, updatedAt, deletedAt",
+      visitas: "id, obraId, syncStatus, updatedAt, fecha, deletedAt",
+      puntos: "id, visitaId, syncStatus, orden, deletedAt",
+      adjuntos: "id, visitaId, puntoId, syncStatus, orden",
     });
   }
 }

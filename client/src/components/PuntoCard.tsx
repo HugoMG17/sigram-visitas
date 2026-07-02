@@ -1,0 +1,114 @@
+import { useLiveQuery } from "dexie-react-hooks";
+import { useMutation } from "@tanstack/react-query";
+import type { LocalPunto } from "../db/db";
+import { listAdjuntosDePunto, deleteAdjuntoLocal } from "../db/repositories/adjuntoRepo";
+import { setPuntoEstadoLocal, softDeletePuntoLocal } from "../db/repositories/puntoRepo";
+import { runSync } from "../sync/syncEngine";
+import { AttachmentCapture } from "./AttachmentCapture";
+import { AdjuntoImage } from "./AdjuntoImage";
+
+export function PuntoCard({ punto, numero }: { punto: LocalPunto; numero: number }) {
+  const adjuntos = useLiveQuery(() => listAdjuntosDePunto(punto.id), [punto.id]) ?? [];
+
+  const toggleMutation = useMutation({
+    networkMode: "always",
+    mutationFn: () =>
+      setPuntoEstadoLocal(punto.id, punto.estado === "pendiente" ? "solucionado" : "pendiente"),
+    onSuccess: () => void runSync(),
+  });
+
+  const deleteMutation = useMutation({
+    networkMode: "always",
+    mutationFn: () => softDeletePuntoLocal(punto.id),
+    onSuccess: () => void runSync(),
+  });
+
+  const solucionado = punto.estado === "solucionado";
+
+  return (
+    <div className="card stack" style={{ gap: "0.6rem" }}>
+      <div className="row-between">
+        <div className="row" style={{ gap: "0.5rem" }}>
+          <span
+            title={solucionado ? "Solucionado" : "Pendiente"}
+            style={{
+              display: "inline-block",
+              width: 12,
+              height: 12,
+              borderRadius: "50%",
+              background: solucionado ? "#16a34a" : "#f59e0b",
+              flexShrink: 0,
+            }}
+          />
+          <strong>Punto {numero}</strong>
+        </div>
+        <div className="row" style={{ gap: "0.4rem" }}>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem" }}
+            onClick={() => toggleMutation.mutate()}
+            disabled={toggleMutation.isPending}
+          >
+            {solucionado ? "Marcar pendiente" : "Marcar solucionado"}
+          </button>
+          <button
+            type="button"
+            className="btn btn-danger"
+            style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem" }}
+            onClick={() => deleteMutation.mutate()}
+          >
+            Eliminar
+          </button>
+        </div>
+      </div>
+
+      <p style={{ margin: 0, whiteSpace: "pre-wrap" }}>{punto.descripcion}</p>
+
+      <AttachmentCapture
+        visitaId={punto.visitaId}
+        puntoId={punto.id}
+        siguienteOrden={adjuntos.length}
+        compact
+      />
+
+      {adjuntos.length > 0 && (
+        <div className="photo-grid">
+          {adjuntos.map((foto) => (
+            <div key={foto.id} className="photo-thumb">
+              <AdjuntoImage adjunto={foto} alt={foto.caption ?? "Foto del punto"} />
+              {foto.syncStatus === "pending" && (
+                <span
+                  className="badge"
+                  style={{
+                    position: "absolute",
+                    bottom: 4,
+                    left: 4,
+                    background: "#f59e0b",
+                    color: "white",
+                  }}
+                >
+                  pendiente
+                </span>
+              )}
+              <button
+                type="button"
+                className="btn btn-danger"
+                style={{
+                  position: "absolute",
+                  top: 4,
+                  right: 4,
+                  padding: "0.15rem 0.5rem",
+                  fontSize: "0.75rem",
+                }}
+                onClick={() => deleteAdjuntoLocal(foto.id)}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

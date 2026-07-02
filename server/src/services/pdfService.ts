@@ -3,7 +3,7 @@ import path from "node:path";
 import puppeteer, { type Browser } from "puppeteer";
 import { isImageMime } from "@sigram/shared";
 import { renderInformeVisitaHtml } from "../templates/informe-visita.js";
-import type { adjuntos, obras, visitas } from "../db/schema.js";
+import type { adjuntos, obras, puntos, visitas } from "../db/schema.js";
 import { env } from "../env.js";
 import { buildOAuthClient, downloadFromDrive } from "./driveService.js";
 import type { AuthUser } from "../auth/passport.js";
@@ -11,6 +11,7 @@ import type { AuthUser } from "../auth/passport.js";
 type ObraRow = typeof obras.$inferSelect;
 type VisitaRow = typeof visitas.$inferSelect;
 type AdjuntoRow = typeof adjuntos.$inferSelect;
+type PuntoRow = typeof puntos.$inferSelect;
 
 let browserPromise: Promise<Browser> | null = null;
 
@@ -61,6 +62,7 @@ export async function generateInformeVisitaPdf(params: {
   obra: ObraRow;
   visita: VisitaRow;
   adjuntos: AdjuntoRow[];
+  puntos: PuntoRow[];
   numeroVisita: number;
   user?: AuthUser;
 }): Promise<Buffer> {

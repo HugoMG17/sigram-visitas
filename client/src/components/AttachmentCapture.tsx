@@ -13,10 +13,14 @@ const TIPO_LABELS: Record<TipoAdjunto, string> = {
 
 export function AttachmentCapture({
   visitaId,
+  puntoId,
   siguienteOrden,
+  compact = false,
 }: {
   visitaId: string;
+  puntoId?: string;
   siguienteOrden: number;
+  compact?: boolean;
 }) {
   const fotoInputRef = useRef<HTMLInputElement>(null);
   const archivoInputRef = useRef<HTMLInputElement>(null);
@@ -27,7 +31,13 @@ export function AttachmentCapture({
     // que estamos offline (por defecto pausaría la mutación hasta reconectar).
     networkMode: "always",
     mutationFn: (params: { file: File; tipo: TipoAdjunto; orden: number }) =>
-      addAdjuntoLocal({ visitaId, file: params.file, tipo: params.tipo, orden: params.orden }),
+      addAdjuntoLocal({
+        visitaId,
+        puntoId,
+        file: params.file,
+        tipo: params.tipo,
+        orden: params.orden,
+      }),
     onSuccess: () => {
       setError(null);
       void runSync();
@@ -42,25 +52,30 @@ export function AttachmentCapture({
     );
   }
 
+  const btnStyle = compact ? { padding: "0.3rem 0.6rem", fontSize: "0.8rem" } : undefined;
+
   return (
     <div className="stack">
       <div className="row">
         <button
           type="button"
           className="btn"
+          style={btnStyle}
           onClick={() => fotoInputRef.current?.click()}
           disabled={mutation.isPending}
         >
           📷 Añadir fotos
         </button>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={() => archivoInputRef.current?.click()}
-          disabled={mutation.isPending}
-        >
-          📎 Añadir plano/documento
-        </button>
+        {!compact && (
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => archivoInputRef.current?.click()}
+            disabled={mutation.isPending}
+          >
+            📎 Añadir plano/documento
+          </button>
+        )}
       </div>
 
       <input

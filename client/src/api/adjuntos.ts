@@ -4,6 +4,7 @@ import { apiClient } from "./client";
 export async function uploadAdjunto(params: {
   id: string;
   visitaId: string;
+  puntoId?: string;
   file: Blob;
   fileName: string;
   tipo: TipoAdjunto;
@@ -14,6 +15,7 @@ export async function uploadAdjunto(params: {
   form.append("id", params.id);
   form.append("tipo", params.tipo);
   form.append("orden", String(params.orden));
+  if (params.puntoId) form.append("puntoId", params.puntoId);
   if (params.caption) form.append("caption", params.caption);
   form.append("file", params.file, params.fileName);
 

@@ -7,10 +7,13 @@ import { pdfUrl } from "../api/visitas";
 import { getVisita } from "../db/repositories/visitaRepo";
 import { getObra } from "../db/repositories/obraRepo";
 import { listAdjuntos, deleteAdjuntoLocal } from "../db/repositories/adjuntoRepo";
+import { listPuntosDeVisita } from "../db/repositories/puntoRepo";
 import { runSync } from "../sync/syncEngine";
 import { AttachmentCapture } from "../components/AttachmentCapture";
 import { AdjuntoImage } from "../components/AdjuntoImage";
 import { DocumentoLink } from "../components/DocumentoLink";
+import { PuntoCard } from "../components/PuntoCard";
+import { AddPuntoForm } from "../components/AddPuntoForm";
 
 export function VisitaDetailPage() {
   const { visitaId } = useParams<{ visitaId: string }>();
@@ -22,16 +25,25 @@ export function VisitaDetailPage() {
     () => (visitaId ? listAdjuntos(visitaId) : undefined),
     [visitaId]
   );
+  const puntos = useLiveQuery(
+    () => (visitaId ? listPuntosDeVisita(visitaId) : undefined),
+    [visitaId]
+  );
 
-  if (visita === undefined || adjuntos === undefined) {
+  if (visita === undefined || adjuntos === undefined || puntos === undefined) {
     return <p className="muted">Cargando visita…</p>;
   }
   if (!visita) return <p className="error-text">Visita no encontrada.</p>;
 
-  const fotos = adjuntos.filter((a) => isImageMime(a.mimeType));
-  const documentos = adjuntos.filter((a) => !isImageMime(a.mimeType));
+  // Los adjuntos ligados a un punto se muestran dentro de su propia tarjeta;
+  // aquí solo quedan los generales de la visita (documentos sueltos, etc.).
+  const adjuntosGenerales = adjuntos.filter((a) => !a.puntoId);
+  const fotos = adjuntosGenerales.filter((a) => isImageMime(a.mimeType));
+  const documentos = adjuntosGenerales.filter((a) => !isImageMime(a.mimeType));
   const puedeExportar =
-    visita.syncStatus === "synced" && adjuntos.every((a) => a.syncStatus === "synced");
+    visita.syncStatus === "synced" &&
+    adjuntos.every((a) => a.syncStatus === "synced") &&
+    puntos.every((p) => p.syncStatus === "synced");
 
   async function handleSincronizar() {
     setSyncing(true);
@@ -85,8 +97,30 @@ export function VisitaDetailPage() {
       </div>
 
       <div className="card stack">
-        <h2 style={{ margin: 0 }}>Adjuntos</h2>
-        <AttachmentCapture visitaId={visita.id} siguienteOrden={adjuntos.length} />
+        <div className="row-between">
+          <h2 style={{ margin: 0 }}>Puntos</h2>
+          {puntos.length > 0 && (
+            <span className="muted" style={{ fontSize: "0.85rem" }}>
+              {puntos.filter((p) => p.estado === "solucionado").length} de {puntos.length}{" "}
+              solucionados
+            </span>
+          )}
+        </div>
+        <AddPuntoForm visitaId={visita.id} />
+        {puntos.length === 0 && (
+          <p className="muted">Todavía no hay puntos registrados en esta visita.</p>
+        )}
+        {puntos.map((punto, index) => (
+          <PuntoCard key={punto.id} punto={punto} numero={index + 1} />
+        ))}
+      </div>
+
+      <div className="card stack">
+        <h2 style={{ margin: 0 }}>Otros adjuntos</h2>
+        <p className="muted" style={{ margin: 0, fontSize: "0.85rem" }}>
+          Fotos o documentos generales de la visita, no ligados a un punto concreto.
+        </p>
+        <AttachmentCapture visitaId={visita.id} siguienteOrden={adjuntosGenerales.length} />
 
         {fotos.length > 0 && (
           <div className="photo-grid">
@@ -137,7 +171,7 @@ export function VisitaDetailPage() {
           </div>
         )}
 
-        {adjuntos.length === 0 && <p className="muted">Todavía no hay adjuntos.</p>}
+        {adjuntosGenerales.length === 0 && <p className="muted">Todavía no hay adjuntos generales.</p>}
       </div>
     </div>
   );

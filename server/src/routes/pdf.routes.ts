@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { asc, eq, isNull, and } from "drizzle-orm";
 import { db } from "../db/client.js";
-import { adjuntos, obras, visitas } from "../db/schema.js";
+import { adjuntos, obras, puntos, visitas } from "../db/schema.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { idParamSchema } from "../validation.js";
 import { generateInformeVisitaPdf } from "../services/pdfService.js";
@@ -52,10 +52,17 @@ pdfRouter.get(
       .where(eq(adjuntos.visitaId, id))
       .orderBy(asc(adjuntos.orden));
 
+    const puntosDeVisita = await db
+      .select()
+      .from(puntos)
+      .where(and(eq(puntos.visitaId, id), isNull(puntos.deletedAt)))
+      .orderBy(asc(puntos.orden));
+
     const pdfBuffer = await generateInformeVisitaPdf({
       obra,
       visita,
       adjuntos: attachments,
+      puntos: puntosDeVisita,
       numeroVisita,
       user: req.user as AuthUser | undefined,
     });

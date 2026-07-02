@@ -35,6 +35,19 @@ adjuntosRouter.get(
   })
 );
 
+adjuntosRouter.get(
+  "/puntos/:puntoId/adjuntos",
+  asyncHandler(async (req, res) => {
+    const puntoId = idParamSchema.parse(req.params.puntoId);
+    const rows = await db
+      .select()
+      .from(adjuntos)
+      .where(eq(adjuntos.puntoId, puntoId))
+      .orderBy(asc(adjuntos.orden));
+    res.json(rows);
+  })
+);
+
 adjuntosRouter.post(
   "/visitas/:visitaId/adjuntos",
   upload.single("file"),
@@ -67,6 +80,7 @@ adjuntosRouter.post(
       await db.insert(adjuntos).values({
         id: meta.id,
         visitaId,
+        puntoId: meta.puntoId,
         tipo: meta.tipo,
         mimeType: req.file.mimetype,
         nombreArchivo: req.file.originalname,
@@ -90,6 +104,7 @@ adjuntosRouter.post(
       await db.insert(adjuntos).values({
         id: meta.id,
         visitaId,
+        puntoId: meta.puntoId,
         tipo: meta.tipo,
         mimeType: req.file.mimetype,
         nombreArchivo: req.file.originalname,

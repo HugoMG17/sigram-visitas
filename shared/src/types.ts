@@ -48,9 +48,26 @@ export interface Visita {
   deletedAt?: string | null;
 }
 
+export type EstadoPunto = "pendiente" | "solucionado";
+
+export interface Punto {
+  id: string;
+  visitaId: string;
+  descripcion: string;
+  estado: EstadoPunto;
+  orden: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+}
+
 export interface Adjunto {
   id: string;
   visitaId: string;
+  // Si tiene puntoId, la foto/documento pertenece a ese punto concreto de
+  // la visita; si no, es un adjunto general de la visita (comportamiento
+  // previo a los puntos, se mantiene para compatibilidad).
+  puntoId?: string;
   tipo: TipoAdjunto;
   mimeType: string;
   nombreArchivo: string;
@@ -64,6 +81,11 @@ export interface Adjunto {
   height?: number;
   createdAt: string;
 }
+
+export const ESTADO_PUNTO_LABELS: Record<EstadoPunto, string> = {
+  pendiente: "Pendiente",
+  solucionado: "Solucionado",
+};
 
 export const TIPO_OBRA_LABELS: Record<TipoObra, string> = {
   nueva: "Obra nueva",

@@ -46,9 +46,24 @@ export async function ensureSchema(): Promise<void> {
   await sqlClient.execute("CREATE INDEX IF NOT EXISTS idx_visitas_obra_id ON visitas(obra_id);");
 
   await sqlClient.execute(`
+    CREATE TABLE IF NOT EXISTS puntos (
+      id TEXT PRIMARY KEY,
+      visita_id TEXT NOT NULL REFERENCES visitas(id) ON DELETE CASCADE,
+      descripcion TEXT NOT NULL,
+      estado TEXT NOT NULL,
+      orden INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT
+    );
+  `);
+  await sqlClient.execute("CREATE INDEX IF NOT EXISTS idx_puntos_visita_id ON puntos(visita_id);");
+
+  await sqlClient.execute(`
     CREATE TABLE IF NOT EXISTS adjuntos (
       id TEXT PRIMARY KEY,
       visita_id TEXT NOT NULL REFERENCES visitas(id) ON DELETE CASCADE,
+      punto_id TEXT REFERENCES puntos(id) ON DELETE CASCADE,
       tipo TEXT NOT NULL,
       mime_type TEXT NOT NULL,
       nombre_archivo TEXT NOT NULL,
@@ -68,6 +83,17 @@ export async function ensureSchema(): Promise<void> {
   );
 
   await migrateAdjuntosDriveColumns();
+  await migrateAdjuntosPuntoColumn();
+}
+
+// Las bases de datos creadas antes de los "puntos" no tienen punto_id en
+// adjuntos; al ser una columna nueva y admitir NULL, basta con un ALTER
+// TABLE ADD COLUMN idempotente (sin reconstruir la tabla).
+async function migrateAdjuntosPuntoColumn(): Promise<void> {
+  const info = await sqlClient.execute("PRAGMA table_info(adjuntos);");
+  const hasPuntoId = info.rows.some((row) => row.name === "punto_id");
+  if (hasPuntoId) return;
+  await sqlClient.execute("ALTER TABLE adjuntos ADD COLUMN punto_id TEXT REFERENCES puntos(id) ON DELETE CASCADE;");
 }
 
 // Las bases de datos creadas antes de soportar Drive tienen ruta_archivo
