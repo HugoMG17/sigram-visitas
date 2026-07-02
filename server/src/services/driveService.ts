@@ -13,7 +13,11 @@ function isImageMime(mimeType: string): boolean {
   return mimeType.startsWith("image/");
 }
 
-let folderIdPromise: Promise<string> | null = null;
+// La carpeta "SIGRAM VISITAS" vive en el Drive de cada usuario, así que el
+// caché de su id tiene que estar indexado por usuario -- una única variable
+// de módulo compartida haría que la carpeta encontrada para el usuario A se
+// reutilizara (con el token de B) para el usuario B.
+const folderIdPromises = new Map<string, Promise<string>>();
 
 export function buildOAuthClient(user: AuthUser): OAuth2Client {
   const client = new google.auth.OAuth2(env.googleClientId, env.googleClientSecret);
@@ -24,10 +28,11 @@ export function buildOAuthClient(user: AuthUser): OAuth2Client {
   return client;
 }
 
-async function getOrCreateAppFolder(auth: OAuth2Client): Promise<string> {
-  if (folderIdPromise) return folderIdPromise;
+async function getOrCreateAppFolder(auth: OAuth2Client, userEmail: string): Promise<string> {
+  const cached = folderIdPromises.get(userEmail);
+  if (cached) return cached;
 
-  folderIdPromise = (async () => {
+  const promise = (async () => {
     const drive = google.drive({ version: "v3", auth });
     const existing = await drive.files.list({
       q: "name='SIGRAM VISITAS' and mimeType='application/vnd.google-apps.folder' and trashed=false",
@@ -46,21 +51,23 @@ async function getOrCreateAppFolder(auth: OAuth2Client): Promise<string> {
   })().catch((err) => {
     // Si falla, no se deja la promesa (ni el fallo) cacheada para siempre:
     // se limpia para que el próximo intento vuelva a consultar Drive de cero.
-    folderIdPromise = null;
+    folderIdPromises.delete(userEmail);
     throw err;
   });
 
-  return folderIdPromise;
+  folderIdPromises.set(userEmail, promise);
+  return promise;
 }
 
 export async function uploadToDrive(params: {
   auth: OAuth2Client;
+  userEmail: string;
   name: string;
   mimeType: string;
   buffer: Buffer;
 }): Promise<string> {
   const drive = google.drive({ version: "v3", auth: params.auth });
-  const folderId = await getOrCreateAppFolder(params.auth);
+  const folderId = await getOrCreateAppFolder(params.auth, params.userEmail);
   const res = await drive.files.create({
     requestBody: { name: params.name, parents: [folderId] },
     media: { mimeType: params.mimeType, body: Readable.from(params.buffer) },
@@ -99,6 +106,7 @@ export interface SavedDriveAttachment {
 
 export async function saveAttachmentToDrive(params: {
   auth: OAuth2Client;
+  userEmail: string;
   adjuntoId: string;
   mimeType: string;
   originalName: string;
@@ -106,6 +114,7 @@ export async function saveAttachmentToDrive(params: {
 }): Promise<SavedDriveAttachment> {
   const driveFileId = await uploadToDrive({
     auth: params.auth,
+    userEmail: params.userEmail,
     name: `${params.adjuntoId}_${params.originalName}`,
     mimeType: params.mimeType,
     buffer: params.buffer,
@@ -118,6 +127,7 @@ export async function saveAttachmentToDrive(params: {
   const thumb = await generateThumbnail(params.buffer);
   const driveThumbnailId = await uploadToDrive({
     auth: params.auth,
+    userEmail: params.userEmail,
     name: `${params.adjuntoId}_thumb.jpg`,
     mimeType: "image/jpeg",
     buffer: thumb.buffer,

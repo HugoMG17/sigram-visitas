@@ -9,6 +9,7 @@ export async function ensureSchema(): Promise<void> {
   await sqlClient.execute(`
     CREATE TABLE IF NOT EXISTS obras (
       id TEXT PRIMARY KEY,
+      owner_email TEXT,
       nombre TEXT NOT NULL,
       direccion TEXT NOT NULL,
       municipio TEXT NOT NULL,
@@ -86,6 +87,23 @@ export async function ensureSchema(): Promise<void> {
   await migrateAdjuntosDriveColumns();
   await migrateAdjuntosPuntoColumn();
   await migratePuntosTituloColumn();
+  await migrateObrasOwnerEmailColumn();
+}
+
+// Las bases de datos creadas antes del multi-usuario no tienen owner_email
+// en obras; al ser una columna nueva y admitir NULL, basta con un ALTER
+// TABLE ADD COLUMN idempotente (sin reconstruir la tabla).
+async function migrateObrasOwnerEmailColumn(): Promise<void> {
+  const info = await sqlClient.execute("PRAGMA table_info(obras);");
+  const hasOwnerEmail = info.rows.some((row) => row.name === "owner_email");
+  if (!hasOwnerEmail) {
+    await sqlClient.execute("ALTER TABLE obras ADD COLUMN owner_email TEXT;");
+  }
+  // Se crea al final, tanto para bases nuevas (columna ya presente en el
+  // CREATE TABLE) como para las que acaban de recibir el ALTER TABLE de arriba.
+  await sqlClient.execute(
+    "CREATE INDEX IF NOT EXISTS idx_obras_owner_email ON obras(owner_email);"
+  );
 }
 
 // Las bases de datos creadas antes del título de punto no tienen esa

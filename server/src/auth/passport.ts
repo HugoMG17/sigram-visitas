@@ -28,6 +28,9 @@ export function configurePassport(): void {
           done(null, false);
           return;
         }
+        // ALLOWED_GOOGLE_EMAIL es una allowlist opcional: si no está definida,
+        // cualquier cuenta de Google puede entrar (multi-usuario). Si se fija,
+        // solo esa cuenta pasa — útil para volver a modo "app personal".
         if (env.allowedGoogleEmail && email.toLowerCase() !== env.allowedGoogleEmail.toLowerCase()) {
           console.warn(`[auth] intento de login rechazado: ${email} no está autorizado`);
           done(null, false);

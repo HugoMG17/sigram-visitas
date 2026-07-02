@@ -2,6 +2,10 @@ import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 
 export const obras = sqliteTable("obras", {
   id: text("id").primaryKey(),
+  // Email de la cuenta de Google propietaria de la obra (multi-usuario).
+  // Nullable porque las bases de datos previas a esta columna no la tienen
+  // rellena; en modo local sin login (authEnabled=false) queda vacía.
+  ownerEmail: text("owner_email"),
   nombre: text("nombre").notNull(),
   direccion: text("direccion").notNull(),
   municipio: text("municipio").notNull(),

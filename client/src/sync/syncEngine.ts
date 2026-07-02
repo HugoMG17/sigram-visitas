@@ -1,5 +1,6 @@
 import { isAxiosError } from "axios";
 import { apiClient } from "../api/client";
+import { fetchAuthStatus } from "../api/auth";
 import { deleteObra, saveObra } from "../api/obras";
 import { deleteVisita, saveVisita } from "../api/visitas";
 import { deletePunto, savePunto } from "../api/puntos";
@@ -188,10 +189,33 @@ export async function runSync(): Promise<void> {
   }
 }
 
+const LAST_USER_EMAIL_KEY = "sigram:lastUserEmail";
+
+// Un mismo navegador (p.ej. un ordenador compartido del estudio) podría
+// iniciar sesión con dos cuentas de Google distintas en momentos distintos.
+// Si detectamos que el usuario autenticado cambió respecto al último que
+// sincronizó en este dispositivo, se vacía Dexie antes de traer datos
+// nuevos, para no mezclar obras de dos arquitectos distintos.
+async function resetLocalDataIfUserChanged(): Promise<void> {
+  let status;
+  try {
+    status = await fetchAuthStatus();
+  } catch {
+    return; // sin conexión al arrancar: no se puede comprobar, no se toca nada
+  }
+  if (!status.authenticated || !status.email) return;
+
+  const lastEmail = localStorage.getItem(LAST_USER_EMAIL_KEY);
+  if (lastEmail && lastEmail !== status.email) {
+    await Promise.all([db.obras.clear(), db.visitas.clear(), db.puntos.clear(), db.adjuntos.clear()]);
+  }
+  localStorage.setItem(LAST_USER_EMAIL_KEY, status.email);
+}
+
 export function initSyncEngine(): void {
   window.addEventListener("online", () => void runSync());
   if (!intervalHandle) {
     intervalHandle = setInterval(() => void runSync(), 30_000);
   }
-  void runSync();
+  void resetLocalDataIfUserChanged().then(() => runSync());
 }
