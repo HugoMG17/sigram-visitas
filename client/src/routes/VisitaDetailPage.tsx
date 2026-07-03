@@ -9,6 +9,8 @@ import { getObra } from "../db/repositories/obraRepo";
 import { listAdjuntos, deleteAdjuntoLocal } from "../db/repositories/adjuntoRepo";
 import { listPuntosDeVisita } from "../db/repositories/puntoRepo";
 import { runSync } from "../sync/syncEngine";
+import { isNative } from "../native/platform";
+import { descargarYAbrirPdf } from "../native/pdf";
 import { AttachmentCapture } from "../components/AttachmentCapture";
 import { AdjuntoImage } from "../components/AdjuntoImage";
 import { DocumentoLink } from "../components/DocumentoLink";
@@ -19,6 +21,7 @@ export function VisitaDetailPage() {
   const { visitaId } = useParams<{ visitaId: string }>();
   const navigate = useNavigate();
   const [syncing, setSyncing] = useState(false);
+  const [exportando, setExportando] = useState(false);
 
   const visita = useLiveQuery(() => (visitaId ? getVisita(visitaId) : undefined), [visitaId]);
   const obra = useLiveQuery(() => (visita ? getObra(visita.obraId) : undefined), [visita]);
@@ -58,6 +61,17 @@ export function VisitaDetailPage() {
     }
   }
 
+  async function handleExportarPdf() {
+    setExportando(true);
+    try {
+      await descargarYAbrirPdf(currentVisitaId);
+    } catch {
+      window.alert("No se pudo generar el PDF. Comprueba la conexión e inténtalo de nuevo.");
+    } finally {
+      setExportando(false);
+    }
+  }
+
   async function handleEliminarVisita() {
     if (!window.confirm("¿Eliminar esta visita, con todos sus puntos y adjuntos? No se puede deshacer.")) {
       return;
@@ -78,9 +92,20 @@ export function VisitaDetailPage() {
           <h1 style={{ margin: 0 }}>{visita.titulo || "Visita de obra"}</h1>
           <div className="row">
             {puedeExportar ? (
-              <a href={pdfUrl(visita.id)} className="btn" style={{ textDecoration: "none" }}>
-                Exportar PDF
-              </a>
+              isNative ? (
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={handleExportarPdf}
+                  disabled={exportando}
+                >
+                  {exportando ? "Generando…" : "Exportar PDF"}
+                </button>
+              ) : (
+                <a href={pdfUrl(visita.id)} className="btn" style={{ textDecoration: "none" }}>
+                  Exportar PDF
+                </a>
+              )
             ) : (
               <button
                 type="button"

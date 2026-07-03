@@ -9,6 +9,12 @@
     "preview": "vite preview --host"
   },
   "dependencies": {
+    "@capacitor-community/file-opener": "^8.0.1",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/browser": "^8.0.3",
+    "@capacitor/core": "^8.4.1",
+    "@capacitor/filesystem": "^8.1.2",
+    "@capacitor/preferences": "^8.0.1",
     "@sigram/shared": "*",
     "@tanstack/react-query": "^5.101.2",
     "axios": "^1.18.1",
@@ -21,6 +27,8 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.4.1",
+    "@capacitor/cli": "^8.4.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",

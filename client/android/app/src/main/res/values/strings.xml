@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SIGRAM VISITAS</string>
+    <string name="title_activity_main">SIGRAM VISITAS</string>
+    <string name="package_name">com.sigram.visitas</string>
+    <string name="custom_url_scheme">com.sigram.visitas</string>
+</resources>
