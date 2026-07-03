@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { getNativeToken, loginNativo } from "./auth";
 import { isNative } from "./platform";
+import loginIconDataUri from "./login-icon.png?inline";
 
 // En el APK, sin token guardado no hay sesión posible: se muestra la
 // pantalla de login en vez de la app. Tras el primer login el token queda
@@ -31,18 +32,19 @@ export function NativeAuthGate({ children }: { children: ReactNode }) {
         textAlign: "center",
       }}
     >
-      {/* Como fondo CSS (no <img>) y ya al tamaño exacto de pantalla (no se
-          reescala en tiempo real): un <img> grande reescalado provocaba
-          parpadeos de repintado en el WebView de Android. */}
-      <div
-        role="img"
-        aria-label="SIGRAM VISITAS"
-        style={{
-          width: 96,
-          height: 96,
-          backgroundImage: "url(/icons/icon-login-192.png)",
-          backgroundSize: "cover",
-        }}
+      {/* El WebView de algunos móviles (visto en Realme/ColorOS) descarta y
+          re-rasteriza periódicamente la textura de la imagen, haciéndola
+          desaparecer un instante cada ~0,3s. Dos defensas combinadas: el
+          logo va incrustado como data URI en el bundle (nada que recargar
+          ni descodificar aparte) y translateZ(0) lo fija en su propia capa
+          de composición para que no se vuelva a rasterizar. */}
+      <img
+        src={loginIconDataUri}
+        alt=""
+        width={96}
+        height={96}
+        decoding="sync"
+        style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
       />
       <h1 style={{ margin: 0 }}>SIGRAM VISITAS</h1>
       <p className="muted" style={{ maxWidth: 320 }}>
