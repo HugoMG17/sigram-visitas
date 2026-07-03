@@ -84,6 +84,17 @@ export async function ensureSchema(): Promise<void> {
     "CREATE INDEX IF NOT EXISTS idx_adjuntos_visita_id ON adjuntos(visita_id);"
   );
 
+  await sqlClient.execute(`
+    CREATE TABLE IF NOT EXISTS tokens_nativos (
+      token_hash TEXT PRIMARY KEY,
+      email TEXT NOT NULL,
+      google_access_token TEXT NOT NULL,
+      google_refresh_token TEXT,
+      created_at TEXT NOT NULL,
+      last_used_at TEXT NOT NULL
+    );
+  `);
+
   await migrateAdjuntosDriveColumns();
   await migrateAdjuntosPuntoColumn();
   await migratePuntosTituloColumn();

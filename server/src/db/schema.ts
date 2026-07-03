@@ -54,6 +54,20 @@ export const puntos = sqliteTable("puntos", {
   deletedAt: text("deleted_at"),
 });
 
+// Sesiones de la app Android nativa (Capacitor). El APK no puede usar la
+// cookie de sesión (el login corre en el navegador del sistema, cuyas
+// cookies no llegan al WebView de la app), así que se autentica con un
+// token Bearer. Se guarda el SHA-256 del token, nunca el token en claro,
+// junto con los tokens de Google del usuario (necesarios para Drive).
+export const tokensNativos = sqliteTable("tokens_nativos", {
+  tokenHash: text("token_hash").primaryKey(),
+  email: text("email").notNull(),
+  googleAccessToken: text("google_access_token").notNull(),
+  googleRefreshToken: text("google_refresh_token"),
+  createdAt: text("created_at").notNull(),
+  lastUsedAt: text("last_used_at").notNull(),
+});
+
 export const adjuntos = sqliteTable("adjuntos", {
   id: text("id").primaryKey(),
   visitaId: text("visita_id")

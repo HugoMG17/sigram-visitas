@@ -26,10 +26,15 @@ const app = express();
 // así que solo hace falta aceptar peticiones con credenciales de esa URL
 // concreta -- reflejar "cualquier origen" (origin: true) era necesario en
 // dev (cliente en :5173, servidor en :4000, orígenes distintos) pero es una
-// puerta abierta de más en producción con usuarios reales.
+// puerta abierta de más en producción con usuarios reales. La app Android
+// (Capacitor) sirve su WebView desde https://localhost / capacitor://localhost
+// y se autentica por token Bearer (no cookie), pero su origen también tiene
+// que estar permitido para que el navegador embebido deje pasar las llamadas.
 app.use(
   cors({
-    origin: env.publicUrl ? env.publicUrl.replace(/\/$/, "") : true,
+    origin: env.publicUrl
+      ? [env.publicUrl.replace(/\/$/, ""), "https://localhost", "capacitor://localhost"]
+      : true,
     credentials: true,
   })
 );
