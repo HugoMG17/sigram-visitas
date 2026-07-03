@@ -18,7 +18,7 @@ export function SyncBadge() {
   }
 
   return (
-    <div className="stack" style={{ gap: "0.3rem", alignItems: "flex-end" }}>
+    <div className="stack" style={{ gap: "0.4rem" }}>
       <div className="row" style={{ gap: "0.5rem" }}>
         <span
           className="badge"
@@ -50,9 +50,9 @@ export function SyncBadge() {
         </button>
       </div>
       {errores.length > 0 && (
-        <div className="stack" style={{ gap: "0.15rem", maxWidth: 320 }}>
+        <div className="stack" style={{ gap: "0.2rem" }}>
           {errores.map((e, i) => (
-            <p key={i} className="error-text" style={{ margin: 0, fontSize: "0.75rem", textAlign: "right" }}>
+            <p key={i} className="error-text" style={{ margin: 0, fontSize: "0.75rem" }}>
               {e.entidad} "{e.nombre}": {e.mensaje}
             </p>
           ))}

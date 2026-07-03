@@ -8,7 +8,7 @@ export function Layout({ children }: { children: ReactNode }) {
     <div>
       <header className="app-header">
         <Link to="/">SIGRAM VISITAS</Link>
-        <div className="stack" style={{ gap: "0.3rem", alignItems: "flex-end" }}>
+        <div className="header-right">
           <AuthStatus />
           <SyncBadge />
         </div>
