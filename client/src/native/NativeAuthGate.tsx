@@ -31,7 +31,9 @@ export function NativeAuthGate({ children }: { children: ReactNode }) {
         textAlign: "center",
       }}
     >
-      <img src="/icons/icon-512.png" alt="" width={96} height={96} style={{ borderRadius: 16 }} />
+      {/* Sin border-radius: en el WebView de Android, redondear una imagen
+          directamente suele provocar parpadeos de repintado. */}
+      <img src="/icons/icon-512.png" alt="" width={96} height={96} />
       <h1 style={{ margin: 0 }}>SIGRAM VISITAS</h1>
       <p className="muted" style={{ maxWidth: 320 }}>
         Inicia sesión con tu cuenta de Google para empezar. Solo hace falta la
