@@ -16,6 +16,7 @@ import { downloadBlob, downloadFromUrl } from "../utils/download";
 import type { LocalAdjunto } from "../db/db";
 import { AttachmentCapture } from "../components/AttachmentCapture";
 import { AdjuntoImage } from "../components/AdjuntoImage";
+import { PhotoLightbox } from "../components/PhotoLightbox";
 import { DocumentoLink } from "../components/DocumentoLink";
 import { PuntoCard } from "../components/PuntoCard";
 import { AddPuntoForm } from "../components/AddPuntoForm";
@@ -25,6 +26,7 @@ export function VisitaDetailPage() {
   const navigate = useNavigate();
   const [syncing, setSyncing] = useState(false);
   const [exportando, setExportando] = useState(false);
+  const [fotoAbierta, setFotoAbierta] = useState<LocalAdjunto | null>(null);
 
   const visita = useLiveQuery(() => (visitaId ? getVisita(visitaId) : undefined), [visitaId]);
   const obra = useLiveQuery(() => (visita ? getObra(visita.obraId) : undefined), [visita]);
@@ -189,7 +191,11 @@ export function VisitaDetailPage() {
           <div className="photo-grid">
             {fotos.map((foto) => (
               <div key={foto.id} className="photo-thumb">
-                <AdjuntoImage adjunto={foto} alt={foto.caption ?? "Foto de la visita"} />
+                <AdjuntoImage
+                  adjunto={foto}
+                  alt={foto.caption ?? "Foto de la visita"}
+                  onClick={() => setFotoAbierta(foto)}
+                />
                 {foto.syncStatus === "pending" && (
                   <span
                     className="badge"
@@ -268,6 +274,8 @@ export function VisitaDetailPage() {
 
         {adjuntosGenerales.length === 0 && <p className="muted">Todavía no hay adjuntos generales.</p>}
       </div>
+
+      {fotoAbierta && <PhotoLightbox adjunto={fotoAbierta} onClose={() => setFotoAbierta(null)} />}
     </div>
   );
 }

@@ -15,6 +15,7 @@ import { runSync } from "../sync/syncEngine";
 import { downloadBlob, downloadFromUrl } from "../utils/download";
 import { AttachmentCapture } from "./AttachmentCapture";
 import { AdjuntoImage } from "./AdjuntoImage";
+import { PhotoLightbox } from "./PhotoLightbox";
 
 async function descargarAdjunto(adjunto: LocalAdjunto) {
   try {
@@ -41,6 +42,7 @@ export function PuntoCard({
 }) {
   const adjuntos = useLiveQuery(() => listAdjuntosDePunto(punto.id), [punto.id]) ?? [];
   const [descripcion, setDescripcion] = useState(punto.descripcion ?? "");
+  const [fotoAbierta, setFotoAbierta] = useState<LocalAdjunto | null>(null);
 
   const toggleMutation = useMutation({
     networkMode: "always",
@@ -157,7 +159,11 @@ export function PuntoCard({
         <div className="photo-grid">
           {adjuntos.map((foto) => (
             <div key={foto.id} className="photo-thumb">
-              <AdjuntoImage adjunto={foto} alt={foto.caption ?? "Foto del punto"} />
+              <AdjuntoImage
+                adjunto={foto}
+                alt={foto.caption ?? "Foto del punto"}
+                onClick={() => setFotoAbierta(foto)}
+              />
               {foto.syncStatus === "pending" && (
                 <span
                   className="badge"
@@ -209,6 +215,8 @@ export function PuntoCard({
           ))}
         </div>
       )}
+
+      {fotoAbierta && <PhotoLightbox adjunto={fotoAbierta} onClose={() => setFotoAbierta(null)} />}
     </div>
   );
 }
