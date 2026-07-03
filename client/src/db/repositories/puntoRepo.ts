@@ -51,6 +51,25 @@ export async function setPuntoDescripcionLocal(id: string, descripcion: string):
   });
 }
 
+export async function movePuntoLocal(
+  visitaId: string,
+  puntoId: string,
+  direccion: "arriba" | "abajo"
+): Promise<void> {
+  const ordenados = await listPuntosDeVisita(visitaId);
+  const index = ordenados.findIndex((p) => p.id === puntoId);
+  if (index === -1) return;
+
+  const destino = direccion === "arriba" ? index - 1 : index + 1;
+  if (destino < 0 || destino >= ordenados.length) return;
+
+  const actual = ordenados[index];
+  const vecino = ordenados[destino];
+  const now = new Date().toISOString();
+  await db.puntos.put({ ...actual, orden: vecino.orden, updatedAt: now, syncStatus: "pending" });
+  await db.puntos.put({ ...vecino, orden: actual.orden, updatedAt: now, syncStatus: "pending" });
+}
+
 export async function softDeletePuntoLocal(id: string): Promise<void> {
   const existing = await db.puntos.get(id);
   if (!existing) return;

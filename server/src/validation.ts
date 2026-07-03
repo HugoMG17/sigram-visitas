@@ -53,6 +53,10 @@ export const puntoUpsertSchema = z.object({
   titulo: z.string().nullish(),
   descripcion: z.string().optional(),
   estado: estadoPuntoSchema,
+  // Solo se tiene en cuenta al actualizar un punto ya existente (reordenar
+  // con las flechas); al crear uno nuevo el servidor sigue calculando el
+  // siguiente orden por su cuenta, ignorando lo que venga aquí.
+  orden: z.coerce.number().int().optional(),
 });
 
 export const adjuntoMetaSchema = z.object({

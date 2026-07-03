@@ -5,6 +5,7 @@ import { ESTADO_PUNTO_LABELS } from "@sigram/shared";
 import type { LocalPunto } from "../db/db";
 import { listAdjuntosDePunto, deleteAdjuntoLocal } from "../db/repositories/adjuntoRepo";
 import {
+  movePuntoLocal,
   setPuntoDescripcionLocal,
   setPuntoEstadoLocal,
   softDeletePuntoLocal,
@@ -13,7 +14,15 @@ import { runSync } from "../sync/syncEngine";
 import { AttachmentCapture } from "./AttachmentCapture";
 import { AdjuntoImage } from "./AdjuntoImage";
 
-export function PuntoCard({ punto }: { punto: LocalPunto }) {
+export function PuntoCard({
+  punto,
+  isFirst,
+  isLast,
+}: {
+  punto: LocalPunto;
+  isFirst: boolean;
+  isLast: boolean;
+}) {
   const adjuntos = useLiveQuery(() => listAdjuntosDePunto(punto.id), [punto.id]) ?? [];
   const [descripcion, setDescripcion] = useState(punto.descripcion ?? "");
 
@@ -21,6 +30,13 @@ export function PuntoCard({ punto }: { punto: LocalPunto }) {
     networkMode: "always",
     mutationFn: () =>
       setPuntoEstadoLocal(punto.id, punto.estado === "pendiente" ? "solucionado" : "pendiente"),
+    onSuccess: () => void runSync(),
+  });
+
+  const moveMutation = useMutation({
+    networkMode: "always",
+    mutationFn: (direccion: "arriba" | "abajo") =>
+      movePuntoLocal(punto.visitaId, punto.id, direccion),
     onSuccess: () => void runSync(),
   });
 
@@ -59,6 +75,26 @@ export function PuntoCard({ punto }: { punto: LocalPunto }) {
           </span>
         </div>
         <div className="row" style={{ gap: "0.4rem" }}>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            title="Subir"
+            style={{ padding: "0.3rem 0.5rem", fontSize: "0.8rem" }}
+            onClick={() => moveMutation.mutate("arriba")}
+            disabled={isFirst || moveMutation.isPending}
+          >
+            ↑
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            title="Bajar"
+            style={{ padding: "0.3rem 0.5rem", fontSize: "0.8rem" }}
+            onClick={() => moveMutation.mutate("abajo")}
+            disabled={isLast || moveMutation.isPending}
+          >
+            ↓
+          </button>
           <button
             type="button"
             className="btn btn-secondary"

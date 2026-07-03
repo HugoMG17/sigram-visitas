@@ -126,8 +126,13 @@ export function VisitaDetailPage() {
         {puntos.length === 0 && (
           <p className="muted">Todavía no hay puntos registrados en esta visita.</p>
         )}
-        {puntos.map((punto) => (
-          <PuntoCard key={punto.id} punto={punto} />
+        {puntos.map((punto, index) => (
+          <PuntoCard
+            key={punto.id}
+            punto={punto}
+            isFirst={index === 0}
+            isLast={index === puntos.length - 1}
+          />
         ))}
       </div>
 

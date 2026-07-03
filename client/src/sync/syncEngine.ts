@@ -82,7 +82,7 @@ async function pushPuntos(): Promise<void> {
       if (punto.deletedAt) {
         await deletePunto(punto.id);
       } else {
-        const { id, syncStatus: _s, syncError: _e, orden: _o, createdAt: _c, updatedAt: _u, deletedAt: _d, ...data } =
+        const { id, syncStatus: _s, syncError: _e, createdAt: _c, updatedAt: _u, deletedAt: _d, ...data } =
           punto;
         await savePunto(id, data);
       }

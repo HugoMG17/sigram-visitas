@@ -1,7 +1,11 @@
 import type { Punto } from "@sigram/shared";
 import { apiClient } from "./client";
 
-export type PuntoInput = Omit<Punto, "id" | "orden" | "createdAt" | "updatedAt" | "deletedAt">;
+export type PuntoInput = Omit<Punto, "id" | "orden" | "createdAt" | "updatedAt" | "deletedAt"> & {
+  // Solo se tiene en cuenta al actualizar un punto ya existente (para
+  // reordenarlo); el servidor lo ignora al crear uno nuevo.
+  orden?: number;
+};
 
 export async function fetchPuntosDeVisita(visitaId: string): Promise<Punto[]> {
   const res = await apiClient.get<Punto[]>(`/visitas/${visitaId}/puntos`);
