@@ -4,12 +4,13 @@ import { db } from "../db/db";
 
 export function usePendingCount(): number {
   const count = useLiveQuery(async () => {
-    const [o, v, a] = await Promise.all([
+    const [o, v, p, a] = await Promise.all([
       db.obras.where("syncStatus").equals("pending").count(),
       db.visitas.where("syncStatus").equals("pending").count(),
+      db.puntos.where("syncStatus").equals("pending").count(),
       db.adjuntos.where("syncStatus").equals("pending").count(),
     ]);
-    return o + v + a;
+    return o + v + p + a;
   }, []);
   return count ?? 0;
 }
@@ -22,9 +23,10 @@ export interface SyncErrorInfo {
 
 export function useSyncErrors(): SyncErrorInfo[] {
   const errores = useLiveQuery(async () => {
-    const [obras, visitas, adjuntos] = await Promise.all([
+    const [obras, visitas, puntos, adjuntos] = await Promise.all([
       db.obras.where("syncStatus").equals("error").toArray(),
       db.visitas.where("syncStatus").equals("error").toArray(),
+      db.puntos.where("syncStatus").equals("error").toArray(),
       db.adjuntos.where("syncStatus").equals("error").toArray(),
     ]);
     return [
@@ -33,6 +35,11 @@ export function useSyncErrors(): SyncErrorInfo[] {
         entidad: "Visita",
         nombre: v.titulo || "Visita de obra",
         mensaje: v.syncError ?? "Error desconocido",
+      })),
+      ...puntos.map((p) => ({
+        entidad: "Punto",
+        nombre: p.titulo || "Punto sin título",
+        mensaje: p.syncError ?? "Error desconocido",
       })),
       ...adjuntos.map((a) => ({
         entidad: "Adjunto",

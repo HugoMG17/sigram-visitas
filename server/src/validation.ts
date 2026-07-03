@@ -44,7 +44,13 @@ export const visitaUpsertSchema = z.object({
 
 export const puntoUpsertSchema = z.object({
   visitaId: uuidSchema,
-  titulo: z.string().min(1),
+  // Sin .min(1) y con .nullish() (admite tanto ausente como null): los
+  // puntos creados antes de que existiera el título tienen titulo NULL en
+  // la base de datos, y el cliente lo manda tal cual (null, no ausente) al
+  // sincronizarlos -- rechazarlo dejaría esos puntos (y sus fotos, que no
+  // suben hasta que el punto sincronice) atascados en error para siempre.
+  // El formulario de creación sigue exigiendo un título no vacío en el cliente.
+  titulo: z.string().nullish(),
   descripcion: z.string().optional(),
   estado: estadoPuntoSchema,
 });

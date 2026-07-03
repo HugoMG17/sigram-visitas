@@ -53,7 +53,7 @@ export function PuntoCard({ punto }: { punto: LocalPunto }) {
               flexShrink: 0,
             }}
           />
-          <strong>{punto.titulo}</strong>
+          <strong>{punto.titulo || "Punto sin título"}</strong>
           <span className="muted" style={{ fontSize: "0.8rem" }}>
             Estado: {ESTADO_PUNTO_LABELS[punto.estado]}
           </span>

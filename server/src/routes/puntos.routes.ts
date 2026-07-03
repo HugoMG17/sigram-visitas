@@ -43,7 +43,7 @@ puntosRouter.put(
     }
 
     const ownedPunto = await findOwnedPunto(id, email);
-    const values = { ...data, descripcion: data.descripcion ?? "" };
+    const values = { ...data, titulo: data.titulo ?? "", descripcion: data.descripcion ?? "" };
 
     if (ownedPunto) {
       await db
