@@ -1,3 +1,4 @@
+import axios from "axios";
 import { Directory, Filesystem } from "@capacitor/filesystem";
 import { FileOpener } from "@capacitor-community/file-opener";
 import { apiClient } from "../api/client";
@@ -51,7 +52,16 @@ export async function downloadBlob(blob: Blob, fileName: string): Promise<void> 
 // Para ficheros que aún no tenemos en el dispositivo (ya sincronizados,
 // solo existen en el servidor/Drive): los pide primero y reutiliza la
 // misma lógica de guardado de arriba.
+//
+// La URL viene ya con el prefijo "/api" incluido como texto (ver
+// resolveAdjuntoFileUrl); pedirla otra vez a través de apiClient (que
+// además antepone su propio baseURL "/api" en web) la duplicaría
+// ("/api/api/..."), el mismo fallo que ya se dio con /auth/me. En web se usa
+// axios "a pelo" con la cookie de sesión; en el APK, apiClient sí hace
+// falta para que el interceptor añada el token Bearer.
 export async function downloadFromUrl(url: string, fileName: string): Promise<void> {
-  const res = await apiClient.get<Blob>(url, { responseType: "blob" });
+  const res = isNative
+    ? await apiClient.get<Blob>(url, { responseType: "blob" })
+    : await axios.get<Blob>(url, { responseType: "blob", withCredentials: true });
   await downloadBlob(res.data, fileName);
 }
