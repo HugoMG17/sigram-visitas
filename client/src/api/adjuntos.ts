@@ -37,3 +37,15 @@ export function adjuntoUrl(rutaRelativa: string): string {
 export function adjuntoDriveUrl(id: string, variante: "file" | "thumbnail"): string {
   return `${apiClient.defaults.baseURL}/adjuntos/${id}/${variante}`;
 }
+
+// URL del fichero completo (no la miniatura) de un adjunto ya sincronizado,
+// sea cual sea dónde se guardó (Drive o disco del servidor). undefined si
+// todavía no se ha subido (solo existe como blob local).
+export function resolveAdjuntoFileUrl(adjunto: {
+  id: string;
+  driveFileId?: string;
+  rutaServidor?: string;
+}): string | undefined {
+  if (adjunto.driveFileId) return adjuntoDriveUrl(adjunto.id, "file");
+  return adjunto.rutaServidor ? adjuntoUrl(adjunto.rutaServidor) : undefined;
+}

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useMutation } from "@tanstack/react-query";
 import { ESTADO_PUNTO_LABELS } from "@sigram/shared";
-import type { LocalPunto } from "../db/db";
+import type { LocalAdjunto, LocalPunto } from "../db/db";
 import { listAdjuntosDePunto, deleteAdjuntoLocal } from "../db/repositories/adjuntoRepo";
 import {
   movePuntoLocal,
@@ -10,9 +10,25 @@ import {
   setPuntoEstadoLocal,
   softDeletePuntoLocal,
 } from "../db/repositories/puntoRepo";
+import { resolveAdjuntoFileUrl } from "../api/adjuntos";
 import { runSync } from "../sync/syncEngine";
+import { downloadBlob, downloadFromUrl } from "../utils/download";
 import { AttachmentCapture } from "./AttachmentCapture";
 import { AdjuntoImage } from "./AdjuntoImage";
+
+async function descargarAdjunto(adjunto: LocalAdjunto) {
+  try {
+    if (adjunto.blobLocal) {
+      await downloadBlob(adjunto.blobLocal, adjunto.nombreArchivo);
+      return;
+    }
+    const url = resolveAdjuntoFileUrl(adjunto);
+    if (!url) return;
+    await downloadFromUrl(url, adjunto.nombreArchivo);
+  } catch {
+    window.alert("No se pudo descargar el archivo.");
+  }
+}
 
 export function PuntoCard({
   punto,
@@ -156,6 +172,21 @@ export function PuntoCard({
                   pendiente
                 </span>
               )}
+              <button
+                type="button"
+                className="btn btn-secondary"
+                title="Descargar"
+                style={{
+                  position: "absolute",
+                  top: 4,
+                  left: 4,
+                  padding: "0.15rem 0.5rem",
+                  fontSize: "0.75rem",
+                }}
+                onClick={() => void descargarAdjunto(foto)}
+              >
+                ⬇
+              </button>
               <button
                 type="button"
                 className="btn btn-danger"

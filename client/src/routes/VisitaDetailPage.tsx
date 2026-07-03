@@ -8,9 +8,12 @@ import { getVisita, softDeleteVisitaLocal } from "../db/repositories/visitaRepo"
 import { getObra } from "../db/repositories/obraRepo";
 import { listAdjuntos, deleteAdjuntoLocal } from "../db/repositories/adjuntoRepo";
 import { listPuntosDeVisita } from "../db/repositories/puntoRepo";
+import { resolveAdjuntoFileUrl } from "../api/adjuntos";
 import { runSync } from "../sync/syncEngine";
 import { isNative } from "../native/platform";
 import { descargarYAbrirPdf } from "../native/pdf";
+import { downloadBlob, downloadFromUrl } from "../utils/download";
+import type { LocalAdjunto } from "../db/db";
 import { AttachmentCapture } from "../components/AttachmentCapture";
 import { AdjuntoImage } from "../components/AdjuntoImage";
 import { DocumentoLink } from "../components/DocumentoLink";
@@ -69,6 +72,20 @@ export function VisitaDetailPage() {
       window.alert("No se pudo generar el PDF. Comprueba la conexión e inténtalo de nuevo.");
     } finally {
       setExportando(false);
+    }
+  }
+
+  async function handleDescargarAdjunto(adjunto: LocalAdjunto) {
+    try {
+      if (adjunto.blobLocal) {
+        await downloadBlob(adjunto.blobLocal, adjunto.nombreArchivo);
+        return;
+      }
+      const url = resolveAdjuntoFileUrl(adjunto);
+      if (!url) return;
+      await downloadFromUrl(url, adjunto.nombreArchivo);
+    } catch {
+      window.alert("No se pudo descargar el archivo.");
     }
   }
 
@@ -183,6 +200,21 @@ export function VisitaDetailPage() {
                 )}
                 <button
                   type="button"
+                  className="btn btn-secondary"
+                  title="Descargar"
+                  style={{
+                    position: "absolute",
+                    top: 4,
+                    left: 4,
+                    padding: "0.15rem 0.5rem",
+                    fontSize: "0.75rem",
+                  }}
+                  onClick={() => void handleDescargarAdjunto(foto)}
+                >
+                  ⬇
+                </button>
+                <button
+                  type="button"
                   className="btn btn-danger"
                   style={{
                     position: "absolute",
@@ -209,17 +241,26 @@ export function VisitaDetailPage() {
             {documentos.map((doc) => (
               <div key={doc.id} className="attachment-row row-between">
                 <DocumentoLink adjunto={doc} />
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  onClick={() => {
-                    if (window.confirm("¿Eliminar este documento? No se puede deshacer.")) {
-                      void deleteAdjuntoLocal(doc.id);
-                    }
-                  }}
-                >
-                  Eliminar
-                </button>
+                <div className="row" style={{ gap: "0.4rem" }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => void handleDescargarAdjunto(doc)}
+                  >
+                    Descargar
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    onClick={() => {
+                      if (window.confirm("¿Eliminar este documento? No se puede deshacer.")) {
+                        void deleteAdjuntoLocal(doc.id);
+                      }
+                    }}
+                  >
+                    Eliminar
+                  </button>
+                </div>
               </div>
             ))}
           </div>

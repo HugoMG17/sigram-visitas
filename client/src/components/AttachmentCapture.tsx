@@ -78,11 +78,13 @@ export function AttachmentCapture({
         )}
       </div>
 
+      {/* Sin "capture": con ese atributo el móvil abre la cámara directamente
+          sin dar opción a elegir; sin él, el selector nativo ofrece tanto
+          hacer una foto como elegir de la galería. */}
       <input
         ref={fotoInputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         multiple
         style={{ display: "none" }}
         onChange={(e) => {
