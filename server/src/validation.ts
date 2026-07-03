@@ -63,4 +63,24 @@ export const adjuntoMetaSchema = z.object({
   orden: z.coerce.number().int().optional(),
 });
 
+// El cliente elige libremente qué fichero subir y declara su tipo MIME sin
+// que el navegador lo verifique; el servidor no puede fiarse de ese dato.
+// Se restringe a lo que la app realmente necesita (fotos, PDFs y documentos
+// de oficina) y se excluye explícitamente cualquier cosa que un navegador
+// pueda ejecutar como contenido activo si se abre directamente (SVG, HTML,
+// JS...), que abriría la puerta a XSS almacenado servido desde el propio
+// dominio de la app.
+export const ALLOWED_ADJUNTO_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "text/plain",
+]);
+
 export const idParamSchema = uuidSchema;

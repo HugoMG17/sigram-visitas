@@ -6,7 +6,7 @@ import { adjuntos } from "../db/schema.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { currentUserEmail } from "../middleware/currentUser.js";
 import { findOwnedAdjunto, findOwnedPunto, findOwnedVisita } from "../services/obraAccess.js";
-import { adjuntoMetaSchema, idParamSchema } from "../validation.js";
+import { ALLOWED_ADJUNTO_MIME_TYPES, adjuntoMetaSchema, idParamSchema } from "../validation.js";
 import { deleteAttachmentFiles, saveAttachmentFile } from "../services/fileService.js";
 import {
   buildOAuthClient,
@@ -72,6 +72,10 @@ adjuntosRouter.post(
 
     if (!req.file) {
       res.status(400).json({ error: "Falta el fichero 'file'" });
+      return;
+    }
+    if (!ALLOWED_ADJUNTO_MIME_TYPES.has(req.file.mimetype)) {
+      res.status(400).json({ error: "Tipo de fichero no permitido" });
       return;
     }
 
