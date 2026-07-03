@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { format } from "date-fns";
 import { isImageMime } from "@sigram/shared";
 import { pdfUrl } from "../api/visitas";
-import { getVisita } from "../db/repositories/visitaRepo";
+import { getVisita, softDeleteVisitaLocal } from "../db/repositories/visitaRepo";
 import { getObra } from "../db/repositories/obraRepo";
 import { listAdjuntos, deleteAdjuntoLocal } from "../db/repositories/adjuntoRepo";
 import { listPuntosDeVisita } from "../db/repositories/puntoRepo";
@@ -17,6 +17,7 @@ import { AddPuntoForm } from "../components/AddPuntoForm";
 
 export function VisitaDetailPage() {
   const { visitaId } = useParams<{ visitaId: string }>();
+  const navigate = useNavigate();
   const [syncing, setSyncing] = useState(false);
 
   const visita = useLiveQuery(() => (visitaId ? getVisita(visitaId) : undefined), [visitaId]);
@@ -35,6 +36,9 @@ export function VisitaDetailPage() {
   }
   if (!visita) return <p className="error-text">Visita no encontrada.</p>;
 
+  const currentVisitaId = visita.id;
+  const obraId = visita.obraId;
+
   // Los adjuntos ligados a un punto se muestran dentro de su propia tarjeta;
   // aquí solo quedan los generales de la visita (documentos sueltos, etc.).
   const adjuntosGenerales = adjuntos.filter((a) => !a.puntoId);
@@ -52,6 +56,15 @@ export function VisitaDetailPage() {
     } finally {
       setSyncing(false);
     }
+  }
+
+  async function handleEliminarVisita() {
+    if (!window.confirm("¿Eliminar esta visita, con todos sus puntos y adjuntos? No se puede deshacer.")) {
+      return;
+    }
+    await softDeleteVisitaLocal(currentVisitaId);
+    void runSync();
+    navigate(`/obras/${obraId}`);
   }
 
   return (
@@ -81,6 +94,9 @@ export function VisitaDetailPage() {
             <Link to={`/visitas/${visita.id}/editar`} className="btn btn-secondary">
               Editar
             </Link>
+            <button type="button" className="btn btn-danger" onClick={handleEliminarVisita}>
+              Eliminar
+            </button>
           </div>
         </div>
         <p className="muted" style={{ margin: 0 }}>
@@ -145,7 +161,11 @@ export function VisitaDetailPage() {
                     padding: "0.15rem 0.5rem",
                     fontSize: "0.75rem",
                   }}
-                  onClick={() => deleteAdjuntoLocal(foto.id)}
+                  onClick={() => {
+                    if (window.confirm("¿Eliminar esta foto? No se puede deshacer.")) {
+                      void deleteAdjuntoLocal(foto.id);
+                    }
+                  }}
                 >
                   ✕
                 </button>
@@ -162,7 +182,11 @@ export function VisitaDetailPage() {
                 <button
                   type="button"
                   className="btn btn-danger"
-                  onClick={() => deleteAdjuntoLocal(doc.id)}
+                  onClick={() => {
+                    if (window.confirm("¿Eliminar este documento? No se puede deshacer.")) {
+                      void deleteAdjuntoLocal(doc.id);
+                    }
+                  }}
                 >
                   Eliminar
                 </button>

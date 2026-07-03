@@ -1,18 +1,35 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { format } from "date-fns";
 import { ESTADO_OBRA_LABELS, TIPO_OBRA_LABELS } from "@sigram/shared";
-import { getObra } from "../db/repositories/obraRepo";
+import { getObra, softDeleteObraLocal } from "../db/repositories/obraRepo";
 import { listVisitasDeObra } from "../db/repositories/visitaRepo";
+import { runSync } from "../sync/syncEngine";
 
 export function ObraDetailPage() {
   const { obraId } = useParams<{ obraId: string }>();
+  const navigate = useNavigate();
 
   const obra = useLiveQuery(() => (obraId ? getObra(obraId) : undefined), [obraId]);
   const visitas = useLiveQuery(() => (obraId ? listVisitasDeObra(obraId) : undefined), [obraId]);
 
   if (obra === undefined) return <p className="muted">Cargando obra…</p>;
   if (!obra) return <p className="error-text">Obra no encontrada.</p>;
+
+  const currentObraId = obra.id;
+
+  async function handleEliminarObra() {
+    if (
+      !window.confirm(
+        "¿Eliminar esta obra, con todas sus visitas, puntos y adjuntos? No se puede deshacer."
+      )
+    ) {
+      return;
+    }
+    await softDeleteObraLocal(currentObraId);
+    void runSync();
+    navigate("/");
+  }
 
   return (
     <div className="stack">
@@ -50,6 +67,9 @@ export function ObraDetailPage() {
           <Link to={`/obras/${obra.id}/editar`} className="btn btn-secondary">
             Editar obra
           </Link>
+          <button type="button" className="btn btn-danger" onClick={handleEliminarObra}>
+            Eliminar obra
+          </button>
         </div>
       </div>
 

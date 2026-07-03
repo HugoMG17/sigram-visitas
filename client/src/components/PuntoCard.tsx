@@ -72,7 +72,11 @@ export function PuntoCard({ punto }: { punto: LocalPunto }) {
             type="button"
             className="btn btn-danger"
             style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem" }}
-            onClick={() => deleteMutation.mutate()}
+            onClick={() => {
+              if (window.confirm("¿Eliminar este punto, con sus fotos? No se puede deshacer.")) {
+                deleteMutation.mutate();
+              }
+            }}
           >
             Eliminar
           </button>
@@ -126,7 +130,11 @@ export function PuntoCard({ punto }: { punto: LocalPunto }) {
                   padding: "0.15rem 0.5rem",
                   fontSize: "0.75rem",
                 }}
-                onClick={() => deleteAdjuntoLocal(foto.id)}
+                onClick={() => {
+                  if (window.confirm("¿Eliminar esta foto? No se puede deshacer.")) {
+                    void deleteAdjuntoLocal(foto.id);
+                  }
+                }}
               >
                 ✕
               </button>
