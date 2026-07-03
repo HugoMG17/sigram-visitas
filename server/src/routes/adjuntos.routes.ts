@@ -86,6 +86,17 @@ adjuntosRouter.post(
     }
     const { visita } = owned;
 
+    // El puntoId lo elige el cliente: hay que comprobar que ese punto existe
+    // y cuelga de ESTA visita, o un usuario podría colgar sus adjuntos del
+    // punto de otra persona (aparecerían listados en el punto ajeno).
+    if (meta.puntoId) {
+      const ownedPunto = await findOwnedPunto(meta.puntoId, email);
+      if (!ownedPunto || ownedPunto.punto.visitaId !== visitaId) {
+        res.status(400).json({ error: "El punto indicado no pertenece a esta visita" });
+        return;
+      }
+    }
+
     const now = new Date().toISOString();
     const user = req.user as AuthUser | undefined;
 
