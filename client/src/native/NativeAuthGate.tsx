@@ -31,9 +31,19 @@ export function NativeAuthGate({ children }: { children: ReactNode }) {
         textAlign: "center",
       }}
     >
-      {/* Sin border-radius: en el WebView de Android, redondear una imagen
-          directamente suele provocar parpadeos de repintado. */}
-      <img src="/icons/icon-512.png" alt="" width={96} height={96} />
+      {/* Como fondo CSS (no <img>) y ya al tamaño exacto de pantalla (no se
+          reescala en tiempo real): un <img> grande reescalado provocaba
+          parpadeos de repintado en el WebView de Android. */}
+      <div
+        role="img"
+        aria-label="SIGRAM VISITAS"
+        style={{
+          width: 96,
+          height: 96,
+          backgroundImage: "url(/icons/icon-login-192.png)",
+          backgroundSize: "cover",
+        }}
+      />
       <h1 style={{ margin: 0 }}>SIGRAM VISITAS</h1>
       <p className="muted" style={{ maxWidth: 320 }}>
         Inicia sesión con tu cuenta de Google para empezar. Solo hace falta la
