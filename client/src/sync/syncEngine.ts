@@ -14,7 +14,7 @@ let intervalHandle: ReturnType<typeof setInterval> | undefined;
 function describeError(err: unknown): string {
   if (isAxiosError(err)) {
     if (!err.response) {
-      return `Sin respuesta del servidor (${err.message}). Comprueba que el móvil está en la misma wifi que el ordenador y que el servidor sigue arrancado.`;
+      return `Sin respuesta del servidor (${err.message}). Comprueba tu conexión a internet e inténtalo de nuevo — si el servidor llevaba un rato dormido, la primera petición puede tardar hasta un minuto.`;
     }
     const data = err.response.data as { error?: string } | undefined;
     return `HTTP ${err.response.status}: ${data?.error ?? err.message}`;
