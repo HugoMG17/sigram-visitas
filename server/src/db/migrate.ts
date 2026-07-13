@@ -17,6 +17,17 @@ export async function ensureSchema(): Promise<void> {
       referencia_catastral TEXT,
       promotor TEXT NOT NULL,
       promotor_contacto TEXT,
+      promotor_dni TEXT,
+      constructor_nombre TEXT,
+      constructor_dni TEXT,
+      proyectista_nombre TEXT,
+      proyectista_dni TEXT,
+      arquitecto_nombre TEXT,
+      arquitecto_dni TEXT,
+      arquitecto_tecnico_nombre TEXT,
+      arquitecto_tecnico_dni TEXT,
+      coordinador_ss_nombre TEXT,
+      coordinador_ss_dni TEXT,
       tipo_obra TEXT NOT NULL,
       estado TEXT NOT NULL,
       fecha_inicio TEXT,
@@ -99,6 +110,32 @@ export async function ensureSchema(): Promise<void> {
   await migrateAdjuntosPuntoColumn();
   await migratePuntosTituloColumn();
   await migrateObrasOwnerEmailColumn();
+  await migrateObrasRolesColumns();
+}
+
+// Las bases de datos creadas antes de los roles de obra (constructor,
+// proyectista, dirección facultativa...) no tienen estas columnas; todas
+// admiten NULL, así que basta con ALTER TABLE ADD COLUMN idempotente.
+async function migrateObrasRolesColumns(): Promise<void> {
+  const columnasRoles = [
+    "promotor_dni",
+    "constructor_nombre",
+    "constructor_dni",
+    "proyectista_nombre",
+    "proyectista_dni",
+    "arquitecto_nombre",
+    "arquitecto_dni",
+    "arquitecto_tecnico_nombre",
+    "arquitecto_tecnico_dni",
+    "coordinador_ss_nombre",
+    "coordinador_ss_dni",
+  ];
+  const info = await sqlClient.execute("PRAGMA table_info(obras);");
+  const existentes = new Set(info.rows.map((row) => String(row.name)));
+  for (const columna of columnasRoles) {
+    if (existentes.has(columna)) continue;
+    await sqlClient.execute(`ALTER TABLE obras ADD COLUMN ${columna} TEXT;`);
+  }
 }
 
 // Las bases de datos creadas antes del multi-usuario no tienen owner_email

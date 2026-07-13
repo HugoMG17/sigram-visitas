@@ -1,4 +1,4 @@
-import { ESTADO_OBRA_LABELS, ESTADO_PUNTO_LABELS, TIPO_OBRA_LABELS, isImageMime } from "@sigram/shared";
+import { ESTADO_PUNTO_LABELS, isImageMime } from "@sigram/shared";
 import type { adjuntos, obras, puntos, visitas } from "../db/schema.js";
 
 type ObraRow = typeof obras.$inferSelect;
@@ -14,17 +14,6 @@ function esc(value: string | null | undefined): string {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
-}
-
-function formatFecha(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleString("es-ES", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 function formatFechaSolo(iso: string): string {
@@ -74,14 +63,32 @@ function renderGaleria(attachments: AdjuntoConDataUri[]): string {
   return fotosHtml + documentosHtml;
 }
 
+// En el informe los roles se muestran solo con rol y nombre (sin DNI).
+function renderRoles(obra: ObraRow): string {
+  const df = [
+    obra.arquitectoNombre ? `Arquitecto: ${esc(obra.arquitectoNombre)}` : "",
+    obra.arquitectoTecnicoNombre ? `Arquitecto Técnico: ${esc(obra.arquitectoTecnicoNombre)}` : "",
+    obra.coordinadorSSNombre ? `Coordinador de S. y S.: ${esc(obra.coordinadorSSNombre)}` : "",
+  ].filter(Boolean);
+
+  const lineas = [
+    obra.promotor ? `<div><span class="label">Promotor</span>${esc(obra.promotor)}</div>` : "",
+    df.length ? `<div><span class="label">Dirección Facultativa</span>${df.join("<br/>")}</div>` : "",
+    obra.constructorNombre
+      ? `<div><span class="label">Constructor</span>${esc(obra.constructorNombre)}</div>`
+      : "",
+  ].filter(Boolean);
+
+  return lineas.length ? `<div class="datos-obra">${lineas.join("\n")}</div>` : "";
+}
+
 export function renderInformeVisitaHtml(params: {
   obra: ObraRow;
   visita: VisitaRow;
   adjuntos: AdjuntoConDataUri[];
   puntos: PuntoRow[];
-  numeroVisita: number;
 }): string {
-  const { obra, visita, adjuntos: attachments, puntos: puntosDeVisita, numeroVisita } = params;
+  const { obra, visita, adjuntos: attachments, puntos: puntosDeVisita } = params;
 
   const adjuntosGenerales = attachments.filter((a) => !a.puntoId);
   const adjuntosPorPunto = new Map<string, AdjuntoConDataUri[]>();
@@ -98,13 +105,16 @@ export function renderInformeVisitaHtml(params: {
         <h2>Puntos de la visita</h2>
         ${puntosDeVisita
           .map((punto, index) => {
-            const solucionado = punto.estado === "solucionado";
+            // Con estado "sin_estado" (Vacío) el punto se muestra sin
+            // indicador de estado en el informe.
+            const conEstado = punto.estado === "pendiente" || punto.estado === "solucionado";
+            const dot = punto.estado === "solucionado" ? "dot-verde" : "dot-amarillo";
             return `
               <div class="punto">
                 <div class="punto-cabecera">
-                  <span class="punto-dot ${solucionado ? "dot-verde" : "dot-amarillo"}"></span>
+                  ${conEstado ? `<span class="punto-dot ${dot}"></span>` : ""}
                   <strong>${esc(punto.titulo) || `Punto ${index + 1}`}</strong>
-                  <span class="punto-estado">${ESTADO_PUNTO_LABELS[punto.estado as keyof typeof ESTADO_PUNTO_LABELS] ?? punto.estado}</span>
+                  ${conEstado ? `<span class="punto-estado">${ESTADO_PUNTO_LABELS[punto.estado as keyof typeof ESTADO_PUNTO_LABELS] ?? punto.estado}</span>` : ""}
                 </div>
                 ${punto.descripcion ? `<p class="punto-descripcion">${esc(punto.descripcion)}</p>` : ""}
                 ${renderGaleria(adjuntosPorPunto.get(punto.id) ?? [])}
@@ -118,17 +128,23 @@ export function renderInformeVisitaHtml(params: {
     ? `<section class="anexo"><h2>Otros adjuntos</h2>${renderGaleria(adjuntosGenerales)}</section>`
     : "";
 
+  const direccionCompleta = [obra.direccion, obra.municipio, obra.provincia]
+    .filter(Boolean)
+    .map((parte) => esc(parte))
+    .join(", ");
+
   return `<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8" />
 <style>
-  @page { size: A4; margin: 20mm 16mm; }
+  /* Los márgenes de página los fija Puppeteer (page.pdf), no @page: hace
+     falta margen inferior real para el pie con el número de página. */
   * { box-sizing: border-box; }
-  body { font-family: "Segoe UI", Arial, sans-serif; color: #1e293b; font-size: 12px; }
+  body { font-family: "Segoe UI", Arial, sans-serif; color: #1e293b; font-size: 12px; margin: 0; }
   .portada { margin-bottom: 24px; border-bottom: 3px solid #1e293b; padding-bottom: 16px; }
   .portada h1 { font-size: 22px; margin: 0 0 4px; }
-  .portada .visita-num { color: #2563eb; font-weight: 700; font-size: 14px; }
+  .portada .ref-catastral { color: #64748b; font-size: 11px; margin-top: 3px; }
   .datos-obra { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 24px; margin: 12px 0 20px; }
   .datos-obra div span.label { color: #64748b; font-size: 10px; display: block; text-transform: uppercase; letter-spacing: 0.03em; }
   .notas { margin-bottom: 20px; }
@@ -151,22 +167,20 @@ export function renderInformeVisitaHtml(params: {
   .dot-amarillo { background: #f59e0b; }
   .punto-estado { margin-left: auto; font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.03em; }
   .punto-descripcion { margin: 4px 0 8px; white-space: pre-wrap; }
-  .pie { position: fixed; bottom: -12mm; left: 0; right: 0; font-size: 9px; color: #94a3b8; text-align: center; }
+  .firmas { margin-top: 36px; break-inside: avoid; page-break-inside: avoid; }
+  .firmas h2 { font-size: 14px; margin-bottom: 24px; }
+  .firmas .bloques { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+  .firma { padding-top: 56px; border-top: 1px solid #1e293b; font-size: 11px; }
 </style>
 </head>
 <body>
   <div class="portada">
-    <div class="visita-num">Visita nº ${numeroVisita}</div>
     <h1>${esc(obra.nombre)}</h1>
-    <div>${esc(obra.direccion)}, ${esc(obra.municipio)}, ${esc(obra.provincia)}</div>
+    ${direccionCompleta ? `<div>${direccionCompleta}</div>` : ""}
+    ${obra.referenciaCatastral ? `<div class="ref-catastral">Ref. catastral: ${esc(obra.referenciaCatastral)}</div>` : ""}
   </div>
 
-  <div class="datos-obra">
-    <div><span class="label">Promotor</span>${esc(obra.promotor)}</div>
-    <div><span class="label">Estado de la obra</span>${ESTADO_OBRA_LABELS[obra.estado as keyof typeof ESTADO_OBRA_LABELS]}</div>
-    <div><span class="label">Tipo de obra</span>${TIPO_OBRA_LABELS[obra.tipoObra as keyof typeof TIPO_OBRA_LABELS]}</div>
-    ${obra.referenciaCatastral ? `<div><span class="label">Ref. catastral</span>${esc(obra.referenciaCatastral)}</div>` : ""}
-  </div>
+  ${renderRoles(obra)}
 
   <div class="notas">
     <h2>${esc(visita.titulo) || "Visita de obra"}</h2>
@@ -182,7 +196,13 @@ export function renderInformeVisitaHtml(params: {
 
   ${generalesHtml}
 
-  <div class="pie">Informe generado el ${formatFecha(new Date().toISOString())} — SIGRAM VISITAS</div>
+  <section class="firmas">
+    <h2>Firma de los asistentes:</h2>
+    <div class="bloques">
+      <div class="firma">Fdo. Dirección Facultativa</div>
+      <div class="firma">Fdo. Constructor</div>
+    </div>
+  </section>
 </body>
 </html>`;
 }

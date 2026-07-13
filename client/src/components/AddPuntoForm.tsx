@@ -8,7 +8,7 @@ export function AddPuntoForm({ visitaId }: { visitaId: string }) {
 
   const mutation = useMutation({
     networkMode: "always",
-    mutationFn: () => addPuntoLocal({ visitaId, titulo, estado: "pendiente" }),
+    mutationFn: () => addPuntoLocal({ visitaId, titulo, estado: "sin_estado" }),
     onSuccess: () => {
       setTitulo("");
       void runSync();

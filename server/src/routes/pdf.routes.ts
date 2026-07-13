@@ -34,16 +34,6 @@ pdfRouter.get(
     }
     const { visita, obra } = owned;
 
-    const visitasDeObra = await db
-      .select({ id: visitas.id })
-      .from(visitas)
-      .where(and(eq(visitas.obraId, obra.id), isNull(visitas.deletedAt)))
-      .orderBy(asc(visitas.fecha));
-    const numeroVisita = Math.max(
-      1,
-      visitasDeObra.findIndex((v) => v.id === id) + 1
-    );
-
     const attachments = await db
       .select()
       .from(adjuntos)
@@ -61,7 +51,6 @@ pdfRouter.get(
       visita,
       adjuntos: attachments,
       puntos: puntosDeVisita,
-      numeroVisita,
       user: req.user as AuthUser | undefined,
     });
 

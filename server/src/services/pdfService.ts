@@ -63,7 +63,6 @@ export async function generateInformeVisitaPdf(params: {
   visita: VisitaRow;
   adjuntos: AdjuntoRow[];
   puntos: PuntoRow[];
-  numeroVisita: number;
   user?: AuthUser;
 }): Promise<Buffer> {
   const auth = params.user ? buildOAuthClient(params.user) : undefined;
@@ -93,6 +92,14 @@ export async function generateInformeVisitaPdf(params: {
       format: "A4",
       printBackground: true,
       margin: { top: "20mm", bottom: "20mm", left: "16mm", right: "16mm" },
+      // Pie con numeración "Página X de Y" en todas las páginas; el header
+      // se deja vacío (sin él, Puppeteer pintaría fecha y título por defecto).
+      displayHeaderFooter: true,
+      headerTemplate: "<span></span>",
+      footerTemplate: `
+        <div style="width: 100%; font-size: 9px; color: #94a3b8; text-align: center; font-family: 'Segoe UI', Arial, sans-serif;">
+          Página <span class="pageNumber"></span> de <span class="totalPages"></span>
+        </div>`,
     });
     return Buffer.from(pdf);
   } finally {

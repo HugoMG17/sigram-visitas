@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { useLiveQuery } from "dexie-react-hooks";
-import type { EstadoObra, TipoObra } from "@sigram/shared";
-import { ESTADO_OBRA_LABELS, TIPO_OBRA_LABELS } from "@sigram/shared";
+import type { EstadoObra } from "@sigram/shared";
+import { ESTADO_OBRA_LABELS } from "@sigram/shared";
 import type { ObraInput } from "../api/obras";
 import { getObra, saveObraLocal } from "../db/repositories/obraRepo";
 import { runSync } from "../sync/syncEngine";
@@ -17,13 +17,54 @@ const emptyForm: ObraInput = {
   referenciaCatastral: "",
   promotor: "",
   promotorContacto: "",
-  tipoObra: "reforma",
+  promotorDni: "",
+  constructorNombre: "",
+  constructorDni: "",
+  proyectistaNombre: "",
+  proyectistaDni: "",
+  arquitectoNombre: "",
+  arquitectoDni: "",
+  arquitectoTecnicoNombre: "",
+  arquitectoTecnicoDni: "",
+  coordinadorSSNombre: "",
+  coordinadorSSDni: "",
+  // El tipo de obra ya no se pide en el formulario; se conserva en el modelo
+  // por compatibilidad con los datos existentes.
+  tipoObra: "otro",
   estado: "en_ejecucion",
   fechaInicio: "",
   fechaFinPrevista: "",
   numeroExpediente: "",
   notas: "",
 };
+
+// Un rol de la obra = nombre + DNI, siempre con la misma pareja de campos.
+function CampoRol({
+  label,
+  nombre,
+  dni,
+  onNombre,
+  onDni,
+}: {
+  label: string;
+  nombre: string | undefined;
+  dni: string | undefined;
+  onNombre: (v: string) => void;
+  onDni: (v: string) => void;
+}) {
+  return (
+    <div className="row">
+      <div className="field" style={{ flex: 2, minWidth: 180 }}>
+        <label>{label} — Nombre</label>
+        <input className="input" value={nombre ?? ""} onChange={(e) => onNombre(e.target.value)} />
+      </div>
+      <div className="field" style={{ flex: 1, minWidth: 120 }}>
+        <label>DNI</label>
+        <input className="input" value={dni ?? ""} onChange={(e) => onDni(e.target.value)} />
+      </div>
+    </div>
+  );
+}
 
 export function ObraFormPage() {
   const { obraId } = useParams();
@@ -40,7 +81,7 @@ export function ObraFormPage() {
     if (existing) {
       const { id: _id, createdAt: _c, updatedAt: _u, deletedAt: _d, syncStatus: _s, ...rest } =
         existing;
-      setForm({ ...rest, referenciaCatastral: rest.referenciaCatastral ?? "" });
+      setForm({ ...emptyForm, ...rest, referenciaCatastral: rest.referenciaCatastral ?? "" });
     }
   }, [existing]);
 
@@ -74,10 +115,18 @@ export function ObraFormPage() {
         }}
       >
         <div className="field">
-          <label>Nombre de la obra *</label>
+          <label>Nº de expediente</label>
           <input
             className="input"
-            required
+            value={form.numeroExpediente}
+            onChange={(e) => update("numeroExpediente", e.target.value)}
+          />
+        </div>
+
+        <div className="field">
+          <label>Nombre de la obra</label>
+          <input
+            className="input"
             value={form.nombre}
             onChange={(e) => update("nombre", e.target.value)}
             placeholder="Reforma vivienda Calle Mayor 12"
@@ -85,10 +134,9 @@ export function ObraFormPage() {
         </div>
 
         <div className="field">
-          <label>Dirección *</label>
+          <label>Dirección</label>
           <input
             className="input"
-            required
             value={form.direccion}
             onChange={(e) => update("direccion", e.target.value)}
           />
@@ -96,19 +144,17 @@ export function ObraFormPage() {
 
         <div className="row">
           <div className="field" style={{ flex: 1 }}>
-            <label>Municipio *</label>
+            <label>Municipio</label>
             <input
               className="input"
-              required
               value={form.municipio}
               onChange={(e) => update("municipio", e.target.value)}
             />
           </div>
           <div className="field" style={{ flex: 1 }}>
-            <label>Provincia *</label>
+            <label>Provincia</label>
             <input
               className="input"
-              required
               value={form.provincia}
               onChange={(e) => update("provincia", e.target.value)}
             />
@@ -124,56 +170,19 @@ export function ObraFormPage() {
           />
         </div>
 
-        <div className="row">
-          <div className="field" style={{ flex: 1 }}>
-            <label>Promotor *</label>
-            <input
-              className="input"
-              required
-              value={form.promotor}
-              onChange={(e) => update("promotor", e.target.value)}
-            />
-          </div>
-          <div className="field" style={{ flex: 1 }}>
-            <label>Contacto del promotor</label>
-            <input
-              className="input"
-              value={form.promotorContacto}
-              onChange={(e) => update("promotorContacto", e.target.value)}
-              placeholder="Teléfono o email"
-            />
-          </div>
-        </div>
-
-        <div className="row">
-          <div className="field" style={{ flex: 1 }}>
-            <label>Tipo de obra</label>
-            <select
-              className="input"
-              value={form.tipoObra}
-              onChange={(e) => update("tipoObra", e.target.value as TipoObra)}
-            >
-              {Object.entries(TIPO_OBRA_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="field" style={{ flex: 1 }}>
-            <label>Estado</label>
-            <select
-              className="input"
-              value={form.estado}
-              onChange={(e) => update("estado", e.target.value as EstadoObra)}
-            >
-              {Object.entries(ESTADO_OBRA_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="field">
+          <label>Estado</label>
+          <select
+            className="input"
+            value={form.estado}
+            onChange={(e) => update("estado", e.target.value as EstadoObra)}
+          >
+            {Object.entries(ESTADO_OBRA_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="row">
@@ -197,14 +206,55 @@ export function ObraFormPage() {
           </div>
         </div>
 
-        <div className="field">
-          <label>Nº de expediente</label>
-          <input
-            className="input"
-            value={form.numeroExpediente}
-            onChange={(e) => update("numeroExpediente", e.target.value)}
-          />
-        </div>
+        <h2 style={{ margin: "0.5rem 0 0" }}>Promotor</h2>
+        <CampoRol
+          label="Promotor"
+          nombre={form.promotor}
+          dni={form.promotorDni}
+          onNombre={(v) => update("promotor", v)}
+          onDni={(v) => update("promotorDni", v)}
+        />
+
+        <h2 style={{ margin: "0.5rem 0 0" }}>Dirección Facultativa</h2>
+        <CampoRol
+          label="Arquitecto"
+          nombre={form.arquitectoNombre}
+          dni={form.arquitectoDni}
+          onNombre={(v) => update("arquitectoNombre", v)}
+          onDni={(v) => update("arquitectoDni", v)}
+        />
+        <CampoRol
+          label="Arquitecto Técnico"
+          nombre={form.arquitectoTecnicoNombre}
+          dni={form.arquitectoTecnicoDni}
+          onNombre={(v) => update("arquitectoTecnicoNombre", v)}
+          onDni={(v) => update("arquitectoTecnicoDni", v)}
+        />
+        <CampoRol
+          label="Coordinador de seguridad y salud"
+          nombre={form.coordinadorSSNombre}
+          dni={form.coordinadorSSDni}
+          onNombre={(v) => update("coordinadorSSNombre", v)}
+          onDni={(v) => update("coordinadorSSDni", v)}
+        />
+
+        <h2 style={{ margin: "0.5rem 0 0" }}>Constructor</h2>
+        <CampoRol
+          label="Constructor"
+          nombre={form.constructorNombre}
+          dni={form.constructorDni}
+          onNombre={(v) => update("constructorNombre", v)}
+          onDni={(v) => update("constructorDni", v)}
+        />
+
+        <h2 style={{ margin: "0.5rem 0 0" }}>Proyectista</h2>
+        <CampoRol
+          label="Proyectista"
+          nombre={form.proyectistaNombre}
+          dni={form.proyectistaDni}
+          onNombre={(v) => update("proyectistaNombre", v)}
+          onDni={(v) => update("proyectistaDni", v)}
+        />
 
         <div className="field">
           <label>Notas</label>

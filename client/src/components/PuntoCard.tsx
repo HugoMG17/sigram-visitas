@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useMutation } from "@tanstack/react-query";
-import { ESTADO_PUNTO_LABELS } from "@sigram/shared";
+import { ESTADO_PUNTO_LABELS, type EstadoPunto } from "@sigram/shared";
 import type { LocalAdjunto, LocalPunto } from "../db/db";
 import { listAdjuntosDePunto, deleteAdjuntoLocal } from "../db/repositories/adjuntoRepo";
 import {
@@ -44,10 +44,9 @@ export function PuntoCard({
   const [descripcion, setDescripcion] = useState(punto.descripcion ?? "");
   const [fotoAbierta, setFotoAbierta] = useState<LocalAdjunto | null>(null);
 
-  const toggleMutation = useMutation({
+  const estadoMutation = useMutation({
     networkMode: "always",
-    mutationFn: () =>
-      setPuntoEstadoLocal(punto.id, punto.estado === "pendiente" ? "solucionado" : "pendiente"),
+    mutationFn: (estado: EstadoPunto) => setPuntoEstadoLocal(punto.id, estado),
     onSuccess: () => void runSync(),
   });
 
@@ -70,27 +69,29 @@ export function PuntoCard({
     onSuccess: () => void runSync(),
   });
 
-  const solucionado = punto.estado === "solucionado";
+  const dotColor =
+    punto.estado === "solucionado"
+      ? "#16a34a"
+      : punto.estado === "pendiente"
+        ? "#f59e0b"
+        : "#cbd5e1";
 
   return (
     <div className="card stack" style={{ gap: "0.6rem" }}>
       <div className="row-between">
         <div className="row" style={{ gap: "0.5rem" }}>
           <span
-            title={solucionado ? "Solucionado" : "Pendiente"}
+            title={ESTADO_PUNTO_LABELS[punto.estado]}
             style={{
               display: "inline-block",
               width: 12,
               height: 12,
               borderRadius: "50%",
-              background: solucionado ? "#16a34a" : "#f59e0b",
+              background: dotColor,
               flexShrink: 0,
             }}
           />
           <strong>{punto.titulo || "Punto sin título"}</strong>
-          <span className="muted" style={{ fontSize: "0.8rem" }}>
-            Estado: {ESTADO_PUNTO_LABELS[punto.estado]}
-          </span>
         </div>
         <div className="row" style={{ gap: "0.4rem" }}>
           <button
@@ -113,15 +114,20 @@ export function PuntoCard({
           >
             ↓
           </button>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem" }}
-            onClick={() => toggleMutation.mutate()}
-            disabled={toggleMutation.isPending}
+          <select
+            className="input"
+            aria-label="Estado del punto"
+            style={{ padding: "0.3rem 0.5rem", fontSize: "0.8rem" }}
+            value={punto.estado}
+            onChange={(e) => estadoMutation.mutate(e.target.value as EstadoPunto)}
+            disabled={estadoMutation.isPending}
           >
-            {solucionado ? "Marcar pendiente" : "Marcar solucionado"}
-          </button>
+            {Object.entries(ESTADO_PUNTO_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
           <button
             type="button"
             className="btn btn-danger"

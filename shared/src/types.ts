@@ -21,8 +21,22 @@ export interface Obra {
   municipio: string;
   provincia: string;
   referenciaCatastral?: string;
+  // Roles de la obra (agentes de la edificación), cada uno con nombre y DNI.
+  // "promotor" guarda el nombre del promotor (columna histórica reutilizada).
   promotor: string;
   promotorContacto?: string;
+  promotorDni?: string;
+  constructorNombre?: string;
+  constructorDni?: string;
+  proyectistaNombre?: string;
+  proyectistaDni?: string;
+  // Dirección Facultativa
+  arquitectoNombre?: string;
+  arquitectoDni?: string;
+  arquitectoTecnicoNombre?: string;
+  arquitectoTecnicoDni?: string;
+  coordinadorSSNombre?: string;
+  coordinadorSSDni?: string;
   tipoObra: TipoObra;
   estado: EstadoObra;
   fechaInicio?: string;
@@ -48,7 +62,9 @@ export interface Visita {
   deletedAt?: string | null;
 }
 
-export type EstadoPunto = "pendiente" | "solucionado";
+// "sin_estado" = Vacío: el punto no muestra estado (ni en la app ni en el
+// PDF); es el valor con el que nace un punto nuevo.
+export type EstadoPunto = "sin_estado" | "pendiente" | "solucionado";
 
 export interface Punto {
   id: string;
@@ -84,6 +100,7 @@ export interface Adjunto {
 }
 
 export const ESTADO_PUNTO_LABELS: Record<EstadoPunto, string> = {
+  sin_estado: "Vacío",
   pendiente: "Pendiente",
   solucionado: "Solucionado",
 };

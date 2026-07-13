@@ -52,7 +52,19 @@ obrasRouter.put(
   asyncHandler(async (req, res) => {
     const id = idParamSchema.parse(req.params.id);
     const email = currentUserEmail(req);
-    const data = obraUpsertSchema.parse(req.body);
+    const parsed = obraUpsertSchema.parse(req.body);
+    // Ningún campo es obligatorio en el formulario, pero varias columnas
+    // históricas son NOT NULL en SQLite: se rellenan con valores neutros.
+    const data = {
+      ...parsed,
+      nombre: parsed.nombre ?? "",
+      direccion: parsed.direccion ?? "",
+      municipio: parsed.municipio ?? "",
+      provincia: parsed.provincia ?? "",
+      promotor: parsed.promotor ?? "",
+      tipoObra: parsed.tipoObra ?? "otro",
+      estado: parsed.estado ?? "en_ejecucion",
+    };
     const now = new Date().toISOString();
 
     const [existing] = await db.select().from(obras).where(eq(obras.id, id));

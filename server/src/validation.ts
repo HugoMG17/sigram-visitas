@@ -12,20 +12,34 @@ export const estadoObraSchema = z.enum([
 
 export const tipoAdjuntoSchema = z.enum(["foto", "plano", "documento", "otro"]);
 
-export const estadoPuntoSchema = z.enum(["pendiente", "solucionado"]);
+export const estadoPuntoSchema = z.enum(["sin_estado", "pendiente", "solucionado"]);
 
 const uuidSchema = z.string().uuid();
 
+// Ningún campo de la obra es obligatorio (petición expresa de Hugo): las
+// columnas NOT NULL históricas se rellenan con "" / valores por defecto en
+// la ruta antes de insertar.
 export const obraUpsertSchema = z.object({
-  nombre: z.string().min(1),
-  direccion: z.string().min(1),
-  municipio: z.string().min(1),
-  provincia: z.string().min(1),
+  nombre: z.string().optional(),
+  direccion: z.string().optional(),
+  municipio: z.string().optional(),
+  provincia: z.string().optional(),
   referenciaCatastral: z.string().optional(),
-  promotor: z.string().min(1),
+  promotor: z.string().optional(),
   promotorContacto: z.string().optional(),
-  tipoObra: tipoObraSchema,
-  estado: estadoObraSchema,
+  promotorDni: z.string().optional(),
+  constructorNombre: z.string().optional(),
+  constructorDni: z.string().optional(),
+  proyectistaNombre: z.string().optional(),
+  proyectistaDni: z.string().optional(),
+  arquitectoNombre: z.string().optional(),
+  arquitectoDni: z.string().optional(),
+  arquitectoTecnicoNombre: z.string().optional(),
+  arquitectoTecnicoDni: z.string().optional(),
+  coordinadorSSNombre: z.string().optional(),
+  coordinadorSSDni: z.string().optional(),
+  tipoObra: tipoObraSchema.optional(),
+  estado: estadoObraSchema.optional(),
   fechaInicio: z.string().optional(),
   fechaFinPrevista: z.string().optional(),
   numeroExpediente: z.string().optional(),

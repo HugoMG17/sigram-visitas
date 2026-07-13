@@ -1,10 +1,21 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { format } from "date-fns";
-import { ESTADO_OBRA_LABELS, TIPO_OBRA_LABELS } from "@sigram/shared";
+import { ESTADO_OBRA_LABELS } from "@sigram/shared";
 import { getObra, softDeleteObraLocal } from "../db/repositories/obraRepo";
 import { listVisitasDeObra } from "../db/repositories/visitaRepo";
 import { runSync } from "../sync/syncEngine";
+
+// Línea "Rol: Nombre (DNI)"; no pinta nada si el rol está sin rellenar.
+function LineaRol({ rol, nombre, dni }: { rol: string; nombre?: string; dni?: string }) {
+  if (!nombre && !dni) return null;
+  return (
+    <p style={{ margin: 0 }}>
+      <strong>{rol}:</strong> {nombre || "—"}
+      {dni ? ` (DNI ${dni})` : ""}
+    </p>
+  );
+}
 
 export function ObraDetailPage() {
   const { obraId } = useParams<{ obraId: string }>();
@@ -38,30 +49,39 @@ export function ObraDetailPage() {
       </Link>
 
       <div className="card stack">
+        {obra.numeroExpediente && (
+          <p className="muted" style={{ margin: 0, fontWeight: 600 }}>
+            Nº expediente: {obra.numeroExpediente}
+          </p>
+        )}
         <div className="row-between">
-          <h1 style={{ margin: 0 }}>{obra.nombre}</h1>
+          <h1 style={{ margin: 0 }}>{obra.nombre || "Obra sin nombre"}</h1>
           <span className="badge">{ESTADO_OBRA_LABELS[obra.estado]}</span>
         </div>
-        <p className="muted" style={{ margin: 0 }}>
-          {obra.direccion}, {obra.municipio}, {obra.provincia}
-        </p>
-        <p style={{ margin: 0 }}>
-          <strong>Promotor:</strong> {obra.promotor}
-          {obra.promotorContacto ? ` · ${obra.promotorContacto}` : ""}
-        </p>
-        <p style={{ margin: 0 }}>
-          <strong>Tipo:</strong> {TIPO_OBRA_LABELS[obra.tipoObra]}
-        </p>
+        {(obra.direccion || obra.municipio || obra.provincia) && (
+          <p className="muted" style={{ margin: 0 }}>
+            {[obra.direccion, obra.municipio, obra.provincia].filter(Boolean).join(", ")}
+          </p>
+        )}
         {obra.referenciaCatastral && (
           <p style={{ margin: 0 }}>
             <strong>Ref. catastral:</strong> {obra.referenciaCatastral}
           </p>
         )}
-        {obra.numeroExpediente && (
-          <p style={{ margin: 0 }}>
-            <strong>Nº expediente:</strong> {obra.numeroExpediente}
-          </p>
-        )}
+        <LineaRol rol="Promotor" nombre={obra.promotor} dni={obra.promotorDni} />
+        <LineaRol rol="Arquitecto" nombre={obra.arquitectoNombre} dni={obra.arquitectoDni} />
+        <LineaRol
+          rol="Arquitecto Técnico"
+          nombre={obra.arquitectoTecnicoNombre}
+          dni={obra.arquitectoTecnicoDni}
+        />
+        <LineaRol
+          rol="Coordinador de seguridad y salud"
+          nombre={obra.coordinadorSSNombre}
+          dni={obra.coordinadorSSDni}
+        />
+        <LineaRol rol="Constructor" nombre={obra.constructorNombre} dni={obra.constructorDni} />
+        <LineaRol rol="Proyectista" nombre={obra.proyectistaNombre} dni={obra.proyectistaDni} />
         {obra.notas && <p style={{ margin: 0 }}>{obra.notas}</p>}
         <div className="row">
           <Link to={`/obras/${obra.id}/editar`} className="btn btn-secondary">
