@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -35,8 +35,16 @@ export function VisitaFormPage() {
   });
   const [fechaLocal, setFechaLocal] = useState(nowLocalDate());
 
+  // useLiveQuery reemite `existing` cada vez que Dexie reescribe esta visita
+  // (p.ej. un pull() de fondo del motor de sync), no solo al entrar en la
+  // página -- si el efecto se disparara en cada emisión, esa escritura de
+  // fondo pisaría lo que el usuario ya ha tecleado mientras sigue rellenando
+  // el formulario. Por eso solo se siembra `form` la primera vez que llegan
+  // datos para esta visita.
+  const cargadoParaVisitaId = useRef<string | undefined>(undefined);
+
   useEffect(() => {
-    if (existing) {
+    if (existing && cargadoParaVisitaId.current !== visitaId) {
       setForm({
         obraId: existing.obraId,
         fecha: existing.fecha,
@@ -49,8 +57,9 @@ export function VisitaFormPage() {
       const d = new Date(existing.fecha);
       d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
       setFechaLocal(d.toISOString().slice(0, 10));
+      cargadoParaVisitaId.current = visitaId;
     }
-  }, [existing]);
+  }, [existing, visitaId]);
 
   const mutation = useMutation({
     // networkMode "always": esta escritura va a Dexie (local), no a la red,
