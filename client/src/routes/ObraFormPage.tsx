@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -77,13 +77,22 @@ export function ObraFormPage() {
     [obraId, isEdit]
   );
 
+  // useLiveQuery re-emite `existing` cada vez que Dexie escribe esta obra por
+  // cualquier motivo, incluido un pull() de fondo del motor de sync mientras
+  // el usuario sigue rellenando el formulario -- si el efecto se disparara en
+  // cada emisión, esa escritura de fondo pisaría lo que el usuario ya ha
+  // tecleado. Por eso solo se usa para sembrar `form` la primera vez que
+  // llegan datos para esta obra, no en emisiones posteriores.
+  const cargadoParaObraId = useRef<string | undefined>(undefined);
+
   useEffect(() => {
-    if (existing) {
+    if (existing && cargadoParaObraId.current !== obraId) {
       const { id: _id, createdAt: _c, updatedAt: _u, deletedAt: _d, syncStatus: _s, ...rest } =
         existing;
       setForm({ ...emptyForm, ...rest, referenciaCatastral: rest.referenciaCatastral ?? "" });
+      cargadoParaObraId.current = obraId;
     }
-  }, [existing]);
+  }, [existing, obraId]);
 
   const mutation = useMutation({
     // Escritura local en Dexie: debe ejecutarse aunque TanStack Query crea
