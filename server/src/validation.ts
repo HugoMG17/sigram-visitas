@@ -16,44 +16,52 @@ export const estadoPuntoSchema = z.enum(["sin_estado", "pendiente", "solucionado
 
 const uuidSchema = z.string().uuid();
 
+// Todos los campos opcionales usan .nullish() y no .optional(): las filas
+// creadas antes de que existiera un campo lo tienen a NULL en la base de
+// datos, el pull() del cliente guarda ese null en Dexie y el push lo reenvía
+// tal cual -- .optional() acepta que el campo falte pero rechaza null, lo
+// que dejaba esos registros atascados en "error" para siempre (ya pasó con
+// puntos.titulo y con las columnas de roles de obra).
+const textoOpcional = z.string().nullish();
+
 // Ningún campo de la obra es obligatorio (petición expresa de Hugo): las
 // columnas NOT NULL históricas se rellenan con "" / valores por defecto en
 // la ruta antes de insertar.
 export const obraUpsertSchema = z.object({
-  nombre: z.string().optional(),
-  direccion: z.string().optional(),
-  municipio: z.string().optional(),
-  provincia: z.string().optional(),
-  referenciaCatastral: z.string().optional(),
-  promotor: z.string().optional(),
-  promotorContacto: z.string().optional(),
-  promotorDni: z.string().optional(),
-  constructorNombre: z.string().optional(),
-  constructorDni: z.string().optional(),
-  proyectistaNombre: z.string().optional(),
-  proyectistaDni: z.string().optional(),
-  arquitectoNombre: z.string().optional(),
-  arquitectoDni: z.string().optional(),
-  arquitectoTecnicoNombre: z.string().optional(),
-  arquitectoTecnicoDni: z.string().optional(),
-  coordinadorSSNombre: z.string().optional(),
-  coordinadorSSDni: z.string().optional(),
-  tipoObra: tipoObraSchema.optional(),
-  estado: estadoObraSchema.optional(),
-  fechaInicio: z.string().optional(),
-  fechaFinPrevista: z.string().optional(),
-  numeroExpediente: z.string().optional(),
-  notas: z.string().optional(),
+  nombre: textoOpcional,
+  direccion: textoOpcional,
+  municipio: textoOpcional,
+  provincia: textoOpcional,
+  referenciaCatastral: textoOpcional,
+  promotor: textoOpcional,
+  promotorContacto: textoOpcional,
+  promotorDni: textoOpcional,
+  constructorNombre: textoOpcional,
+  constructorDni: textoOpcional,
+  proyectistaNombre: textoOpcional,
+  proyectistaDni: textoOpcional,
+  arquitectoNombre: textoOpcional,
+  arquitectoDni: textoOpcional,
+  arquitectoTecnicoNombre: textoOpcional,
+  arquitectoTecnicoDni: textoOpcional,
+  coordinadorSSNombre: textoOpcional,
+  coordinadorSSDni: textoOpcional,
+  tipoObra: tipoObraSchema.nullish(),
+  estado: estadoObraSchema.nullish(),
+  fechaInicio: textoOpcional,
+  fechaFinPrevista: textoOpcional,
+  numeroExpediente: textoOpcional,
+  notas: textoOpcional,
 });
 
 export const visitaUpsertSchema = z.object({
   obraId: uuidSchema,
   fecha: z.string().min(1),
-  titulo: z.string().optional(),
-  notas: z.string().optional(),
-  tiempoAtmosferico: z.string().optional(),
-  asistentes: z.string().optional(),
-  ubicacionGps: z.string().optional(),
+  titulo: textoOpcional,
+  notas: textoOpcional,
+  tiempoAtmosferico: textoOpcional,
+  asistentes: textoOpcional,
+  ubicacionGps: textoOpcional,
 });
 
 export const puntoUpsertSchema = z.object({
@@ -64,8 +72,8 @@ export const puntoUpsertSchema = z.object({
   // sincronizarlos -- rechazarlo dejaría esos puntos (y sus fotos, que no
   // suben hasta que el punto sincronice) atascados en error para siempre.
   // El formulario de creación sigue exigiendo un título no vacío en el cliente.
-  titulo: z.string().nullish(),
-  descripcion: z.string().optional(),
+  titulo: textoOpcional,
+  descripcion: textoOpcional,
   estado: estadoPuntoSchema,
   // Solo se tiene en cuenta al actualizar un punto ya existente (reordenar
   // con las flechas); al crear uno nuevo el servidor sigue calculando el
@@ -77,7 +85,7 @@ export const adjuntoMetaSchema = z.object({
   id: uuidSchema,
   puntoId: uuidSchema.optional(),
   tipo: tipoAdjuntoSchema,
-  caption: z.string().optional(),
+  caption: textoOpcional,
   orden: z.coerce.number().int().optional(),
 });
 
