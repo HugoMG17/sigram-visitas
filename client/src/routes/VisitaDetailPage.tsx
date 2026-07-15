@@ -2,14 +2,21 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { format } from "date-fns";
+import { isImageMime } from "@sigram/shared";
 import { pdfUrl } from "../api/visitas";
 import { getVisita, softDeleteVisitaLocal } from "../db/repositories/visitaRepo";
 import { getObra } from "../db/repositories/obraRepo";
-import { listAdjuntos } from "../db/repositories/adjuntoRepo";
+import { listAdjuntos, deleteAdjuntoLocal } from "../db/repositories/adjuntoRepo";
 import { listPuntosDeVisita } from "../db/repositories/puntoRepo";
+import { resolveAdjuntoFileUrl } from "../api/adjuntos";
 import { runSync } from "../sync/syncEngine";
 import { isNative } from "../native/platform";
 import { descargarYAbrirPdf } from "../native/pdf";
+import { downloadBlob, downloadFromUrl } from "../utils/download";
+import type { LocalAdjunto } from "../db/db";
+import { AttachmentCapture } from "../components/AttachmentCapture";
+import { AdjuntoImage } from "../components/AdjuntoImage";
+import { PhotoLightbox } from "../components/PhotoLightbox";
 import { PuntoCard } from "../components/PuntoCard";
 import { AddPuntoForm } from "../components/AddPuntoForm";
 
@@ -18,6 +25,7 @@ export function VisitaDetailPage() {
   const navigate = useNavigate();
   const [syncing, setSyncing] = useState(false);
   const [exportando, setExportando] = useState(false);
+  const [fotoAbierta, setFotoAbierta] = useState<LocalAdjunto | null>(null);
 
   const visita = useLiveQuery(() => (visitaId ? getVisita(visitaId) : undefined), [visitaId]);
   const obra = useLiveQuery(() => (visita ? getObra(visita.obraId) : undefined), [visita]);
@@ -38,9 +46,9 @@ export function VisitaDetailPage() {
   const currentVisitaId = visita.id;
   const obraId = visita.obraId;
 
-  // Los adjuntos generales de la visita ya no se gestionan aquí (se suben
-  // desde "Editar visita"); solo se siguen consultando para saber si están
-  // todos sincronizados antes de permitir exportar el PDF, donde sí aparecen.
+  // Las fotos ligadas a un punto se muestran dentro de su propia tarjeta;
+  // aquí solo las fotos generales de la visita, no ligadas a ningún punto.
+  const fotosGenerales = adjuntos.filter((a) => !a.puntoId && isImageMime(a.mimeType));
   const puedeExportar =
     visita.syncStatus === "synced" &&
     adjuntos.every((a) => a.syncStatus === "synced") &&
@@ -63,6 +71,20 @@ export function VisitaDetailPage() {
       window.alert("No se pudo generar el PDF. Comprueba la conexión e inténtalo de nuevo.");
     } finally {
       setExportando(false);
+    }
+  }
+
+  async function handleDescargarAdjunto(adjunto: LocalAdjunto) {
+    try {
+      if (adjunto.blobLocal) {
+        await downloadBlob(adjunto.blobLocal, adjunto.nombreArchivo);
+        return;
+      }
+      const url = resolveAdjuntoFileUrl(adjunto);
+      if (!url) return;
+      await downloadFromUrl(url, adjunto.nombreArchivo);
+    } catch {
+      window.alert("No se pudo descargar el archivo.");
     }
   }
 
@@ -132,6 +154,71 @@ export function VisitaDetailPage() {
       </div>
 
       <div className="card stack">
+        <h2 style={{ margin: 0 }}>Fotos generales</h2>
+        <p className="muted" style={{ margin: 0, fontSize: "0.85rem" }}>
+          Fotos de la visita no ligadas a un punto concreto.
+        </p>
+        <AttachmentCapture visitaId={visita.id} siguienteOrden={fotosGenerales.length} compact />
+
+        {fotosGenerales.length > 0 && (
+          <div className="photo-grid">
+            {fotosGenerales.map((foto) => (
+              <div key={foto.id} className="photo-thumb">
+                <AdjuntoImage
+                  adjunto={foto}
+                  alt={foto.caption ?? "Foto de la visita"}
+                  onClick={() => setFotoAbierta(foto)}
+                />
+                {foto.syncStatus === "pending" && (
+                  <span
+                    className="badge"
+                    style={{ position: "absolute", bottom: 4, left: 4, background: "#f59e0b", color: "white" }}
+                  >
+                    pendiente
+                  </span>
+                )}
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  title="Descargar"
+                  style={{
+                    position: "absolute",
+                    top: 4,
+                    left: 4,
+                    padding: "0.15rem 0.5rem",
+                    fontSize: "0.75rem",
+                  }}
+                  onClick={() => void handleDescargarAdjunto(foto)}
+                >
+                  ⬇
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  style={{
+                    position: "absolute",
+                    top: 4,
+                    right: 4,
+                    padding: "0.15rem 0.5rem",
+                    fontSize: "0.75rem",
+                  }}
+                  onClick={() => {
+                    if (window.confirm("¿Eliminar esta foto? No se puede deshacer.")) {
+                      void deleteAdjuntoLocal(foto.id);
+                    }
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {fotosGenerales.length === 0 && <p className="muted">Todavía no hay fotos generales.</p>}
+      </div>
+
+      <div className="card stack">
         <div className="row-between">
           <h2 style={{ margin: 0 }}>Puntos</h2>
           {puntos.length > 0 && (
@@ -154,6 +241,8 @@ export function VisitaDetailPage() {
           />
         ))}
       </div>
+
+      {fotoAbierta && <PhotoLightbox adjunto={fotoAbierta} onClose={() => setFotoAbierta(null)} />}
     </div>
   );
 }
