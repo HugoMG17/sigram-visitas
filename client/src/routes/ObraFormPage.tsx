@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { useLiveQuery } from "dexie-react-hooks";
-import type { EstadoObra } from "@sigram/shared";
-import { ESTADO_OBRA_LABELS } from "@sigram/shared";
+import type { AgentePersona, EstadoObra, ObraAgentes, RolAgente } from "@sigram/shared";
+import { agentesDeObra, ESTADO_OBRA_LABELS, personasDeRol, ROL_AGENTE_LABELS } from "@sigram/shared";
 import type { ObraInput } from "../api/obras";
 import { getObra, saveObraLocal } from "../db/repositories/obraRepo";
 import { runSync } from "../sync/syncEngine";
@@ -15,6 +15,7 @@ const emptyForm: ObraInput = {
   municipio: "",
   provincia: "",
   referenciaCatastral: "",
+  agentes: {},
   promotor: "",
   promotorContacto: "",
   promotorDni: "",
@@ -38,29 +39,75 @@ const emptyForm: ObraInput = {
   notas: "",
 };
 
-// Un rol de la obra = nombre + DNI, siempre con la misma pareja de campos.
-function CampoRol({
-  label,
-  nombre,
-  dni,
-  onNombre,
-  onDni,
+// Un rol de la obra admite VARIAS personas (nombre + DNI). Se muestra una fila
+// por persona, con un botón para añadir otra y ✕ para quitar. Si la lista está
+// vacía se pinta igualmente una fila en blanco para poder empezar a escribir.
+function CamposRolMulti({
+  rol,
+  personas,
+  onChange,
 }: {
-  label: string;
-  nombre: string | undefined;
-  dni: string | undefined;
-  onNombre: (v: string) => void;
-  onDni: (v: string) => void;
+  rol: RolAgente;
+  personas: AgentePersona[];
+  onChange: (personas: AgentePersona[]) => void;
 }) {
+  const label = ROL_AGENTE_LABELS[rol];
+  const filas = personas.length > 0 ? personas : [{ nombre: "", dni: "" }];
+
+  function actualizar(indice: number, campo: keyof AgentePersona, valor: string) {
+    const copia = filas.map((p) => ({ ...p }));
+    copia[indice] = { ...copia[indice], [campo]: valor };
+    onChange(copia);
+  }
+
+  function quitar(indice: number) {
+    onChange(filas.filter((_, i) => i !== indice));
+  }
+
   return (
-    <div className="row">
-      <div className="field" style={{ flex: 2, minWidth: 180 }}>
-        <label>{label} — Nombre</label>
-        <input className="input" value={nombre ?? ""} onChange={(e) => onNombre(e.target.value)} />
-      </div>
-      <div className="field" style={{ flex: 1, minWidth: 120 }}>
-        <label>DNI</label>
-        <input className="input" value={dni ?? ""} onChange={(e) => onDni(e.target.value)} />
+    <div className="stack" style={{ gap: "0.4rem" }}>
+      {filas.map((persona, indice) => (
+        <div className="row" key={indice} style={{ alignItems: "flex-end" }}>
+          <div className="field" style={{ flex: 2, minWidth: 180 }}>
+            <label>
+              {label} — Nombre{filas.length > 1 ? ` (${indice + 1})` : ""}
+            </label>
+            <input
+              className="input"
+              value={persona.nombre ?? ""}
+              onChange={(e) => actualizar(indice, "nombre", e.target.value)}
+            />
+          </div>
+          <div className="field" style={{ flex: 1, minWidth: 110 }}>
+            <label>DNI</label>
+            <input
+              className="input"
+              value={persona.dni ?? ""}
+              onChange={(e) => actualizar(indice, "dni", e.target.value)}
+            />
+          </div>
+          {filas.length > 1 && (
+            <button
+              type="button"
+              className="btn btn-danger"
+              title="Quitar esta persona"
+              style={{ padding: "0.3rem 0.6rem", marginBottom: "0.15rem" }}
+              onClick={() => quitar(indice)}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      ))}
+      <div>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          style={{ padding: "0.3rem 0.7rem", fontSize: "0.85rem" }}
+          onClick={() => onChange([...filas, { nombre: "", dni: "" }])}
+        >
+          + Añadir persona
+        </button>
       </div>
     </div>
   );
@@ -89,7 +136,15 @@ export function ObraFormPage() {
     if (existing && cargadoParaObraId.current !== obraId) {
       const { id: _id, createdAt: _c, updatedAt: _u, deletedAt: _d, syncStatus: _s, ...rest } =
         existing;
-      setForm({ ...emptyForm, ...rest, referenciaCatastral: rest.referenciaCatastral ?? "" });
+      // agentesDeObra rehidrata los roles: usa `agentes` si la obra ya lo
+      // tiene, o lo reconstruye desde los campos escalares antiguos (obras
+      // creadas antes de soportar varias personas por rol).
+      setForm({
+        ...emptyForm,
+        ...rest,
+        referenciaCatastral: rest.referenciaCatastral ?? "",
+        agentes: agentesDeObra(existing),
+      });
       cargadoParaObraId.current = obraId;
     }
   }, [existing, obraId]);
@@ -107,6 +162,17 @@ export function ObraFormPage() {
 
   function update<K extends keyof ObraInput>(key: K, value: ObraInput[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function updateAgente(rol: RolAgente, personas: AgentePersona[]) {
+    setForm((prev) => {
+      const agentes: ObraAgentes = { ...(prev.agentes ?? {}), [rol]: personas };
+      return { ...prev, agentes };
+    });
+  }
+
+  function personasDe(rol: RolAgente): AgentePersona[] {
+    return personasDeRol(form.agentes, rol);
   }
 
   return (
@@ -216,53 +282,41 @@ export function ObraFormPage() {
         </div>
 
         <h2 style={{ margin: "0.5rem 0 0" }}>Promotor</h2>
-        <CampoRol
-          label="Promotor"
-          nombre={form.promotor}
-          dni={form.promotorDni}
-          onNombre={(v) => update("promotor", v)}
-          onDni={(v) => update("promotorDni", v)}
+        <CamposRolMulti
+          rol="promotor"
+          personas={personasDe("promotor")}
+          onChange={(p) => updateAgente("promotor", p)}
         />
 
         <h2 style={{ margin: "0.5rem 0 0" }}>Dirección Facultativa</h2>
-        <CampoRol
-          label="Arquitecto"
-          nombre={form.arquitectoNombre}
-          dni={form.arquitectoDni}
-          onNombre={(v) => update("arquitectoNombre", v)}
-          onDni={(v) => update("arquitectoDni", v)}
+        <CamposRolMulti
+          rol="directorObra"
+          personas={personasDe("directorObra")}
+          onChange={(p) => updateAgente("directorObra", p)}
         />
-        <CampoRol
-          label="Arquitecto Técnico"
-          nombre={form.arquitectoTecnicoNombre}
-          dni={form.arquitectoTecnicoDni}
-          onNombre={(v) => update("arquitectoTecnicoNombre", v)}
-          onDni={(v) => update("arquitectoTecnicoDni", v)}
+        <CamposRolMulti
+          rol="directorEjecucion"
+          personas={personasDe("directorEjecucion")}
+          onChange={(p) => updateAgente("directorEjecucion", p)}
         />
-        <CampoRol
-          label="Coordinador de seguridad y salud"
-          nombre={form.coordinadorSSNombre}
-          dni={form.coordinadorSSDni}
-          onNombre={(v) => update("coordinadorSSNombre", v)}
-          onDni={(v) => update("coordinadorSSDni", v)}
+        <CamposRolMulti
+          rol="coordinadorSS"
+          personas={personasDe("coordinadorSS")}
+          onChange={(p) => updateAgente("coordinadorSS", p)}
         />
 
         <h2 style={{ margin: "0.5rem 0 0" }}>Constructor</h2>
-        <CampoRol
-          label="Constructor"
-          nombre={form.constructorNombre}
-          dni={form.constructorDni}
-          onNombre={(v) => update("constructorNombre", v)}
-          onDni={(v) => update("constructorDni", v)}
+        <CamposRolMulti
+          rol="constructor"
+          personas={personasDe("constructor")}
+          onChange={(p) => updateAgente("constructor", p)}
         />
 
         <h2 style={{ margin: "0.5rem 0 0" }}>Proyectista</h2>
-        <CampoRol
-          label="Proyectista"
-          nombre={form.proyectistaNombre}
-          dni={form.proyectistaDni}
-          onNombre={(v) => update("proyectistaNombre", v)}
-          onDni={(v) => update("proyectistaDni", v)}
+        <CamposRolMulti
+          rol="proyectista"
+          personas={personasDe("proyectista")}
+          onChange={(p) => updateAgente("proyectista", p)}
         />
 
         <div className="field">

@@ -15,6 +15,7 @@ export async function ensureSchema(): Promise<void> {
       municipio TEXT NOT NULL,
       provincia TEXT NOT NULL,
       referencia_catastral TEXT,
+      agentes TEXT,
       promotor TEXT NOT NULL,
       promotor_contacto TEXT,
       promotor_dni TEXT,
@@ -118,6 +119,7 @@ export async function ensureSchema(): Promise<void> {
 // admiten NULL, así que basta con ALTER TABLE ADD COLUMN idempotente.
 async function migrateObrasRolesColumns(): Promise<void> {
   const columnasRoles = [
+    "agentes",
     "promotor_dni",
     "constructor_nombre",
     "constructor_dni",

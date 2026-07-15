@@ -1,4 +1,11 @@
-import { ESTADO_PUNTO_LABELS, isImageMime } from "@sigram/shared";
+import {
+  agentesDeObra,
+  ESTADO_PUNTO_LABELS,
+  isImageMime,
+  personasConNombre,
+  personasDeRol,
+} from "@sigram/shared";
+import type { Obra } from "@sigram/shared";
 import type { adjuntos, obras, puntos, visitas } from "../db/schema.js";
 
 type ObraRow = typeof obras.$inferSelect;
@@ -63,19 +70,33 @@ function renderGaleria(attachments: AdjuntoConDataUri[]): string {
   return fotosHtml + documentosHtml;
 }
 
-// En el informe los roles se muestran solo con rol y nombre (sin DNI).
+// En el informe los roles se muestran solo con el nombre profesional del rol
+// y los nombres de las personas (sin DNI). Cada rol puede tener varias.
 function renderRoles(obra: ObraRow): string {
+  const agentes = agentesDeObra(obra as unknown as Obra);
+
+  const nombres = (rol: Parameters<typeof personasDeRol>[1]): string =>
+    personasConNombre(personasDeRol(agentes, rol))
+      .map((p) => esc(p.nombre))
+      .join("<br/>");
+
   const df = [
-    obra.arquitectoNombre ? `Arquitecto: ${esc(obra.arquitectoNombre)}` : "",
-    obra.arquitectoTecnicoNombre ? `Arquitecto Técnico: ${esc(obra.arquitectoTecnicoNombre)}` : "",
-    obra.coordinadorSSNombre ? `Coordinador de S. y S.: ${esc(obra.coordinadorSSNombre)}` : "",
+    nombres("directorObra") ? `Director de obra: ${nombres("directorObra")}` : "",
+    nombres("directorEjecucion")
+      ? `Director de ejecución de obra: ${nombres("directorEjecucion")}`
+      : "",
+    nombres("coordinadorSS")
+      ? `Coordinador de seguridad y salud en fase de ejecución: ${nombres("coordinadorSS")}`
+      : "",
   ].filter(Boolean);
 
   const lineas = [
-    obra.promotor ? `<div><span class="label">Promotor</span>${esc(obra.promotor)}</div>` : "",
+    nombres("promotor")
+      ? `<div><span class="label">Promotor</span>${nombres("promotor")}</div>`
+      : "",
     df.length ? `<div><span class="label">Dirección Facultativa</span>${df.join("<br/>")}</div>` : "",
-    obra.constructorNombre
-      ? `<div><span class="label">Constructor</span>${esc(obra.constructorNombre)}</div>`
+    nombres("constructor")
+      ? `<div><span class="label">Constructor</span>${nombres("constructor")}</div>`
       : "",
   ].filter(Boolean);
 

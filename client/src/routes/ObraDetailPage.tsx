@@ -1,19 +1,37 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { format } from "date-fns";
-import { ESTADO_OBRA_LABELS } from "@sigram/shared";
+import { agentesDeObra, ESTADO_OBRA_LABELS, personasConNombre, personasDeRol, ROLES_AGENTE_ORDEN, ROL_AGENTE_LABELS } from "@sigram/shared";
+import type { AgentePersona, RolAgente } from "@sigram/shared";
+import type { LocalObra } from "../db/db";
 import { getObra, softDeleteObraLocal } from "../db/repositories/obraRepo";
 import { listVisitasDeObra } from "../db/repositories/visitaRepo";
 import { runSync } from "../sync/syncEngine";
 
-// Línea "Rol: Nombre (DNI)"; no pinta nada si el rol está sin rellenar.
-function LineaRol({ rol, nombre, dni }: { rol: string; nombre?: string; dni?: string }) {
-  if (!nombre && !dni) return null;
+// Bloque de un rol con todas sus personas ("Rol: Nombre (DNI)" por persona);
+// no pinta nada si el rol no tiene ninguna persona con nombre.
+function BloqueRol({ rol, personas }: { rol: RolAgente; personas: AgentePersona[] }) {
+  const conNombre = personasConNombre(personas);
+  if (conNombre.length === 0) return null;
   return (
     <p style={{ margin: 0 }}>
-      <strong>{rol}:</strong> {nombre || "—"}
-      {dni ? ` (DNI ${dni})` : ""}
+      <strong>{ROL_AGENTE_LABELS[rol]}:</strong>{" "}
+      {conNombre
+        .map((p) => `${p.nombre}${(p.dni ?? "").trim() ? ` (DNI ${p.dni})` : ""}`)
+        .join(" · ")}
     </p>
+  );
+}
+
+// Todos los roles de la obra, en orden, cada uno con sus personas.
+function Roles({ obra }: { obra: LocalObra }) {
+  const agentes = agentesDeObra(obra);
+  return (
+    <>
+      {ROLES_AGENTE_ORDEN.map((rol) => (
+        <BloqueRol key={rol} rol={rol} personas={personasDeRol(agentes, rol)} />
+      ))}
+    </>
   );
 }
 
@@ -68,20 +86,7 @@ export function ObraDetailPage() {
             <strong>Ref. catastral:</strong> {obra.referenciaCatastral}
           </p>
         )}
-        <LineaRol rol="Promotor" nombre={obra.promotor} dni={obra.promotorDni} />
-        <LineaRol rol="Arquitecto" nombre={obra.arquitectoNombre} dni={obra.arquitectoDni} />
-        <LineaRol
-          rol="Arquitecto Técnico"
-          nombre={obra.arquitectoTecnicoNombre}
-          dni={obra.arquitectoTecnicoDni}
-        />
-        <LineaRol
-          rol="Coordinador de seguridad y salud"
-          nombre={obra.coordinadorSSNombre}
-          dni={obra.coordinadorSSDni}
-        />
-        <LineaRol rol="Constructor" nombre={obra.constructorNombre} dni={obra.constructorDni} />
-        <LineaRol rol="Proyectista" nombre={obra.proyectistaNombre} dni={obra.proyectistaDni} />
+        <Roles obra={obra} />
         {obra.notas && <p style={{ margin: 0 }}>{obra.notas}</p>}
         <div className="row">
           <Link to={`/obras/${obra.id}/editar`} className="btn btn-secondary">

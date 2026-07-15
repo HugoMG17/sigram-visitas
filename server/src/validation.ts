@@ -24,10 +24,23 @@ const uuidSchema = z.string().uuid();
 // puntos.titulo y con las columnas de roles de obra).
 const textoOpcional = z.string().nullish();
 
+// Roles de la obra con varias personas por rol. Cada persona lleva nombre y
+// DNI opcionales; todo el objeto es .nullish() por el mismo motivo que el
+// resto de campos (una obra que nunca tuvo `agentes` lo reenvía como null
+// tras el pull).
+//
+// Se usa z.record y NO un z.object con claves fijas a propósito: uno de los
+// roles se llama "constructor", y un z.object leería esa clave del prototipo
+// (Object.prototype.constructor, una función) cuando falta en el body,
+// haciendo fallar la validación. z.record solo mira las claves propias.
+const personaSchema = z.object({ nombre: textoOpcional, dni: textoOpcional });
+const agentesSchema = z.record(z.string(), personaSchema.array()).nullish();
+
 // Ningún campo de la obra es obligatorio (petición expresa de Hugo): las
 // columnas NOT NULL históricas se rellenan con "" / valores por defecto en
 // la ruta antes de insertar.
 export const obraUpsertSchema = z.object({
+  agentes: agentesSchema,
   nombre: textoOpcional,
   direccion: textoOpcional,
   municipio: textoOpcional,

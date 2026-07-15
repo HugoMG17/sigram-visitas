@@ -54,8 +54,9 @@ pdfRouter.get(
       user: req.user as AuthUser | undefined,
     });
 
+    // Fecha delante (YYYY-MM-DD) para que Windows ordene los informes por fecha.
     const fecha = visita.fecha.slice(0, 10);
-    const fileName = `Informe_Visita_${slugify(obra.nombre)}_${fecha}.pdf`;
+    const fileName = `${fecha}_Informe_Visita_${slugify(obra.nombre)}.pdf`;
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);

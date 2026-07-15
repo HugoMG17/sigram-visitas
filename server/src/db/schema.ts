@@ -1,4 +1,5 @@
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import type { ObraAgentes } from "@sigram/shared";
 
 export const obras = sqliteTable("obras", {
   id: text("id").primaryKey(),
@@ -11,7 +12,11 @@ export const obras = sqliteTable("obras", {
   municipio: text("municipio").notNull(),
   provincia: text("provincia").notNull(),
   referenciaCatastral: text("referencia_catastral"),
-  // Roles de la obra: "promotor" guarda el nombre del promotor (columna
+  // Roles de la obra con varias personas por rol, como JSON. Fuente de verdad
+  // actual; drizzle serializa/parsea solo con mode: "json".
+  agentes: text("agentes", { mode: "json" }).$type<ObraAgentes>(),
+  // Campos escalares de rol PREVIOS a `agentes`, conservados por
+  // compatibilidad: "promotor" guarda el nombre del promotor (columna
   // histórica reutilizada); el resto de agentes llevan nombre y DNI propios.
   promotor: text("promotor").notNull(),
   promotorContacto: text("promotor_contacto"),

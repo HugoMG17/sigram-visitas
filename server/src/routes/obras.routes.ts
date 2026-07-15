@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { and, desc, eq, isNull } from "drizzle-orm";
+import type { ObraAgentes, RolAgente } from "@sigram/shared";
 import { db } from "../db/client.js";
 import { obras } from "../db/schema.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
@@ -7,6 +8,24 @@ import { currentUserEmail } from "../middleware/currentUser.js";
 import { idParamSchema, obraUpsertSchema } from "../validation.js";
 
 export const obrasRouter = Router();
+
+// El validador permite null en nombre/dni de cada persona (patrón null-tras-pull),
+// pero la columna JSON guarda AgentePersona (string | undefined): se normaliza
+// aquí, convirtiendo null en undefined y descartando roles vacíos.
+function normalizarAgentes(
+  agentes: ReturnType<typeof obraUpsertSchema.parse>["agentes"]
+): ObraAgentes | null {
+  if (!agentes) return null;
+  const limpio: ObraAgentes = {};
+  for (const [rol, personas] of Object.entries(agentes)) {
+    if (!personas) continue;
+    limpio[rol as RolAgente] = personas.map((p) => ({
+      nombre: p.nombre ?? undefined,
+      dni: p.dni ?? undefined,
+    }));
+  }
+  return limpio;
+}
 
 // En modo local/dev sin login (currentUserEmail === null) no se filtra por
 // propietario: se sigue viendo todo, como antes del multi-usuario.
@@ -57,6 +76,7 @@ obrasRouter.put(
     // históricas son NOT NULL en SQLite: se rellenan con valores neutros.
     const data = {
       ...parsed,
+      agentes: normalizarAgentes(parsed.agentes),
       nombre: parsed.nombre ?? "",
       direccion: parsed.direccion ?? "",
       municipio: parsed.municipio ?? "",
