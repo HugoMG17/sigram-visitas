@@ -1,6 +1,7 @@
 import type { TipoAdjunto } from "@sigram/shared";
-import { deleteAdjunto as deleteAdjuntoRemoto } from "../../api/adjuntos";
+import { deleteAdjunto as deleteAdjuntoRemoto, resolveAdjuntoFileUrl } from "../../api/adjuntos";
 import { compressImage } from "../../utils/imageResize";
+import { fetchUrlAsBlob } from "../../utils/download";
 import { generateId } from "../../utils/id";
 import { db, type LocalAdjunto } from "../db";
 
@@ -43,6 +44,16 @@ export async function addAdjuntoLocal(params: {
   };
   await db.adjuntos.put(record);
   return record;
+}
+
+// Devuelve los bytes de un adjunto: su blob local si aún no se ha subido, o
+// el fichero completo descargado del servidor/Drive si ya está sincronizado.
+// Lanza si no hay ni blob local ni URL resoluble (p.ej. sin conexión).
+export async function getAdjuntoBlob(adjunto: LocalAdjunto): Promise<Blob> {
+  if (adjunto.blobLocal) return adjunto.blobLocal;
+  const url = resolveAdjuntoFileUrl(adjunto);
+  if (!url) throw new Error(`No se puede obtener el fichero del adjunto ${adjunto.id}`);
+  return fetchUrlAsBlob(url);
 }
 
 export async function deleteAdjuntoLocal(id: string): Promise<void> {

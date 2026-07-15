@@ -59,9 +59,14 @@ export async function downloadBlob(blob: Blob, fileName: string): Promise<void> 
 // ("/api/api/..."), el mismo fallo que ya se dio con /auth/me. En web se usa
 // axios "a pelo" con la cookie de sesión; en el APK, apiClient sí hace
 // falta para que el interceptor añada el token Bearer.
-export async function downloadFromUrl(url: string, fileName: string): Promise<void> {
+export async function fetchUrlAsBlob(url: string): Promise<Blob> {
   const res = isNative
     ? await apiClient.get<Blob>(url, { responseType: "blob" })
     : await axios.get<Blob>(url, { responseType: "blob", withCredentials: true });
-  await downloadBlob(res.data, fileName);
+  return res.data;
+}
+
+export async function downloadFromUrl(url: string, fileName: string): Promise<void> {
+  const blob = await fetchUrlAsBlob(url);
+  await downloadBlob(blob, fileName);
 }

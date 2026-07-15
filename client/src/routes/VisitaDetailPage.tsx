@@ -19,6 +19,7 @@ import { AdjuntoImage } from "../components/AdjuntoImage";
 import { PhotoLightbox } from "../components/PhotoLightbox";
 import { PuntoCard } from "../components/PuntoCard";
 import { AddPuntoForm } from "../components/AddPuntoForm";
+import { ImportarPuntosButton } from "../components/ImportarPuntosButton";
 
 export function VisitaDetailPage() {
   const { visitaId } = useParams<{ visitaId: string }>();
@@ -229,6 +230,7 @@ export function VisitaDetailPage() {
           )}
         </div>
         <AddPuntoForm visitaId={visita.id} />
+        <ImportarPuntosButton obraId={visita.obraId} visitaId={visita.id} />
         {puntos.length === 0 && (
           <p className="muted">Todavía no hay puntos registrados en esta visita.</p>
         )}
