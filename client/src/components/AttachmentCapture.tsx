@@ -54,36 +54,27 @@ export function AttachmentCapture({
   }
 
   // En el APK el <input type="file"> del WebView no ofrece bien la cámara, así
-  // que se usa el plugin nativo de Capacitor, que sí muestra la cámara y la
-  // galería del sistema. Se importa de forma perezosa para no cargarlo en web.
-  async function hacerFoto() {
+  // que se usa el plugin nativo de Capacitor. Con source "Prompt" es el propio
+  // Android el que pregunta si hacer una foto o elegir de la galería, así que
+  // se mantiene un único botón. Añade una foto por pulsación. Se importa de
+  // forma perezosa para no cargar el plugin en web.
+  async function anadirFotoNativa() {
     setError(null);
     setCapturando(true);
     try {
       const { Camera, CameraResultType, CameraSource } = await import("@capacitor/camera");
       const foto = await Camera.getPhoto({
-        source: CameraSource.Camera,
+        source: CameraSource.Prompt,
         resultType: CameraResultType.Uri,
         quality: 90,
+        promptLabelHeader: "Añadir foto",
+        promptLabelPicture: "Hacer foto",
+        promptLabelPhoto: "Elegir de la galería",
+        promptLabelCancel: "Cancelar",
       });
       if (foto.webPath) handleFiles([await webPathToFile(foto.webPath)]);
     } catch {
-      // El usuario canceló la cámara: no es un error que mostrar.
-    } finally {
-      setCapturando(false);
-    }
-  }
-
-  async function elegirDeGaleria() {
-    setError(null);
-    setCapturando(true);
-    try {
-      const { Camera } = await import("@capacitor/camera");
-      const { photos } = await Camera.pickImages({ quality: 90 });
-      const files = await Promise.all(photos.map((p) => webPathToFile(p.webPath)));
-      handleFiles(files);
-    } catch {
-      // Cancelado o sin permiso: no se muestra error.
+      // El usuario canceló el diálogo: no es un error que mostrar.
     } finally {
       setCapturando(false);
     }
@@ -95,38 +86,15 @@ export function AttachmentCapture({
   return (
     <div className="stack">
       <div className="row">
-        {isNative ? (
-          <>
-            <button
-              type="button"
-              className="btn"
-              style={btnStyle}
-              onClick={() => void hacerFoto()}
-              disabled={ocupado}
-            >
-              📷 Hacer foto
-            </button>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              style={btnStyle}
-              onClick={() => void elegirDeGaleria()}
-              disabled={ocupado}
-            >
-              🖼️ Elegir de galería
-            </button>
-          </>
-        ) : (
-          <button
-            type="button"
-            className="btn"
-            style={btnStyle}
-            onClick={() => fotoInputRef.current?.click()}
-            disabled={ocupado}
-          >
-            📷 Añadir fotos
-          </button>
-        )}
+        <button
+          type="button"
+          className="btn"
+          style={btnStyle}
+          onClick={() => (isNative ? void anadirFotoNativa() : fotoInputRef.current?.click())}
+          disabled={ocupado}
+        >
+          📷 Añadir fotos
+        </button>
       </div>
 
       {/* Solo web: en el navegador el selector nativo ya ofrece cámara y
