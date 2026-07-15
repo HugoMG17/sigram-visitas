@@ -1,15 +1,7 @@
 import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import type { TipoAdjunto } from "@sigram/shared";
 import { addAdjuntoLocal } from "../db/repositories/adjuntoRepo";
 import { runSync } from "../sync/syncEngine";
-
-const TIPO_LABELS: Record<TipoAdjunto, string> = {
-  foto: "Foto",
-  plano: "Plano",
-  documento: "Documento",
-  otro: "Otro",
-};
 
 export function AttachmentCapture({
   visitaId,
@@ -23,19 +15,18 @@ export function AttachmentCapture({
   compact?: boolean;
 }) {
   const fotoInputRef = useRef<HTMLInputElement>(null);
-  const archivoInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
 
   const mutation = useMutation({
     // Escritura local en Dexie: debe ejecutarse aunque TanStack Query crea
     // que estamos offline (por defecto pausaría la mutación hasta reconectar).
     networkMode: "always",
-    mutationFn: (params: { file: File; tipo: TipoAdjunto; orden: number }) =>
+    mutationFn: (params: { file: File; orden: number }) =>
       addAdjuntoLocal({
         visitaId,
         puntoId,
         file: params.file,
-        tipo: params.tipo,
+        tipo: "foto",
         orden: params.orden,
       }),
     onSuccess: () => {
@@ -45,10 +36,10 @@ export function AttachmentCapture({
     onError: () => setError("No se pudo guardar el archivo."),
   });
 
-  function handleFiles(files: FileList | null, tipo: TipoAdjunto) {
+  function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
     Array.from(files).forEach((file, index) =>
-      mutation.mutate({ file, tipo, orden: siguienteOrden + index })
+      mutation.mutate({ file, orden: siguienteOrden + index })
     );
   }
 
@@ -66,16 +57,6 @@ export function AttachmentCapture({
         >
           📷 Añadir fotos
         </button>
-        {!compact && (
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={() => archivoInputRef.current?.click()}
-            disabled={mutation.isPending}
-          >
-            📎 Añadir plano/documento
-          </button>
-        )}
       </div>
 
       {/* Sin "capture": con ese atributo el móvil abre la cámara directamente
@@ -88,17 +69,7 @@ export function AttachmentCapture({
         multiple
         style={{ display: "none" }}
         onChange={(e) => {
-          handleFiles(e.target.files, "foto");
-          e.target.value = "";
-        }}
-      />
-      <input
-        ref={archivoInputRef}
-        type="file"
-        multiple
-        style={{ display: "none" }}
-        onChange={(e) => {
-          handleFiles(e.target.files, "documento");
+          handleFiles(e.target.files);
           e.target.value = "";
         }}
       />
@@ -108,5 +79,3 @@ export function AttachmentCapture({
     </div>
   );
 }
-
-export { TIPO_LABELS };
