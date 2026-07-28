@@ -21,12 +21,18 @@ export interface AgentePersona {
 }
 
 // Los seis roles de la obra. Cada uno admite VARIAS personas.
+//
+// El rol del constructor se llama "constructora" y NO "constructor" a
+// propósito: una clave llamada `constructor` choca con
+// Object.prototype.constructor y se perdía al serializar el objeto para
+// enviarlo al servidor (el nombre del constructor no se guardaba nunca).
+// La etiqueta que ve el usuario sigue siendo "Constructor".
 export type RolAgente =
   | "promotor"
   | "directorObra"
   | "directorEjecucion"
   | "coordinadorSS"
-  | "constructor"
+  | "constructora"
   | "proyectista";
 
 // Estructura de roles con varias personas por rol. Se guarda como JSON dentro
@@ -156,7 +162,7 @@ export const ROL_AGENTE_LABELS: Record<RolAgente, string> = {
   directorObra: "Director de obra",
   directorEjecucion: "Director de ejecución de obra",
   coordinadorSS: "Coordinador de seguridad y salud en fase de ejecución",
-  constructor: "Constructor",
+  constructora: "Constructor",
   proyectista: "Proyectista",
 };
 
@@ -165,7 +171,7 @@ export const ROLES_AGENTE_ORDEN: RolAgente[] = [
   "directorObra",
   "directorEjecucion",
   "coordinadorSS",
-  "constructor",
+  "constructora",
   "proyectista",
 ];
 
@@ -175,10 +181,9 @@ export function personasConNombre(lista: AgentePersona[] | undefined): AgentePer
   return (lista ?? []).filter((p) => (p.nombre ?? "").trim() !== "");
 }
 
-// Accesor SEGURO de un rol dentro de `agentes`. Imprescindible porque uno de
-// los roles se llama "constructor": indexar `agentes["constructor"]` cuando
-// esa clave no es propia devolvería Object.prototype.constructor (una
-// función), no un array. Se comprueba que la clave sea propia antes de leer.
+// Accesor de un rol dentro de `agentes` que solo lee claves propias, nunca
+// heredadas del prototipo (defensa extra frente a nombres de rol que puedan
+// chocar con algo de Object.prototype).
 export function personasDeRol(
   agentes: ObraAgentes | undefined,
   rol: RolAgente
@@ -194,7 +199,18 @@ export function personasDeRol(
 // reeditado), se reconstruye desde los campos escalares históricos, cada rol
 // como una lista de una sola persona si tenía datos.
 export function agentesDeObra(obra: Obra): ObraAgentes {
-  if (obra.agentes) return obra.agentes;
+  if (obra.agentes) {
+    // Datos guardados antes del renombrado del rol: si quedó alguno con la
+    // clave antigua "constructor", se lee bajo el nombre nuevo. Se copian
+    // solo las claves PROPIAS, nunca las heredadas del prototipo.
+    const guardados = obra.agentes as Record<string, AgentePersona[] | undefined>;
+    const resultado: Record<string, AgentePersona[] | undefined> = {};
+    for (const clave of Object.keys(guardados)) {
+      const destino = clave === "constructor" ? "constructora" : clave;
+      if (resultado[destino] === undefined) resultado[destino] = guardados[clave];
+    }
+    return resultado as ObraAgentes;
+  }
   const persona = (nombre?: string, dni?: string): AgentePersona[] =>
     (nombre ?? "").trim() !== "" || (dni ?? "").trim() !== "" ? [{ nombre, dni }] : [];
   return {
@@ -202,7 +218,7 @@ export function agentesDeObra(obra: Obra): ObraAgentes {
     directorObra: persona(obra.arquitectoNombre, obra.arquitectoDni),
     directorEjecucion: persona(obra.arquitectoTecnicoNombre, obra.arquitectoTecnicoDni),
     coordinadorSS: persona(obra.coordinadorSSNombre, obra.coordinadorSSDni),
-    constructor: persona(obra.constructorNombre, obra.constructorDni),
+    constructora: persona(obra.constructorNombre, obra.constructorDni),
     proyectista: persona(obra.proyectistaNombre, obra.proyectistaDni),
   };
 }

@@ -307,9 +307,9 @@ export function ObraFormPage() {
 
         <h2 style={{ margin: "0.5rem 0 0" }}>Constructor</h2>
         <CamposRolMulti
-          rol="constructor"
-          personas={personasDe("constructor")}
-          onChange={(p) => updateAgente("constructor", p)}
+          rol="constructora"
+          personas={personasDe("constructora")}
+          onChange={(p) => updateAgente("constructora", p)}
         />
 
         <h2 style={{ margin: "0.5rem 0 0" }}>Proyectista</h2>

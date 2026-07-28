@@ -29,10 +29,10 @@ const textoOpcional = z.string().nullish();
 // resto de campos (una obra que nunca tuvo `agentes` lo reenvía como null
 // tras el pull).
 //
-// Se usa z.record y NO un z.object con claves fijas a propósito: uno de los
-// roles se llama "constructor", y un z.object leería esa clave del prototipo
-// (Object.prototype.constructor, una función) cuando falta en el body,
-// haciendo fallar la validación. z.record solo mira las claves propias.
+// Se usa z.record y NO un z.object con claves fijas: z.record solo mira las
+// claves propias del body, así que ningún nombre de rol puede colisionar con
+// algo heredado de Object.prototype (ver el comentario de RolAgente sobre por
+// qué el rol del constructor se llama "constructora").
 const personaSchema = z.object({ nombre: textoOpcional, dni: textoOpcional });
 const agentesSchema = z.record(z.string(), personaSchema.array()).nullish();
 

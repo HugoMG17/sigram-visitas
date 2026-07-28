@@ -95,8 +95,8 @@ function renderRoles(obra: ObraRow): string {
       ? `<div><span class="label">Promotor</span>${nombres("promotor")}</div>`
       : "",
     df.length ? `<div><span class="label">Dirección Facultativa</span>${df.join("<br/>")}</div>` : "",
-    nombres("constructor")
-      ? `<div><span class="label">Constructor</span>${nombres("constructor")}</div>`
+    nombres("constructora")
+      ? `<div><span class="label">Constructor</span>${nombres("constructora")}</div>`
       : "",
   ].filter(Boolean);
 
