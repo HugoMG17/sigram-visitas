@@ -168,25 +168,29 @@ export function renderInformeVisitaHtml(params: {
   .portada .ref-catastral { color: #64748b; font-size: 11px; margin-top: 3px; }
   .datos-obra { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 24px; margin: 12px 0 20px; }
   .datos-obra div span.label { color: #64748b; font-size: 10px; display: block; text-transform: uppercase; letter-spacing: 0.03em; }
+  /* Del título de la visita hacia abajo (notas, puntos y otros adjuntos) el
+     texto va un punto más grande que la cabecera de la obra. Las firmas y el
+     pie con el número de página se quedan como estaban, fuera de esta caja. */
+  .cuerpo-visita { font-size: 13px; }
   .notas { margin-bottom: 20px; }
-  .notas h2 { font-size: 14px; margin-bottom: 6px; }
+  .notas h2 { font-size: 15px; margin-bottom: 6px; }
   .notas p { white-space: pre-wrap; line-height: 1.5; }
-  .meta-visita { color: #64748b; font-size: 11px; margin-bottom: 10px; }
+  .meta-visita { color: #64748b; font-size: 12px; margin-bottom: 10px; }
   .galeria { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0; }
   .foto { margin: 0 0 10px; break-inside: avoid; page-break-inside: avoid; }
   .foto img { width: 100%; height: 60mm; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0; }
-  .foto figcaption { font-size: 10px; color: #64748b; margin-top: 3px; }
+  .foto figcaption { font-size: 11px; color: #64748b; margin-top: 3px; }
   .lista-documentos { padding-left: 18px; margin: 6px 0; }
   .anexo { margin-top: 20px; }
-  .anexo h2 { font-size: 14px; }
+  .anexo h2 { font-size: 15px; }
   .puntos { margin-top: 20px; }
-  .puntos h2 { font-size: 14px; margin-bottom: 10px; }
+  .puntos h2 { font-size: 15px; margin-bottom: 10px; }
   .punto { border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; break-inside: avoid; page-break-inside: avoid; }
   .punto-cabecera { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
   .punto-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
   .dot-verde { background: #16a34a; }
   .dot-amarillo { background: #f59e0b; }
-  .punto-estado { margin-left: auto; font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.03em; }
+  .punto-estado { margin-left: auto; font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.03em; }
   .punto-descripcion { margin: 4px 0 8px; white-space: pre-wrap; }
   .firmas { margin-top: 36px; break-inside: avoid; page-break-inside: avoid; }
   .firmas h2 { font-size: 14px; margin-bottom: 24px; }
@@ -203,19 +207,21 @@ export function renderInformeVisitaHtml(params: {
 
   ${renderRoles(obra)}
 
-  <div class="notas">
-    <h2>${esc(visita.titulo) || "Visita de obra"}</h2>
-    <div class="meta-visita">
-      ${formatFechaSolo(visita.fecha)}
-      ${visita.tiempoAtmosferico ? ` · Tiempo: ${esc(visita.tiempoAtmosferico)}` : ""}
-      ${visita.asistentes ? ` · Asistentes: ${esc(visita.asistentes)}` : ""}
+  <div class="cuerpo-visita">
+    <div class="notas">
+      <h2>${esc(visita.titulo) || "Visita de obra"}</h2>
+      <div class="meta-visita">
+        ${formatFechaSolo(visita.fecha)}
+        ${visita.tiempoAtmosferico ? ` · Tiempo: ${esc(visita.tiempoAtmosferico)}` : ""}
+        ${visita.asistentes ? ` · Asistentes: ${esc(visita.asistentes)}` : ""}
+      </div>
+      ${visita.notas ? `<p>${esc(visita.notas)}</p>` : ""}
     </div>
-    ${visita.notas ? `<p>${esc(visita.notas)}</p>` : ""}
+
+    ${puntosHtml}
+
+    ${generalesHtml}
   </div>
-
-  ${puntosHtml}
-
-  ${generalesHtml}
 
   <section class="firmas">
     <h2>Firma de los asistentes:</h2>
