@@ -52,14 +52,10 @@ export function ObraDetailPage() {
             {[obra.direccion, obra.municipio, obra.provincia].filter(Boolean).join(", ")}
           </p>
         )}
-        {obra.referenciaCatastral && (
-          <p style={{ margin: 0 }}>
-            <strong>Ref. catastral:</strong> {obra.referenciaCatastral}
-          </p>
-        )}
-        {/* La ficha se queda en la referencia catastral a propósito: los roles
-            (que en algunas obras son mucha gente) y las notas se consultan en
-            "Editar obra", para que esta pantalla no resulte abrumadora. */}
+        {/* La ficha se queda en el expediente, el nombre y la dirección a
+            propósito: la referencia catastral, los roles (que en algunas
+            obras son mucha gente) y las notas se consultan en "Editar obra",
+            para que esta pantalla no resulte abrumadora. */}
         <div className="row">
           <Link to={`/obras/${obra.id}/editar`} className="btn btn-secondary">
             Editar obra
