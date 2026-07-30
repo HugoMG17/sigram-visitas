@@ -10,6 +10,7 @@ import { env } from "./env.js";
 import { ensureSchema } from "./db/migrate.js";
 import { configurePassport } from "./auth/passport.js";
 import { requireAuth } from "./middleware/requireAuth.js";
+import { DbSessionStore } from "./auth/sessionStore.js";
 import { authRouter } from "./routes/auth.routes.js";
 import { obrasRouter } from "./routes/obras.routes.js";
 import { visitasRouter } from "./routes/visitas.routes.js";
@@ -66,6 +67,9 @@ if (env.authEnabled) {
   if (env.cookieSecure) app.set("trust proxy", 1);
   app.use(
     session({
+      // Sesiones en la base de datos: el almacén por defecto las guarda en la
+      // memoria del proceso y se pierden en cada despliegue o reinicio.
+      store: new DbSessionStore(),
       secret: env.sessionSecret,
       resave: false,
       saveUninitialized: false,
@@ -96,6 +100,28 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use(authRouter);
+
+// En producción el cliente se sirve desde este mismo servidor (una sola URL,
+// necesario para desplegar en un hosting con una única web service). En
+// desarrollo local no existe client/dist y esto simplemente no hace nada.
+//
+// Va ANTES de requireAuth a propósito: son los ficheros del programa
+// (index.html, el JavaScript, los iconos y el service worker), iguales para
+// todo el mundo y sin ningún dato del usuario. Detrás del login, la
+// comprobación automática de actualizaciones recibía un 401 en vez del
+// sw.js cuando la sesión no era válida —justo tras cada despliegue— y se
+// quedaba en silencio sin actualizar nunca.
+//
+// Lo que sí queda protegido, debajo, es TODO lo que son datos: /uploads
+// (las fotos) y /api (obras, visitas, puntos y el PDF).
+const clientDist = path.resolve(env.rootDir, "..", "client", "dist");
+if (fs.existsSync(clientDist)) {
+  app.use(express.static(clientDist));
+  app.get(/^\/(?!api\/|uploads\/).*/, (_req, res) => {
+    res.sendFile(path.join(clientDist, "index.html"));
+  });
+}
+
 app.use(requireAuth);
 
 app.use("/uploads", express.static(env.uploadsDir));
@@ -104,17 +130,6 @@ app.use("/api", visitasRouter);
 app.use("/api", puntosRouter);
 app.use("/api", adjuntosRouter);
 app.use("/api", pdfRouter);
-
-// En producción el cliente se sirve desde este mismo servidor (una sola URL,
-// necesario para desplegar en un hosting con una única web service). En
-// desarrollo local no existe client/dist y esto simplemente no hace nada.
-const clientDist = path.resolve(env.rootDir, "..", "client", "dist");
-if (fs.existsSync(clientDist)) {
-  app.use(express.static(clientDist));
-  app.get(/^\/(?!api\/|uploads\/).*/, (_req, res) => {
-    res.sendFile(path.join(clientDist, "index.html"));
-  });
-}
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof ZodError) {
