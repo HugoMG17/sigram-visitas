@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { blobToDataUri, compressImage } from "../utils/imageResize";
+import { blobToDataUri, compressLogo } from "../utils/imageResize";
 
 // El logo viaja como texto (data URI) dentro de la propia fila de la obra, y
 // esa fila se reenvía completa en cada sincronización: conviene que sea
@@ -23,9 +23,9 @@ export function CampoLogo({
     setError(null);
     setProcesando(true);
     try {
-      // PNG y no JPEG: un logo suele tener fondo transparente, y en JPEG esas
-      // zonas saldrían en negro.
-      const redimensionado = await compressImage(file, MAX_LADO_PX, 0.9, "image/png");
+      // compressLogo elige el formato solo: JPEG si la imagen es opaca (mucho
+      // más ligero) y PNG si tiene transparencia que hay que conservar.
+      const redimensionado = await compressLogo(file, MAX_LADO_PX);
       const dataUri = await blobToDataUri(redimensionado);
       if (dataUri.length > MAX_TAMANO_BYTES) {
         setError(

@@ -38,7 +38,10 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json());
+// El límite por defecto de express.json() son 100 KB, y una obra con logo lo
+// pasa de largo (el logo viaja como data URI dentro de la propia fila): con
+// el valor por defecto, guardar un logo normal fallaba con un 500.
+app.use(express.json({ limit: "4mb" }));
 
 // Límite básico por IP para las rutas de la API: evita que un script pueda
 // machacar la base de datos (Turso) o el servidor (Puppeteer/sharp) creando
@@ -117,6 +120,20 @@ const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof ZodError) {
     console.error(`Validación fallida en ${_req.method} ${_req.originalUrl}:`, err.issues);
     res.status(400).json({ error: "Datos inválidos", issues: err.issues });
+    return;
+  }
+  // Errores que ya traen su propio código HTTP (p.ej. el 413 de body-parser
+  // cuando el cuerpo supera el límite): responder con ese código y un mensaje
+  // que diga qué pasa. Antes todo caía en el 500 genérico de abajo, que no
+  // daba ninguna pista de que el problema fuera el tamaño del envío.
+  const status = Number((err as { status?: number; statusCode?: number })?.status ?? (err as { statusCode?: number })?.statusCode);
+  if (Number.isInteger(status) && status >= 400 && status < 500) {
+    console.error(`Petición rechazada en ${_req.method} ${_req.originalUrl}:`, err);
+    const mensaje =
+      status === 413
+        ? "El envío es demasiado grande (¿un logo o una imagen muy pesada?)"
+        : "Petición incorrecta";
+    res.status(status).json({ error: mensaje });
     return;
   }
   console.error(err);
