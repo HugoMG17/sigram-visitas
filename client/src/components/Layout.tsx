@@ -14,6 +14,14 @@ export function Layout({ children }: { children: ReactNode }) {
     <div>
       <header className="app-header">
         <Link to="/">SIGRAM VISITAS</Link>
+        {/* Versión visible: sirve para saber si una actualización ya ha
+            llegado, sin tener que adivinarlo por los cambios. */}
+        <span
+          title="Versión instalada"
+          style={{ marginLeft: "0.4rem", fontSize: "0.7rem", opacity: 0.55 }}
+        >
+          v{__APP_VERSION__}
+        </span>
         {entorno && (
           <span
             className="badge"
