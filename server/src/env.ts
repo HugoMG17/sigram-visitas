@@ -27,6 +27,11 @@ export const env = {
   tursoAuthToken: readEnv("TURSO_AUTH_TOKEN"),
   rootDir,
 
+  // Carpeta del Drive del usuario donde se guardan las fotos. Configurable
+  // para que el entorno de pruebas escriba en una carpeta aparte (p.ej.
+  // "SIGRAM VISITAS (pruebas)") y no mezcle fotos de prueba con las reales.
+  driveFolderName: readEnv("DRIVE_FOLDER_NAME") ?? "SIGRAM VISITAS",
+
   // Login con Google + subida de fotos a Drive: solo activo si estas
   // variables están configuradas (pensado para producción; en local se
   // sigue trabajando sin login, contra disco local, como hasta ahora).

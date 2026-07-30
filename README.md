@@ -34,6 +34,15 @@ Esto sirve la app ya con Service Worker activo en `http://localhost:4173` (y acc
 - `server/` — API local (Express + SQLite vía libSQL), generación de PDF con Puppeteer
 - `shared/` — tipos TypeScript compartidos
 
+## Entornos y publicación
+
+Hay dos despliegues del mismo código: **producción** (rama `main`, la que se usa
+en obra y a la que apunta el APK) y **pruebas** (rama `pruebas`, con su propia
+base de datos y su propia carpeta de Drive). Se desarrolla en `pruebas` y se
+publica haciendo merge a `main`.
+
+Detalles, variables de entorno y alta del servicio: [`docs/ENTORNOS.md`](docs/ENTORNOS.md).
+
 ## Estado del proyecto
 
 Completo: gestión de obras y visitas, fotos y documentos adjuntos, exportación de informe de visita a PDF, modo offline (Dexie) con sincronización automática al recuperar conexión, y PWA instalable.

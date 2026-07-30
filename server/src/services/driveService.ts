@@ -13,10 +13,12 @@ function isImageMime(mimeType: string): boolean {
   return mimeType.startsWith("image/");
 }
 
-// La carpeta "SIGRAM VISITAS" vive en el Drive de cada usuario, así que el
-// caché de su id tiene que estar indexado por usuario -- una única variable
-// de módulo compartida haría que la carpeta encontrada para el usuario A se
-// reutilizara (con el token de B) para el usuario B.
+// La carpeta de la app (env.driveFolderName) vive en el Drive de cada
+// usuario, así que el caché de su id tiene que estar indexado por usuario --
+// una única variable de módulo compartida haría que la carpeta encontrada
+// para el usuario A se reutilizara (con el token de B) para el usuario B.
+// El nombre de la carpeta es fijo por despliegue, así que no forma parte de
+// la clave del caché.
 const folderIdPromises = new Map<string, Promise<string>>();
 
 export function buildOAuthClient(user: AuthUser): OAuth2Client {
@@ -34,8 +36,12 @@ async function getOrCreateAppFolder(auth: OAuth2Client, userEmail: string): Prom
 
   const promise = (async () => {
     const drive = google.drive({ version: "v3", auth });
+    const nombreCarpeta = env.driveFolderName;
+    // El nombre va dentro de una cadena entre comillas simples en la consulta
+    // de Drive: si contuviera una comilla simple rompería la búsqueda.
+    const nombreParaQuery = nombreCarpeta.replace(/'/g, "\\'");
     const existing = await drive.files.list({
-      q: "name='SIGRAM VISITAS' and mimeType='application/vnd.google-apps.folder' and trashed=false",
+      q: `name='${nombreParaQuery}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
       fields: "files(id)",
       spaces: "drive",
     });
@@ -43,7 +49,7 @@ async function getOrCreateAppFolder(auth: OAuth2Client, userEmail: string): Prom
     if (found) return found;
 
     const created = await drive.files.create({
-      requestBody: { name: "SIGRAM VISITAS", mimeType: "application/vnd.google-apps.folder" },
+      requestBody: { name: nombreCarpeta, mimeType: "application/vnd.google-apps.folder" },
       fields: "id",
     });
     if (!created.data.id) throw new Error("No se pudo crear la carpeta de Drive");
