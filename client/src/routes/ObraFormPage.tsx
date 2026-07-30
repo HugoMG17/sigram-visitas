@@ -374,7 +374,14 @@ export function ObraFormPage() {
           <button
             type="button"
             className="btn btn-secondary"
-            style={{ padding: "0.3rem 0.7rem", fontSize: "0.85rem" }}
+            // En gris, para distinguirlo a simple vista de "+ Añadir persona".
+            style={{
+              padding: "0.3rem 0.7rem",
+              fontSize: "0.85rem",
+              background: "#64748b",
+              borderColor: "#64748b",
+              color: "white",
+            }}
             onClick={anadirExtra}
           >
             + Añadir otro rol
