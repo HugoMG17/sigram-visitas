@@ -59,12 +59,25 @@ distintas y carpetas de Drive distintas.
    rama **`pruebas`**, entorno **Docker** (usa el `Dockerfile` del repo),
    nombre `sigram-visitas-pruebas`. Rellenar las variables de la tabla de
    arriba.
-3. **Google Cloud Console** → credenciales OAuth → *URIs de redirección
-   autorizados* → añadir:
+3. **Google Cloud Console** → *APIs y servicios* → *Credenciales*. Los dos
+   entornos comparten el **mismo cliente de OAuth**, así que hay que añadirle
+   la dirección de retorno del sitio de pruebas. En la sección **"URIs de
+   redirección autorizados"** añadir:
    ```
    https://sigram-visitas-pruebas.onrender.com/auth/google/callback
    ```
-   Sin esto, el login del sitio de pruebas falla.
+   Sin esto, el login del sitio de pruebas falla con
+   `Error 400: redirect_uri_mismatch`.
+
+   > **Cuidado:** no confundirla con *"Orígenes autorizados de JavaScript"*,
+   > que está justo encima y solo acepta dominios. Se distinguen en que las
+   > URIs de redirección terminan en `/auth/google/callback` y los orígenes
+   > no. Poner la URL en los orígenes **no** arregla el
+   > `redirect_uri_mismatch`. Y hay que pulsar **GUARDAR** al fondo.
+
+4. `ALLOWED_GOOGLE_EMAIL` tiene que ser **exactamente** la cuenta de Google con
+   la que se inicia sesión; si no coincide, el login se rechaza con un aviso
+   de "no autorizado" en el log del servidor.
 
 En el plan gratuito de Render el sitio de pruebas se duerme cuando no se usa:
 la primera carga tras un rato tarda 30-60 s. Es normal y no afecta a

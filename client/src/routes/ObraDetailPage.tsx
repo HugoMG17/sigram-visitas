@@ -1,39 +1,10 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { format } from "date-fns";
-import { agentesDeObra, ESTADO_OBRA_LABELS, personasConNombre, personasDeRol, ROLES_AGENTE_ORDEN, ROL_AGENTE_LABELS } from "@sigram/shared";
-import type { AgentePersona, RolAgente } from "@sigram/shared";
-import type { LocalObra } from "../db/db";
+import { ESTADO_OBRA_LABELS } from "@sigram/shared";
 import { getObra, softDeleteObraLocal } from "../db/repositories/obraRepo";
 import { listVisitasDeObra } from "../db/repositories/visitaRepo";
 import { runSync } from "../sync/syncEngine";
-
-// Bloque de un rol con todas sus personas ("Rol: Nombre (DNI)" por persona);
-// no pinta nada si el rol no tiene ninguna persona con nombre.
-function BloqueRol({ rol, personas }: { rol: RolAgente; personas: AgentePersona[] }) {
-  const conNombre = personasConNombre(personas);
-  if (conNombre.length === 0) return null;
-  return (
-    <p style={{ margin: 0 }}>
-      <strong>{ROL_AGENTE_LABELS[rol]}:</strong>{" "}
-      {conNombre
-        .map((p) => `${p.nombre}${(p.dni ?? "").trim() ? ` (DNI ${p.dni})` : ""}`)
-        .join(" · ")}
-    </p>
-  );
-}
-
-// Todos los roles de la obra, en orden, cada uno con sus personas.
-function Roles({ obra }: { obra: LocalObra }) {
-  const agentes = agentesDeObra(obra);
-  return (
-    <>
-      {ROLES_AGENTE_ORDEN.map((rol) => (
-        <BloqueRol key={rol} rol={rol} personas={personasDeRol(agentes, rol)} />
-      ))}
-    </>
-  );
-}
 
 export function ObraDetailPage() {
   const { obraId } = useParams<{ obraId: string }>();
@@ -81,13 +52,10 @@ export function ObraDetailPage() {
             {[obra.direccion, obra.municipio, obra.provincia].filter(Boolean).join(", ")}
           </p>
         )}
-        {obra.referenciaCatastral && (
-          <p style={{ margin: 0 }}>
-            <strong>Ref. catastral:</strong> {obra.referenciaCatastral}
-          </p>
-        )}
-        <Roles obra={obra} />
-        {obra.notas && <p style={{ margin: 0 }}>{obra.notas}</p>}
+        {/* La ficha se queda en el expediente, el nombre y la dirección a
+            propósito: la referencia catastral, los roles (que en algunas
+            obras son mucha gente) y las notas se consultan en "Editar obra",
+            para que esta pantalla no resulte abrumadora. */}
         <div className="row">
           <Link to={`/obras/${obra.id}/editar`} className="btn btn-secondary">
             Editar obra

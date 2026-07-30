@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { and, desc, eq, isNull } from "drizzle-orm";
-import type { ObraAgentes, RolAgente } from "@sigram/shared";
+import type { AgenteExtra, ObraAgentes, RolAgente } from "@sigram/shared";
 import { db } from "../db/client.js";
 import { obras } from "../db/schema.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
@@ -25,6 +25,21 @@ function normalizarAgentes(
     }));
   }
   return limpio;
+}
+
+// Mismo motivo que normalizarAgentes: el validador admite null en nombre/dni y
+// la columna JSON guarda AgentePersona (string | undefined).
+function normalizarAgentesExtra(
+  extra: ReturnType<typeof obraUpsertSchema.parse>["direccionFacultativaExtra"]
+): AgenteExtra[] | null {
+  if (!extra) return null;
+  return extra.map((item) => ({
+    rol: item.rol ?? "",
+    personas: (item.personas ?? []).map((p) => ({
+      nombre: p.nombre ?? undefined,
+      dni: p.dni ?? undefined,
+    })),
+  }));
 }
 
 // En modo local/dev sin login (currentUserEmail === null) no se filtra por
@@ -77,6 +92,7 @@ obrasRouter.put(
     const data = {
       ...parsed,
       agentes: normalizarAgentes(parsed.agentes),
+      direccionFacultativaExtra: normalizarAgentesExtra(parsed.direccionFacultativaExtra),
       nombre: parsed.nombre ?? "",
       direccion: parsed.direccion ?? "",
       municipio: parsed.municipio ?? "",

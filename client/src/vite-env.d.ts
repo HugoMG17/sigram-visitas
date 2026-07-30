@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+/// <reference types="vite-plugin-pwa/react" />
 
 // Importación con ?inline: Vite incrusta el fichero como data URI base64 en
 // el propio bundle (sin petición ni descodificación de asset aparte).

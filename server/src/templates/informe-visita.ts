@@ -1,5 +1,6 @@
 import {
   agentesDeObra,
+  direccionFacultativaExtraDeObra,
   ESTADO_PUNTO_LABELS,
   isImageMime,
   personasConNombre,
@@ -80,6 +81,12 @@ function renderRoles(obra: ObraRow): string {
       .map((p) => esc(p.nombre))
       .join("<br/>");
 
+  // Roles extra escritos a mano para esta obra (otros profesionales de la
+  // Dirección Facultativa), detrás de los tres fijos.
+  const extras = direccionFacultativaExtraDeObra(obra as unknown as Obra).map(
+    (extra) => `${esc(extra.rol)}: ${extra.personas.map((p) => esc(p.nombre)).join("<br/>")}`
+  );
+
   const df = [
     nombres("directorObra") ? `Director de obra: ${nombres("directorObra")}` : "",
     nombres("directorEjecucion")
@@ -88,6 +95,7 @@ function renderRoles(obra: ObraRow): string {
     nombres("coordinadorSS")
       ? `Coordinador de seguridad y salud en fase de ejecución: ${nombres("coordinadorSS")}`
       : "",
+    ...extras,
   ].filter(Boolean);
 
   const lineas = [
@@ -146,10 +154,19 @@ export function renderInformeVisitaHtml(params: {
     : "";
 
   // Fotos de la visita que no cuelgan de ningún punto. Van justo después de
-  // las notas de la visita y antes de los puntos, no al final del informe.
+  // las notas de la visita y antes de los puntos, sin encabezado: se muestran
+  // las fotos y nada más.
   const generalesHtml = adjuntosGenerales.length
-    ? `<section class="fotos-generales"><h2>Fotos generales</h2>${renderGaleria(adjuntosGenerales)}</section>`
+    ? `<section class="fotos-generales">${renderGaleria(adjuntosGenerales)}</section>`
     : "";
+
+  // El logo lo escribe el cliente y se inyecta crudo en un atributo HTML:
+  // se exige la forma "data:image/..." para no romper la cabecera con un
+  // valor mal formado ni permitir que ese campo cuele nada más.
+  const logoHtml =
+    obra.logo && /^data:image\//.test(obra.logo)
+      ? `<img class="logo" src="${obra.logo}" />`
+      : "";
 
   const direccionCompleta = [obra.direccion, obra.municipio, obra.provincia]
     .filter(Boolean)
@@ -165,9 +182,16 @@ export function renderInformeVisitaHtml(params: {
      falta margen inferior real para el pie con el número de página. */
   * { box-sizing: border-box; }
   body { font-family: "Segoe UI", Arial, sans-serif; color: #1e293b; font-size: 12px; margin: 0; }
-  .portada { margin-bottom: 24px; border-bottom: 3px solid #1e293b; padding-bottom: 16px; }
+  /* Cabecera en dos columnas: los datos de la obra a la izquierda y, si la
+     obra tiene logo, el logo arriba a la derecha. */
+  .portada { margin-bottom: 24px; border-bottom: 3px solid #1e293b; padding-bottom: 16px;
+             display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+  .portada .datos { flex: 1; min-width: 0; }
   .portada h1 { font-size: 22px; margin: 0 0 4px; }
   .portada .ref-catastral { color: #64748b; font-size: 11px; margin-top: 3px; }
+  /* object-fit: contain para que el logo no se deforme sea cual sea su
+     proporción, y límites en mm para que no descuadre la cabecera. */
+  .portada .logo { max-height: 22mm; max-width: 45mm; object-fit: contain; flex-shrink: 0; }
   .datos-obra { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 24px; margin: 12px 0 20px; }
   .datos-obra div span.label { color: #64748b; font-size: 10px; display: block; text-transform: uppercase; letter-spacing: 0.03em; }
   /* Del título de la visita hacia abajo (notas, puntos y otros adjuntos) el
@@ -184,7 +208,6 @@ export function renderInformeVisitaHtml(params: {
   .foto figcaption { font-size: 11px; color: #64748b; margin-top: 3px; }
   .lista-documentos { padding-left: 18px; margin: 6px 0; }
   .fotos-generales { margin-top: 20px; }
-  .fotos-generales h2 { font-size: 15px; }
   .puntos { margin-top: 20px; }
   .puntos h2 { font-size: 15px; margin-bottom: 10px; }
   .punto { border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; break-inside: avoid; page-break-inside: avoid; }
@@ -202,9 +225,12 @@ export function renderInformeVisitaHtml(params: {
 </head>
 <body>
   <div class="portada">
-    <h1>${esc(obra.nombre)}</h1>
-    ${direccionCompleta ? `<div>${direccionCompleta}</div>` : ""}
-    ${obra.referenciaCatastral ? `<div class="ref-catastral">Ref. catastral: ${esc(obra.referenciaCatastral)}</div>` : ""}
+    <div class="datos">
+      <h1>${esc(obra.nombre)}</h1>
+      ${direccionCompleta ? `<div>${direccionCompleta}</div>` : ""}
+      ${obra.referenciaCatastral ? `<div class="ref-catastral">Ref. catastral: ${esc(obra.referenciaCatastral)}</div>` : ""}
+    </div>
+    ${logoHtml}
   </div>
 
   ${renderRoles(obra)}

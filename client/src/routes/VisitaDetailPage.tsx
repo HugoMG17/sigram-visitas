@@ -50,8 +50,12 @@ export function VisitaDetailPage() {
   // Las fotos ligadas a un punto se muestran dentro de su propia tarjeta;
   // aquí solo las fotos generales de la visita, no ligadas a ningún punto.
   const fotosGenerales = adjuntos.filter((a) => !a.puntoId && isImageMime(a.mimeType));
+  // La obra también tiene que estar sincronizada: el PDF se genera desde la
+  // fila de obra del servidor, así que un cambio pendiente ahí (p.ej. acabar
+  // de poner el logo) saldría sin reflejar y sin avisar.
   const puedeExportar =
     visita.syncStatus === "synced" &&
+    obra?.syncStatus === "synced" &&
     adjuntos.every((a) => a.syncStatus === "synced") &&
     puntos.every((p) => p.syncStatus === "synced");
 

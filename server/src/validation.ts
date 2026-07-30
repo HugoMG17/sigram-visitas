@@ -36,11 +36,22 @@ const textoOpcional = z.string().nullish();
 const personaSchema = z.object({ nombre: textoOpcional, dni: textoOpcional });
 const agentesSchema = z.record(z.string(), personaSchema.array()).nullish();
 
+// Roles extra de la Dirección Facultativa: aquí el nombre del rol es un valor
+// (`rol`), no una clave, así que no hay riesgo de colisión con el prototipo.
+const agentesExtraSchema = z
+  .object({ rol: textoOpcional, personas: personaSchema.array() })
+  .array()
+  .nullish();
+
 // Ningún campo de la obra es obligatorio (petición expresa de Hugo): las
 // columnas NOT NULL históricas se rellenan con "" / valores por defecto en
 // la ruta antes de insertar.
 export const obraUpsertSchema = z.object({
   agentes: agentesSchema,
+  direccionFacultativaExtra: agentesExtraSchema,
+  // Data URI del logo de la obra. Se valida su forma al inyectarlo en el
+  // HTML del informe (ver la plantilla), no aquí.
+  logo: textoOpcional,
   nombre: textoOpcional,
   direccion: textoOpcional,
   municipio: textoOpcional,
