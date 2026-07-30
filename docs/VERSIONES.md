@@ -62,7 +62,8 @@ obra. Las fotos se guardan en el Google Drive de cada usuario.
 - **Fotos generales sin encabezado** en el PDF.
 - **La app se actualiza sola** tras cada publicación. Espera si hay un
   formulario abierto o quedan cambios sin sincronizar, y nunca borra datos.
-- **La versión se muestra en la cabecera.**
+  Se acabó tener que borrar los datos del sitio con F12 para ver los cambios.
+- **La versión se muestra en la cabecera**, bajo el nombre de la app.
 
 ### Arreglos
 
@@ -81,8 +82,16 @@ obra. Las fotos se guardan en el Google Drive de cada usuario.
   automática de versión recibía un error de autenticación en vez del fichero y
   fallaba en silencio. Los datos (obras, fotos y PDF) siguen protegidos.
 - **El nombre del constructor no se guardaba** al editar una obra.
+- **Al borrar una obra, una visita o un punto, sus fotos se quedaban en
+  Drive.** Solo se borraba el fichero al eliminar una foto suelta, así que el
+  resto se acumulaba ocupando espacio y sin forma de llegar a él, pese a que
+  el mensaje de confirmación decía "con todos sus puntos y adjuntos". Ahora se
+  eliminan de verdad, y también se liberan del móvil.
 
-### Nota
+### Notas
 
 Al instalar esta versión puede pedirse iniciar sesión una última vez: las
 sesiones anteriores no eran recuperables. A partir de aquí ya no.
+
+Las fotos de lo que se borrara **antes** de esta versión siguen en Drive: el
+arreglo se aplica a los borrados de aquí en adelante, no a los pasados.
