@@ -6,6 +6,8 @@ import { asyncHandler } from "../middleware/asyncHandler.js";
 import { currentUserEmail } from "../middleware/currentUser.js";
 import { findOwnedObra, findOwnedVisita } from "../services/obraAccess.js";
 import { idParamSchema, visitaUpsertSchema } from "../validation.js";
+import { eliminarAdjuntosDeVisitas } from "../services/adjuntoDeletion.js";
+import type { AuthUser } from "../auth/passport.js";
 
 export const visitasRouter = Router();
 
@@ -101,6 +103,12 @@ visitasRouter.delete(
       res.status(404).json({ error: "Visita no encontrada" });
       return;
     }
+    // La visita se marca como borrada (para que el borrado se propague al
+    // resto de dispositivos), pero sus fotos -las generales y las de sus
+    // puntos- se eliminan de verdad para no dejarlas ocupando espacio.
+    const borradas = await eliminarAdjuntosDeVisitas([id], req.user as AuthUser | undefined);
+    if (borradas > 0) console.log(`[visitas] borrada ${id}: ${borradas} adjunto(s) eliminados`);
+
     const now = new Date().toISOString();
     await db.update(visitas).set({ deletedAt: now, updatedAt: now }).where(eq(visitas.id, id));
     res.status(204).send();

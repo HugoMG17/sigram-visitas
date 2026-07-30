@@ -34,4 +34,9 @@ export async function softDeleteVisitaLocal(id: string): Promise<void> {
     updatedAt: new Date().toISOString(),
     syncStatus: "pending",
   });
+  // Las fotos de la visita se quitan del dispositivo: liberan espacio (llevan
+  // el fichero dentro) y, sobre todo, evitan que una que aún estuviera sin
+  // subir acabe subiéndose a una visita ya borrada. En el servidor las borra
+  // la propia petición de borrado de la visita.
+  await db.adjuntos.where("visitaId").equals(id).delete();
 }

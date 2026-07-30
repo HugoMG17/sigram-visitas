@@ -98,9 +98,14 @@ export async function downloadFromDrive(
   };
 }
 
+// No lanza: que falle un borrado en Drive no debe impedir borrar el registro.
+// Pero sí se deja constancia en el log — si se tragara el error en silencio,
+// un fichero que se quedara ocupando espacio no habría forma de detectarlo.
 export async function deleteFromDrive(auth: OAuth2Client, fileId: string): Promise<void> {
   const drive = google.drive({ version: "v3", auth });
-  await drive.files.delete({ fileId }).catch(() => undefined);
+  await drive.files.delete({ fileId }).catch((err) => {
+    console.error(`[drive] no se pudo borrar el fichero ${fileId}:`, err?.message ?? err);
+  });
 }
 
 export interface SavedDriveAttachment {

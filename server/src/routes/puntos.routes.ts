@@ -6,6 +6,8 @@ import { asyncHandler } from "../middleware/asyncHandler.js";
 import { currentUserEmail } from "../middleware/currentUser.js";
 import { findOwnedPunto, findOwnedVisita } from "../services/obraAccess.js";
 import { idParamSchema, puntoUpsertSchema } from "../validation.js";
+import { eliminarAdjuntosDePuntos } from "../services/adjuntoDeletion.js";
+import type { AuthUser } from "../auth/passport.js";
 
 export const puntosRouter = Router();
 
@@ -80,6 +82,11 @@ puntosRouter.delete(
       res.status(404).json({ error: "Punto no encontrado" });
       return;
     }
+    // El punto se marca como borrado (para propagar el borrado), pero sus
+    // fotos se eliminan de verdad y no se quedan ocupando espacio.
+    const borradas = await eliminarAdjuntosDePuntos([id], req.user as AuthUser | undefined);
+    if (borradas > 0) console.log(`[puntos] borrado ${id}: ${borradas} adjunto(s) eliminados`);
+
     const now = new Date().toISOString();
     await db.update(puntos).set({ deletedAt: now, updatedAt: now }).where(eq(puntos.id, id));
     res.status(204).send();

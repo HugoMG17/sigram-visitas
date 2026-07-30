@@ -36,4 +36,11 @@ export async function softDeleteObraLocal(id: string): Promise<void> {
     updatedAt: new Date().toISOString(),
     syncStatus: "pending",
   });
+  // Ver el comentario de softDeleteVisitaLocal: las fotos de todas sus
+  // visitas se quitan del dispositivo; en el servidor las borra la petición
+  // de borrado de la obra.
+  const visitas = await db.visitas.where("obraId").equals(id).toArray();
+  for (const visita of visitas) {
+    await db.adjuntos.where("visitaId").equals(visita.id).delete();
+  }
 }

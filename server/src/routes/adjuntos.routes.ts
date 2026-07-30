@@ -7,13 +7,13 @@ import { asyncHandler } from "../middleware/asyncHandler.js";
 import { currentUserEmail } from "../middleware/currentUser.js";
 import { findOwnedAdjunto, findOwnedPunto, findOwnedVisita } from "../services/obraAccess.js";
 import { ALLOWED_ADJUNTO_MIME_TYPES, adjuntoMetaSchema, idParamSchema } from "../validation.js";
-import { deleteAttachmentFiles, saveAttachmentFile } from "../services/fileService.js";
+import { saveAttachmentFile } from "../services/fileService.js";
 import {
   buildOAuthClient,
-  deleteFromDrive,
   downloadFromDrive,
   saveAttachmentToDrive,
 } from "../services/driveService.js";
+import { eliminarAdjuntos } from "../services/adjuntoDeletion.js";
 import { env } from "../env.js";
 import type { AuthUser } from "../auth/passport.js";
 
@@ -191,20 +191,7 @@ adjuntosRouter.delete(
       res.status(404).json({ error: "Adjunto no encontrado" });
       return;
     }
-    const { adjunto: row } = owned;
-    if (row.driveFileId) {
-      const user = req.user as AuthUser | undefined;
-      if (user) {
-        const auth = buildOAuthClient(user);
-        await Promise.all([
-          deleteFromDrive(auth, row.driveFileId),
-          row.driveThumbnailId ? deleteFromDrive(auth, row.driveThumbnailId) : undefined,
-        ]);
-      }
-    } else {
-      await deleteAttachmentFiles([row.rutaServidor, row.rutaThumbnail]);
-    }
-    await db.delete(adjuntos).where(eq(adjuntos.id, id));
+    await eliminarAdjuntos([owned.adjunto], req.user as AuthUser | undefined);
     res.status(204).send();
   })
 );
