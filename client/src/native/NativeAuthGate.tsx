@@ -46,7 +46,7 @@ export function NativeAuthGate({ children }: { children: ReactNode }) {
         decoding="sync"
         style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
       />
-      <h1 style={{ margin: 0 }}>SIGRAM VISITAS</h1>
+      <h1 style={{ margin: 0 }}>SIGRAM APP</h1>
       <p className="muted" style={{ maxWidth: 320 }}>
         Inicia sesión con tu cuenta de Google para empezar. Solo hace falta la
         primera vez: después la app funciona también sin conexión.

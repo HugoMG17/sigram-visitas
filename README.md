@@ -1,4 +1,4 @@
-# SIGRAM VISITAS
+# SIGRAM APP
 
 App para gestionar obras y visitas de obra (fotos, notas, adjuntos) con exportación de informes en PDF. Funciona offline en el móvil durante la visita y sincroniza al recuperar conexión.
 

@@ -1,4 +1,4 @@
-# Cómo generar el APK de Android (SIGRAM VISITAS)
+# Cómo generar el APK de Android (SIGRAM APP)
 
 La app Android es el mismo cliente web empaquetado con Capacitor. Funciona
 100% offline (los datos viven en el dispositivo y sincronizan al recuperar

@@ -24,7 +24,7 @@ export default defineConfig({
       injectRegister: null,
       includeAssets: ["icons/icon-192.png", "icons/icon-512.png"],
       manifest: {
-        name: "SIGRAM VISITAS",
+        name: "SIGRAM APP",
         short_name: "SIGRAM",
         description: "Gestión de obras y visitas para arquitectos",
         theme_color: "#1e293b",

@@ -159,7 +159,7 @@ app.use(errorHandler);
 async function main() {
   await ensureSchema();
   app.listen(env.port, "0.0.0.0", () => {
-    console.log(`SIGRAM VISITAS server escuchando en http://0.0.0.0:${env.port}`);
+    console.log(`SIGRAM APP server escuchando en http://0.0.0.0:${env.port}`);
   });
 }
 

@@ -13,7 +13,7 @@ export function Layout({ children }: { children: ReactNode }) {
   return (
     <div>
       <header className="app-header">
-        <Link to="/">SIGRAM VISITAS</Link>
+        <Link to="/">SIGRAM APP</Link>
         {/* Versión visible: sirve para saber si una actualización ya ha
             llegado, sin tener que adivinarlo por los cambios. */}
         <span
