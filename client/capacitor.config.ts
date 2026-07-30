@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "com.sigram.visitas",
-  appName: "SIGRAM VISITAS",
+  appName: "SIGRAM APP",
   // Los assets del cliente compilado van empaquetados dentro del APK: la app
   // arranca siempre, con o sin conexión (los datos offline los gestiona
   // Dexie, igual que en la web).

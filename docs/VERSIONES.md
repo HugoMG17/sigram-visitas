@@ -1,4 +1,4 @@
-# Versiones de SIGRAM VISITAS
+# Versiones de SIGRAM APP
 
 La versión se ve en la cabecera de la app, junto al nombre, y en los datos de
 la aplicación en Android. Sirve para saber de un vistazo si una actualización
@@ -13,6 +13,15 @@ ya ha llegado.
 
 Primera versión numerada. La app ya estaba en uso; a partir de aquí cada
 publicación queda registrada aquí.
+
+**La app pasa a llamarse SIGRAM APP** (antes SIGRAM VISITAS): las visitas de
+obra son el primer apartado, pero está pensada para ir sumando otros.
+
+> El identificador interno de la aplicación Android (`com.sigram.visitas`) y el
+> nombre de la carpeta de Google Drive se mantienen a propósito. Cambiarlos
+> haría que Android la tratara como una app distinta —instalándose aparte en
+> lugar de actualizarse— y que las fotos nuevas fueran a una carpeta distinta
+> de las que ya hay. Son nombres que nunca se ven.
 
 ### Qué hace la app
 
