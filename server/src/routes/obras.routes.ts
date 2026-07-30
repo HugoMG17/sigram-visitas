@@ -2,7 +2,9 @@ import { Router } from "express";
 import { and, desc, eq, isNull } from "drizzle-orm";
 import type { AgenteExtra, ObraAgentes, RolAgente } from "@sigram/shared";
 import { db } from "../db/client.js";
-import { obras } from "../db/schema.js";
+import { obras, visitas } from "../db/schema.js";
+import { eliminarAdjuntosDeVisitas } from "../services/adjuntoDeletion.js";
+import type { AuthUser } from "../auth/passport.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { currentUserEmail } from "../middleware/currentUser.js";
 import { idParamSchema, obraUpsertSchema } from "../validation.js";
@@ -135,6 +137,20 @@ obrasRouter.delete(
       res.status(404).json({ error: "Obra no encontrada" });
       return;
     }
+    // La obra se marca como borrada (no se elimina la fila) para que la
+    // sincronización propague el borrado a los demás dispositivos. Pero sus
+    // fotos sí se eliminan de verdad: si no, se quedarían para siempre
+    // ocupando espacio en el Drive del usuario y sin forma de llegar a ellas.
+    const visitasDeObra = await db
+      .select({ id: visitas.id })
+      .from(visitas)
+      .where(eq(visitas.obraId, id));
+    const borradas = await eliminarAdjuntosDeVisitas(
+      visitasDeObra.map((v) => v.id),
+      req.user as AuthUser | undefined
+    );
+    if (borradas > 0) console.log(`[obras] borrada ${id}: ${borradas} adjunto(s) eliminados`);
+
     const now = new Date().toISOString();
     await db.update(obras).set({ deletedAt: now, updatedAt: now }).where(eq(obras.id, id));
     res.status(204).send();

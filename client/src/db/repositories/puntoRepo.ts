@@ -172,4 +172,7 @@ export async function softDeletePuntoLocal(id: string): Promise<void> {
     updatedAt: new Date().toISOString(),
     syncStatus: "pending",
   });
+  // Ver el comentario de softDeleteVisitaLocal: sus fotos se quitan del
+  // dispositivo; en el servidor las borra la petición de borrado del punto.
+  await db.adjuntos.where("puntoId").equals(id).delete();
 }
