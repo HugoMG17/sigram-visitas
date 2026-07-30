@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { useLiveQuery } from "dexie-react-hooks";
-import type { AgentePersona, EstadoObra, ObraAgentes, RolAgente } from "@sigram/shared";
+import type { AgenteExtra, AgentePersona, EstadoObra, ObraAgentes, RolAgente } from "@sigram/shared";
 import { agentesDeObra, ESTADO_OBRA_LABELS, personasDeRol, ROL_AGENTE_LABELS } from "@sigram/shared";
 import type { ObraInput } from "../api/obras";
 import { CampoLogo } from "../components/CampoLogo";
@@ -18,6 +18,7 @@ const emptyForm: ObraInput = {
   referenciaCatastral: "",
   logo: "",
   agentes: {},
+  direccionFacultativaExtra: [],
   promotor: "",
   promotorContacto: "",
   promotorDni: "",
@@ -45,15 +46,14 @@ const emptyForm: ObraInput = {
 // por persona, con un botón para añadir otra y ✕ para quitar. Si la lista está
 // vacía se pinta igualmente una fila en blanco para poder empezar a escribir.
 function CamposRolMulti({
-  rol,
+  label,
   personas,
   onChange,
 }: {
-  rol: RolAgente;
+  label: string;
   personas: AgentePersona[];
   onChange: (personas: AgentePersona[]) => void;
 }) {
-  const label = ROL_AGENTE_LABELS[rol];
   const filas = personas.length > 0 ? personas : [{ nombre: "", dni: "" }];
 
   function actualizar(indice: number, campo: keyof AgentePersona, valor: string) {
@@ -146,6 +146,9 @@ export function ObraFormPage() {
         ...rest,
         referenciaCatastral: rest.referenciaCatastral ?? "",
         agentes: agentesDeObra(existing),
+        // Las obras anteriores a este campo lo traen como null tras el pull;
+        // sin este ?? [] el listado de roles extra reventaría al pintarse.
+        direccionFacultativaExtra: rest.direccionFacultativaExtra ?? [],
       });
       cargadoParaObraId.current = obraId;
     }
@@ -175,6 +178,26 @@ export function ObraFormPage() {
 
   function personasDe(rol: RolAgente): AgentePersona[] {
     return personasDeRol(form.agentes, rol);
+  }
+
+  // Roles extra de la Dirección Facultativa. El nombre del rol es texto libre,
+  // así que se guardan como lista (no como claves de un objeto).
+  const extras: AgenteExtra[] = form.direccionFacultativaExtra ?? [];
+
+  function setExtras(nuevos: AgenteExtra[]) {
+    setForm((prev) => ({ ...prev, direccionFacultativaExtra: nuevos }));
+  }
+
+  function anadirExtra() {
+    setExtras([...extras, { rol: "", personas: [{ nombre: "", dni: "" }] }]);
+  }
+
+  function actualizarExtra(indice: number, cambios: Partial<AgenteExtra>) {
+    setExtras(extras.map((extra, i) => (i === indice ? { ...extra, ...cambios } : extra)));
+  }
+
+  function quitarExtra(indice: number) {
+    setExtras(extras.filter((_, i) => i !== indice));
   }
 
   return (
@@ -285,38 +308,89 @@ export function ObraFormPage() {
 
         <h2 style={{ margin: "0.5rem 0 0" }}>Promotor</h2>
         <CamposRolMulti
-          rol="promotor"
+          label={ROL_AGENTE_LABELS.promotor}
           personas={personasDe("promotor")}
           onChange={(p) => updateAgente("promotor", p)}
         />
 
         <h2 style={{ margin: "0.5rem 0 0" }}>Dirección Facultativa</h2>
         <CamposRolMulti
-          rol="directorObra"
+          label={ROL_AGENTE_LABELS.directorObra}
           personas={personasDe("directorObra")}
           onChange={(p) => updateAgente("directorObra", p)}
         />
         <CamposRolMulti
-          rol="directorEjecucion"
+          label={ROL_AGENTE_LABELS.directorEjecucion}
           personas={personasDe("directorEjecucion")}
           onChange={(p) => updateAgente("directorEjecucion", p)}
         />
         <CamposRolMulti
-          rol="coordinadorSS"
+          label={ROL_AGENTE_LABELS.coordinadorSS}
           personas={personasDe("coordinadorSS")}
           onChange={(p) => updateAgente("coordinadorSS", p)}
         />
 
+        {/* Otros profesionales de la Dirección Facultativa, con el nombre del
+            rol escrito a mano (varía según la obra). */}
+        {extras.map((extra, indice) => (
+          <div
+            key={indice}
+            className="stack"
+            style={{
+              gap: "0.4rem",
+              borderLeft: "3px solid #e2e8f0",
+              paddingLeft: "0.75rem",
+            }}
+          >
+            <div className="row" style={{ alignItems: "flex-end" }}>
+              <div className="field" style={{ flex: 1, minWidth: 200 }}>
+                <label>Nombre del rol</label>
+                <input
+                  className="input"
+                  value={extra.rol}
+                  placeholder="Ej. Ingeniero de telecomunicaciones"
+                  onChange={(e) => actualizarExtra(indice, { rol: e.target.value })}
+                />
+              </div>
+              <button
+                type="button"
+                className="btn btn-danger"
+                title="Quitar este rol"
+                style={{ padding: "0.3rem 0.6rem", marginBottom: "0.15rem" }}
+                onClick={() => quitarExtra(indice)}
+              >
+                ✕
+              </button>
+            </div>
+            <CamposRolMulti
+              label={extra.rol.trim() || "Rol sin nombre"}
+              personas={extra.personas}
+              onChange={(personas) => actualizarExtra(indice, { personas })}
+            />
+          </div>
+        ))}
+
+        <div>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            style={{ padding: "0.3rem 0.7rem", fontSize: "0.85rem" }}
+            onClick={anadirExtra}
+          >
+            + Añadir otro rol
+          </button>
+        </div>
+
         <h2 style={{ margin: "0.5rem 0 0" }}>Constructor</h2>
         <CamposRolMulti
-          rol="constructora"
+          label={ROL_AGENTE_LABELS.constructora}
           personas={personasDe("constructora")}
           onChange={(p) => updateAgente("constructora", p)}
         />
 
         <h2 style={{ margin: "0.5rem 0 0" }}>Proyectista</h2>
         <CamposRolMulti
-          rol="proyectista"
+          label={ROL_AGENTE_LABELS.proyectista}
           personas={personasDe("proyectista")}
           onChange={(p) => updateAgente("proyectista", p)}
         />

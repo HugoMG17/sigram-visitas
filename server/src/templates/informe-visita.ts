@@ -1,5 +1,6 @@
 import {
   agentesDeObra,
+  direccionFacultativaExtraDeObra,
   ESTADO_PUNTO_LABELS,
   isImageMime,
   personasConNombre,
@@ -80,6 +81,12 @@ function renderRoles(obra: ObraRow): string {
       .map((p) => esc(p.nombre))
       .join("<br/>");
 
+  // Roles extra escritos a mano para esta obra (otros profesionales de la
+  // Dirección Facultativa), detrás de los tres fijos.
+  const extras = direccionFacultativaExtraDeObra(obra as unknown as Obra).map(
+    (extra) => `${esc(extra.rol)}: ${extra.personas.map((p) => esc(p.nombre)).join("<br/>")}`
+  );
+
   const df = [
     nombres("directorObra") ? `Director de obra: ${nombres("directorObra")}` : "",
     nombres("directorEjecucion")
@@ -88,6 +95,7 @@ function renderRoles(obra: ObraRow): string {
     nombres("coordinadorSS")
       ? `Coordinador de seguridad y salud en fase de ejecución: ${nombres("coordinadorSS")}`
       : "",
+    ...extras,
   ].filter(Boolean);
 
   const lineas = [

@@ -40,6 +40,18 @@ export type RolAgente =
 // una sola fila -- así no hace falta una entidad de sincronización aparte.
 export type ObraAgentes = Partial<Record<RolAgente, AgentePersona[]>>;
 
+// Rol adicional de la Dirección Facultativa, con el nombre escrito por el
+// usuario (a veces intervienen profesionales que no son los tres de siempre).
+//
+// El nombre del rol va como VALOR (`rol`) y no como clave de un objeto: así
+// da igual lo que se escriba -- incluida una palabra como "constructor", que
+// como clave chocaría con Object.prototype y se perdería al serializar (ver
+// el comentario de RolAgente).
+export interface AgenteExtra {
+  rol: string;
+  personas: AgentePersona[];
+}
+
 export interface Obra {
   id: string;
   nombre: string;
@@ -54,6 +66,9 @@ export interface Obra {
   logo?: string;
   // Roles de la obra con varias personas por rol (fuente de verdad actual).
   agentes?: ObraAgentes;
+  // Roles añadidos a mano dentro de la Dirección Facultativa, además de los
+  // tres fijos (director de obra, de ejecución y coordinador de S. y S.).
+  direccionFacultativaExtra?: AgenteExtra[];
   // Campos escalares de rol PREVIOS a `agentes`: se conservan solo por
   // compatibilidad con obras antiguas que aún no se han reeditado; se leen
   // vía agentesDeObra() como fallback cuando `agentes` no existe todavía.
@@ -184,6 +199,15 @@ export const ROLES_AGENTE_ORDEN: RolAgente[] = [
 // vacías en la app ni en el PDF).
 export function personasConNombre(lista: AgentePersona[] | undefined): AgentePersona[] {
   return (lista ?? []).filter((p) => (p.nombre ?? "").trim() !== "");
+}
+
+// Roles extra de la Dirección Facultativa listos para pintar: solo los que
+// tienen nombre de rol y al menos una persona con nombre, para no arrastrar
+// filas a medio rellenar al detalle ni al informe.
+export function direccionFacultativaExtraDeObra(obra: Obra): AgenteExtra[] {
+  return (obra.direccionFacultativaExtra ?? [])
+    .filter((extra) => (extra.rol ?? "").trim() !== "" && personasConNombre(extra.personas).length > 0)
+    .map((extra) => ({ rol: extra.rol.trim(), personas: personasConNombre(extra.personas) }));
 }
 
 // Accesor de un rol dentro de `agentes` que solo lee claves propias, nunca

@@ -17,6 +17,7 @@ export async function ensureSchema(): Promise<void> {
       referencia_catastral TEXT,
       logo TEXT,
       agentes TEXT,
+      direccion_facultativa_extra TEXT,
       promotor TEXT NOT NULL,
       promotor_contacto TEXT,
       promotor_dni TEXT,
@@ -122,6 +123,7 @@ async function migrateObrasColumnasNuevas(): Promise<void> {
   const columnasRoles = [
     "logo",
     "agentes",
+    "direccion_facultativa_extra",
     "promotor_dni",
     "constructor_nombre",
     "constructor_dni",
