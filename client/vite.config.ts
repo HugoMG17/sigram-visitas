@@ -7,7 +7,13 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: "autoUpdate",
+      // "prompt" y no "autoUpdate": con autoUpdate el módulo virtual decide
+      // solo cuándo aplicar la versión nueva, y aquí hace falta comprobar
+      // antes que no queden datos sin sincronizar ni un formulario a medias
+      // (ver ActualizacionApp.tsx). injectRegister: null porque el registro
+      // lo hace la propia app; si no, se registraría dos veces.
+      registerType: "prompt",
+      injectRegister: null,
       includeAssets: ["icons/icon-192.png", "icons/icon-512.png"],
       manifest: {
         name: "SIGRAM VISITAS",

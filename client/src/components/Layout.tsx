@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { SyncBadge } from "./SyncBadge";
 import { AuthStatus } from "./AuthStatus";
 import { etiquetaEntorno } from "../utils/entorno";
+import { ActualizacionApp } from "./ActualizacionApp";
 
 export function Layout({ children }: { children: ReactNode }) {
   // Solo se pinta fuera de producción, para saber de un vistazo que lo que
@@ -28,6 +29,7 @@ export function Layout({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main className="page">{children}</main>
+      <ActualizacionApp />
     </div>
   );
 }
