@@ -145,8 +145,10 @@ export function renderInformeVisitaHtml(params: {
       </section>`
     : "";
 
+  // Fotos de la visita que no cuelgan de ningún punto. Van justo después de
+  // las notas de la visita y antes de los puntos, no al final del informe.
   const generalesHtml = adjuntosGenerales.length
-    ? `<section class="anexo"><h2>Otros adjuntos</h2>${renderGaleria(adjuntosGenerales)}</section>`
+    ? `<section class="fotos-generales"><h2>Fotos generales</h2>${renderGaleria(adjuntosGenerales)}</section>`
     : "";
 
   const direccionCompleta = [obra.direccion, obra.municipio, obra.provincia]
@@ -181,8 +183,8 @@ export function renderInformeVisitaHtml(params: {
   .foto img { width: 100%; height: 60mm; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0; }
   .foto figcaption { font-size: 11px; color: #64748b; margin-top: 3px; }
   .lista-documentos { padding-left: 18px; margin: 6px 0; }
-  .anexo { margin-top: 20px; }
-  .anexo h2 { font-size: 15px; }
+  .fotos-generales { margin-top: 20px; }
+  .fotos-generales h2 { font-size: 15px; }
   .puntos { margin-top: 20px; }
   .puntos h2 { font-size: 15px; margin-bottom: 10px; }
   .punto { border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; break-inside: avoid; page-break-inside: avoid; }
@@ -218,9 +220,9 @@ export function renderInformeVisitaHtml(params: {
       ${visita.notas ? `<p>${esc(visita.notas)}</p>` : ""}
     </div>
 
-    ${puntosHtml}
-
     ${generalesHtml}
+
+    ${puntosHtml}
   </div>
 
   <section class="firmas">
