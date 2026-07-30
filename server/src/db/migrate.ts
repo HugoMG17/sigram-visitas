@@ -98,6 +98,20 @@ export async function ensureSchema(): Promise<void> {
     "CREATE INDEX IF NOT EXISTS idx_adjuntos_visita_id ON adjuntos(visita_id);"
   );
 
+  // Sesiones del login web. Viven en la base de datos y no en la memoria del
+  // proceso para que sobrevivan a los despliegues y a que el hosting duerma el
+  // servicio; si no, cada reinicio obliga a volver a iniciar sesión.
+  await sqlClient.execute(`
+    CREATE TABLE IF NOT EXISTS sesiones (
+      sid TEXT PRIMARY KEY,
+      datos TEXT NOT NULL,
+      expira_en INTEGER NOT NULL
+    );
+  `);
+  await sqlClient.execute(
+    "CREATE INDEX IF NOT EXISTS idx_sesiones_expira_en ON sesiones(expira_en);"
+  );
+
   await sqlClient.execute(`
     CREATE TABLE IF NOT EXISTS tokens_nativos (
       token_hash TEXT PRIMARY KEY,
