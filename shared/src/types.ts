@@ -47,6 +47,11 @@ export interface Obra {
   municipio: string;
   provincia: string;
   referenciaCatastral?: string;
+  // Logo de la obra como data URI (p.ej. "data:image/png;base64,...."), que
+  // sale arriba a la derecha en la primera página del informe PDF. Se guarda
+  // dentro de la propia fila de obra para que viaje con la sincronización que
+  // ya existe, sin necesidad de tratarlo como un adjunto aparte.
+  logo?: string;
   // Roles de la obra con varias personas por rol (fuente de verdad actual).
   agentes?: ObraAgentes;
   // Campos escalares de rol PREVIOS a `agentes`: se conservan solo por

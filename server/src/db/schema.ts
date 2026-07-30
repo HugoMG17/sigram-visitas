@@ -12,6 +12,8 @@ export const obras = sqliteTable("obras", {
   municipio: text("municipio").notNull(),
   provincia: text("provincia").notNull(),
   referenciaCatastral: text("referencia_catastral"),
+  // Logo de la obra como data URI; se incrusta en la cabecera del PDF.
+  logo: text("logo"),
   // Roles de la obra con varias personas por rol, como JSON. Fuente de verdad
   // actual; drizzle serializa/parsea solo con mode: "json".
   agentes: text("agentes", { mode: "json" }).$type<ObraAgentes>(),

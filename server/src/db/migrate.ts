@@ -15,6 +15,7 @@ export async function ensureSchema(): Promise<void> {
       municipio TEXT NOT NULL,
       provincia TEXT NOT NULL,
       referencia_catastral TEXT,
+      logo TEXT,
       agentes TEXT,
       promotor TEXT NOT NULL,
       promotor_contacto TEXT,
@@ -111,14 +112,15 @@ export async function ensureSchema(): Promise<void> {
   await migrateAdjuntosPuntoColumn();
   await migratePuntosTituloColumn();
   await migrateObrasOwnerEmailColumn();
-  await migrateObrasRolesColumns();
+  await migrateObrasColumnasNuevas();
 }
 
-// Las bases de datos creadas antes de los roles de obra (constructor,
-// proyectista, dirección facultativa...) no tienen estas columnas; todas
-// admiten NULL, así que basta con ALTER TABLE ADD COLUMN idempotente.
-async function migrateObrasRolesColumns(): Promise<void> {
+// Columnas de obras añadidas después de la versión inicial (roles de la
+// edificación, el JSON de agentes, el logo...). Todas admiten NULL, así que
+// basta con un ALTER TABLE ADD COLUMN idempotente por cada una.
+async function migrateObrasColumnasNuevas(): Promise<void> {
   const columnasRoles = [
+    "logo",
     "agentes",
     "promotor_dni",
     "constructor_nombre",

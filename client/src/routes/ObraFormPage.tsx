@@ -5,6 +5,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import type { AgentePersona, EstadoObra, ObraAgentes, RolAgente } from "@sigram/shared";
 import { agentesDeObra, ESTADO_OBRA_LABELS, personasDeRol, ROL_AGENTE_LABELS } from "@sigram/shared";
 import type { ObraInput } from "../api/obras";
+import { CampoLogo } from "../components/CampoLogo";
 import { getObra, saveObraLocal } from "../db/repositories/obraRepo";
 import { runSync } from "../sync/syncEngine";
 import { generateId } from "../utils/id";
@@ -15,6 +16,7 @@ const emptyForm: ObraInput = {
   municipio: "",
   provincia: "",
   referenciaCatastral: "",
+  logo: "",
   agentes: {},
   promotor: "",
   promotorContacto: "",
@@ -327,6 +329,8 @@ export function ObraFormPage() {
             onChange={(e) => update("notas", e.target.value)}
           />
         </div>
+
+        <CampoLogo logo={form.logo} onChange={(v) => update("logo", v)} />
 
         {mutation.isError && <p className="error-text">No se pudo guardar la obra.</p>}
 

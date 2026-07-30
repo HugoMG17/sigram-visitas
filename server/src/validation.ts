@@ -41,6 +41,9 @@ const agentesSchema = z.record(z.string(), personaSchema.array()).nullish();
 // la ruta antes de insertar.
 export const obraUpsertSchema = z.object({
   agentes: agentesSchema,
+  // Data URI del logo de la obra. Se valida su forma al inyectarlo en el
+  // HTML del informe (ver la plantilla), no aquí.
+  logo: textoOpcional,
   nombre: textoOpcional,
   direccion: textoOpcional,
   municipio: textoOpcional,
