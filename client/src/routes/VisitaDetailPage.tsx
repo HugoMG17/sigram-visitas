@@ -156,8 +156,11 @@ export function VisitaDetailPage() {
             {puedeExportar && tieneFotos && (
               <button
                 type="button"
-                className="btn btn-secondary"
+                className="btn"
                 title="Descarga un ZIP con todas las fotos, en carpetas por punto"
+                // En verde: es una descarga, y así no se confunde con "Editar",
+                // que usa el mismo estilo secundario que tenía antes.
+                style={{ background: "#16a34a", borderColor: "#16a34a", color: "white" }}
                 onClick={handleDescargarFotos}
                 disabled={descargandoFotos}
               >
