@@ -7,19 +7,10 @@ import { currentUserEmail } from "../middleware/currentUser.js";
 import { findOwnedVisita } from "../services/obraAccess.js";
 import { idParamSchema } from "../validation.js";
 import { generateInformeVisitaPdf } from "../services/pdfService.js";
+import { slugify } from "../utils/nombreArchivo.js";
 import type { AuthUser } from "../auth/passport.js";
 
 export const pdfRouter = Router();
-
-const COMBINING_MARKS = /[̀-ͯ]/g;
-
-function slugify(value: string): string {
-  return value
-    .normalize("NFD")
-    .replace(COMBINING_MARKS, "")
-    .replace(/[^a-zA-Z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-}
 
 pdfRouter.get(
   "/visitas/:id/pdf",

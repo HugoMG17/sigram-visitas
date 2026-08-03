@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { format } from "date-fns";
 import { isImageMime } from "@sigram/shared";
-import { pdfUrl } from "../api/visitas";
+import { fotosZipUrl, pdfUrl } from "../api/visitas";
 import { getVisita, softDeleteVisitaLocal } from "../db/repositories/visitaRepo";
 import { getObra } from "../db/repositories/obraRepo";
 import { listAdjuntos, deleteAdjuntoLocal } from "../db/repositories/adjuntoRepo";
@@ -26,6 +26,7 @@ export function VisitaDetailPage() {
   const navigate = useNavigate();
   const [syncing, setSyncing] = useState(false);
   const [exportando, setExportando] = useState(false);
+  const [descargandoFotos, setDescargandoFotos] = useState(false);
   const [fotoAbierta, setFotoAbierta] = useState<LocalAdjunto | null>(null);
 
   const visita = useLiveQuery(() => (visitaId ? getVisita(visitaId) : undefined), [visitaId]);
@@ -45,11 +46,15 @@ export function VisitaDetailPage() {
   if (!visita) return <p className="error-text">Visita no encontrada.</p>;
 
   const currentVisitaId = visita.id;
+  const visitaParaDescarga = visita;
+  const obraParaDescarga = obra;
   const obraId = visita.obraId;
 
   // Las fotos ligadas a un punto se muestran dentro de su propia tarjeta;
   // aquí solo las fotos generales de la visita, no ligadas a ningún punto.
   const fotosGenerales = adjuntos.filter((a) => !a.puntoId && isImageMime(a.mimeType));
+  // El ZIP incluye tanto las generales como las de los puntos.
+  const tieneFotos = adjuntos.some((a) => isImageMime(a.mimeType));
   // La obra también tiene que estar sincronizada: el PDF se genera desde la
   // fila de obra del servidor, así que un cambio pendiente ahí (p.ej. acabar
   // de poner el logo) saldría sin reflejar y sin avisar.
@@ -65,6 +70,26 @@ export function VisitaDetailPage() {
       await runSync();
     } finally {
       setSyncing(false);
+    }
+  }
+
+  // Descarga un ZIP con todas las fotos de la visita. Lo arma el servidor
+  // (es donde están los ficheros), y downloadFromUrl ya distingue entre web
+  // y APK. Puede tardar unos segundos si hay muchas, de ahí el "Preparando…".
+  async function handleDescargarFotos() {
+    setDescargandoFotos(true);
+    try {
+      const fecha = visitaParaDescarga.fecha.slice(0, 10);
+      const nombreObra = (obraParaDescarga?.nombre || "obra")
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .replace(/[^a-zA-Z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "");
+      await downloadFromUrl(fotosZipUrl(currentVisitaId), `${fecha}_Fotos_${nombreObra}.zip`);
+    } catch {
+      window.alert("No se pudieron descargar las fotos. Comprueba la conexión e inténtalo de nuevo.");
+    } finally {
+      setDescargandoFotos(false);
     }
   }
 
@@ -127,7 +152,19 @@ export function VisitaDetailPage() {
                   Exportar PDF
                 </a>
               )
-            ) : (
+            ) : null}
+            {puedeExportar && tieneFotos && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                title="Descarga un ZIP con todas las fotos, en carpetas por punto"
+                onClick={handleDescargarFotos}
+                disabled={descargandoFotos}
+              >
+                {descargandoFotos ? "Preparando…" : "Descargar fotos"}
+              </button>
+            )}
+            {!puedeExportar && (
               <button
                 type="button"
                 className="btn btn-secondary"
