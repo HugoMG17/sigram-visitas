@@ -28,6 +28,11 @@ export async function deleteVisita(id: string): Promise<void> {
   await apiClient.delete(`/visitas/${id}`);
 }
 
+// ZIP con todas las fotos de la visita, ordenadas en carpetas por punto.
+export function fotosZipUrl(id: string): string {
+  return `${apiClient.defaults.baseURL}/visitas/${id}/fotos.zip`;
+}
+
 export function pdfUrl(id: string): string {
   return `${apiClient.defaults.baseURL}/visitas/${id}/pdf`;
 }
