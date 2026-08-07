@@ -1,11 +1,32 @@
 # Versiones de SIGRAM APP
 
-La versión se ve en la cabecera de la app, junto al nombre, y en los datos de
+La versión se ve en la cabecera de la app, debajo del nombre, y en los datos de
 la aplicación en Android. Sirve para saber de un vistazo si una actualización
 ya ha llegado.
 
 **Cómo se numeran:** se sube el segundo número en cada tanda de cambios (1.1,
 1.2, 1.3…) y el primero solo si algún día cambia algo de fondo. Sin más reglas.
+
+---
+
+## 1.1.0 — 1 de agosto de 2026
+
+### Novedades
+
+- **Descargar todas las fotos de una visita.** Botón verde *Descargar fotos*
+  junto a *Exportar PDF*, que baja un ZIP con todas las fotos de la visita
+  **organizadas en carpetas**: una por cada punto (numerada y con su título) y
+  otra de *Fotos generales*. Dentro de cada carpeta las fotos van numeradas
+  desde 1. Antes había que bajarlas de una en una.
+- **Editar el título de un punto.** Un botón de lápiz junto al título lo
+  convierte en un campo editable: se guarda con Enter o al salir, y se cancela
+  con Escape. Hasta ahora el título se escribía al crear el punto y ya no había
+  forma de cambiarlo; solo se podía editar la descripción.
+
+### Nota
+
+Si se deja el título de un punto vacío, se recupera el que tenía: un punto sin
+título no habría manera de identificarlo en el informe.
 
 ---
 
