@@ -144,6 +144,17 @@ export async function setPuntoDescripcionLocal(id: string, descripcion: string):
   });
 }
 
+export async function setPuntoTituloLocal(id: string, titulo: string): Promise<void> {
+  const existing = await db.puntos.get(id);
+  if (!existing) return;
+  await db.puntos.put({
+    ...existing,
+    titulo,
+    updatedAt: new Date().toISOString(),
+    syncStatus: "pending",
+  });
+}
+
 export async function movePuntoLocal(
   visitaId: string,
   puntoId: string,

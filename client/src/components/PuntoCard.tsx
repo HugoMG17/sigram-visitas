@@ -8,6 +8,7 @@ import {
   movePuntoLocal,
   setPuntoDescripcionLocal,
   setPuntoEstadoLocal,
+  setPuntoTituloLocal,
   softDeletePuntoLocal,
 } from "../db/repositories/puntoRepo";
 import { resolveAdjuntoFileUrl } from "../api/adjuntos";
@@ -43,6 +44,8 @@ export function PuntoCard({
   const adjuntos = useLiveQuery(() => listAdjuntosDePunto(punto.id), [punto.id]) ?? [];
   const [descripcion, setDescripcion] = useState(punto.descripcion ?? "");
   const [fotoAbierta, setFotoAbierta] = useState<LocalAdjunto | null>(null);
+  const [editandoTitulo, setEditandoTitulo] = useState(false);
+  const [titulo, setTitulo] = useState(punto.titulo ?? "");
 
   const estadoMutation = useMutation({
     networkMode: "always",
@@ -69,6 +72,31 @@ export function PuntoCard({
     onSuccess: () => void runSync(),
   });
 
+  const tituloMutation = useMutation({
+    networkMode: "always",
+    mutationFn: (valor: string) => setPuntoTituloLocal(punto.id, valor),
+    onSuccess: () => void runSync(),
+  });
+
+  function empezarAEditarTitulo() {
+    // Se parte del título actual del punto, no de un estado antiguo: así
+    // refleja también un cambio que haya llegado desde otro dispositivo.
+    setTitulo(punto.titulo ?? "");
+    setEditandoTitulo(true);
+  }
+
+  function guardarTitulo() {
+    const limpio = titulo.trim();
+    setEditandoTitulo(false);
+    // Un punto sin título no es útil (no habría por dónde identificarlo en el
+    // informe), así que si se deja vacío se recupera el que tenía.
+    if (!limpio) {
+      setTitulo(punto.titulo ?? "");
+      return;
+    }
+    if (limpio !== (punto.titulo ?? "")) tituloMutation.mutate(limpio);
+  }
+
   const dotColor =
     punto.estado === "solucionado"
       ? "#16a34a"
@@ -91,7 +119,37 @@ export function PuntoCard({
               flexShrink: 0,
             }}
           />
-          <strong>{punto.titulo || "Punto sin título"}</strong>
+          {editandoTitulo ? (
+            <input
+              className="input"
+              autoFocus
+              value={titulo}
+              style={{ fontWeight: 700, minWidth: 180 }}
+              onChange={(e) => setTitulo(e.target.value)}
+              onBlur={guardarTitulo}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") guardarTitulo();
+                if (e.key === "Escape") {
+                  setTitulo(punto.titulo ?? "");
+                  setEditandoTitulo(false);
+                }
+              }}
+            />
+          ) : (
+            <>
+              <strong>{punto.titulo || "Punto sin título"}</strong>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                title="Editar el título del punto"
+                aria-label="Editar el título del punto"
+                style={{ padding: "0.1rem 0.4rem", fontSize: "0.8rem", lineHeight: 1.2 }}
+                onClick={empezarAEditarTitulo}
+              >
+                ✏️
+              </button>
+            </>
+          )}
         </div>
         <div className="row" style={{ gap: "0.4rem" }}>
           <button
