@@ -7,6 +7,8 @@ import { VisitaFormPage } from "./routes/VisitaFormPage";
 import { VisitaDetailPage } from "./routes/VisitaDetailPage";
 import { PersonasListPage } from "./routes/PersonasListPage";
 import { PersonaFormPage } from "./routes/PersonaFormPage";
+import { MusaatListPage } from "./routes/MusaatListPage";
+import { MusaatFormPage } from "./routes/MusaatFormPage";
 
 function App() {
   return (
@@ -23,6 +25,9 @@ function App() {
           <Route path="/personas" element={<PersonasListPage />} />
           <Route path="/personas/nueva" element={<PersonaFormPage />} />
           <Route path="/personas/:personaId/editar" element={<PersonaFormPage />} />
+          <Route path="/musaat" element={<MusaatListPage />} />
+          <Route path="/musaat/nueva" element={<MusaatFormPage />} />
+          <Route path="/musaat/:musaatId/editar" element={<MusaatFormPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>

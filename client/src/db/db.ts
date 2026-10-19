@@ -1,5 +1,13 @@
 import Dexie, { type Table } from "dexie";
-import type { Adjunto, Obra, Persona, Punto, SyncStatus, Visita } from "@sigram/shared";
+import type {
+  Adjunto,
+  Obra,
+  Persona,
+  Punto,
+  RegistroMusaat,
+  SyncStatus,
+  Visita,
+} from "@sigram/shared";
 
 export interface LocalObra extends Obra {
   syncStatus: SyncStatus;
@@ -29,12 +37,18 @@ export interface LocalPersona extends Persona {
   syncError?: string;
 }
 
+export interface LocalMusaat extends RegistroMusaat {
+  syncStatus: SyncStatus;
+  syncError?: string;
+}
+
 export class AppDB extends Dexie {
   obras!: Table<LocalObra, string>;
   visitas!: Table<LocalVisita, string>;
   puntos!: Table<LocalPunto, string>;
   adjuntos!: Table<LocalAdjunto, string>;
   personas!: Table<LocalPersona, string>;
+  musaat!: Table<LocalMusaat, string>;
 
   constructor() {
     super("sigram-visitas");
@@ -61,6 +75,16 @@ export class AppDB extends Dexie {
       puntos: "id, visitaId, syncStatus, orden, deletedAt",
       adjuntos: "id, visitaId, puntoId, syncStatus, orden",
       personas: "id, syncStatus, updatedAt, deletedAt",
+    });
+    // v4: el registro de Musaat. Como en la v3, se repiten los stores
+    // anteriores tal cual; nunca se edita un bloque de versión ya publicada.
+    this.version(4).stores({
+      obras: "id, syncStatus, updatedAt, deletedAt",
+      visitas: "id, obraId, syncStatus, updatedAt, fecha, deletedAt",
+      puntos: "id, visitaId, syncStatus, orden, deletedAt",
+      adjuntos: "id, visitaId, puntoId, syncStatus, orden",
+      personas: "id, syncStatus, updatedAt, deletedAt",
+      musaat: "id, syncStatus, updatedAt, deletedAt",
     });
   }
 }

@@ -21,6 +21,7 @@ export async function seedDemoSiSePide(): Promise<void> {
 
   await Promise.all([
     db.personas.clear(),
+    db.musaat.clear(),
     db.obras.clear(),
     db.visitas.clear(),
     db.puntos.clear(),
@@ -106,14 +107,97 @@ export async function seedDemoSiSePide(): Promise<void> {
 
   // Fichas de la agenda. A proposito NO se enlazan con las obras: asi se
   // puede probar tanto el buscador del formulario como el importador.
-  await db.personas.bulkPut([
-    { id: "c0a10000-0000-4000-8000-000000000001", nombre: "María Jesús Pizarro Hurtado", dni: "76123456Z", esEmpresa: false },
-    { id: "c0a10000-0000-4000-8000-000000000002", nombre: "Promociones Norba S.L.", dni: "B10234567", esEmpresa: true },
-    { id: "c0a10000-0000-4000-8000-000000000003", nombre: "Hugo Martín Gabriel", dni: "44987654Q", esEmpresa: false },
-    { id: "c0a10000-0000-4000-8000-000000000004", nombre: "Talleres Monfragüe S.L.", dni: "B10987654", esEmpresa: true },
-    { id: "c0a10000-0000-4000-8000-000000000005", nombre: "Lucía Benítez Tovar", dni: "28112233D", esEmpresa: false },
-    { id: "c0a10000-0000-4000-8000-000000000006", nombre: "Álvaro Rey Cordero", dni: "", esEmpresa: false },
-  ].map((f) => ({ ...f, createdAt: FECHA, updatedAt: FECHA, deletedAt: null, syncStatus: "synced" as const })));
+  await db.personas.bulkPut(
+    [
+      {
+        id: "c0a10000-0000-4000-8000-000000000001",
+        nombre: "María Jesús Pizarro Hurtado",
+        dni: "76123456Z",
+        esEmpresa: false,
+      },
+      {
+        id: "c0a10000-0000-4000-8000-000000000002",
+        nombre: "Promociones Norba S.L.",
+        dni: "B10234567",
+        esEmpresa: true,
+      },
+      {
+        id: "c0a10000-0000-4000-8000-000000000003",
+        nombre: "Hugo Martín Gabriel",
+        dni: "44987654Q",
+        esEmpresa: false,
+      },
+      {
+        id: "c0a10000-0000-4000-8000-000000000004",
+        nombre: "Talleres Monfragüe S.L.",
+        dni: "B10987654",
+        esEmpresa: true,
+      },
+      {
+        id: "c0a10000-0000-4000-8000-000000000005",
+        nombre: "Lucía Benítez Tovar",
+        dni: "28112233D",
+        esEmpresa: false,
+      },
+      {
+        id: "c0a10000-0000-4000-8000-000000000006",
+        nombre: "Álvaro Rey Cordero",
+        dni: "",
+        esEmpresa: false,
+      },
+    ].map((f) => ({
+      ...f,
+      createdAt: FECHA,
+      updatedAt: FECHA,
+      deletedAt: null,
+      syncStatus: "synced" as const,
+    }))
+  );
+
+  // Registro de Musaat: uno con todo enviado, dos con algo pendiente y uno
+  // sin marcar, para ver los tres puntos de la lista.
+  await db.musaat.bulkPut(
+    [
+      {
+        id: "3a5a0000-0000-4000-8000-000000000001",
+        numeroExpediente: "2026-014",
+        nombre: "REFORMA DE VIVIENDA UNIFAMILIAR Y PISCINA",
+        intervenciones: {
+          direccionAparejador: { aplica: true, fechaEnvio: "2026-02-10" },
+          coordinacion: { aplica: true, fechaEnvio: "2026-02-10" },
+        },
+      },
+      {
+        id: "3a5a0000-0000-4000-8000-000000000002",
+        numeroExpediente: "2026-009",
+        nombre: "EDIFICIO DE 12 VIVIENDAS EN AVENIDA DE ESPAÑA",
+        intervenciones: {
+          proyecto: { aplica: true, fechaEnvio: "2026-01-15" },
+          estudioSeguridad: { aplica: true, fechaEnvio: "2026-01-15" },
+          direccionObra: { aplica: true },
+          coordinacion: { aplica: true },
+        },
+      },
+      {
+        id: "3a5a0000-0000-4000-8000-000000000003",
+        numeroExpediente: "2026-022",
+        nombre: "NAVE INDUSTRIAL EN EL POLÍGONO LAS CAPELLANÍAS",
+        intervenciones: { direccionAparejador: { aplica: true } },
+      },
+      {
+        id: "3a5a0000-0000-4000-8000-000000000004",
+        numeroExpediente: "2026-031",
+        nombre: "VIVIENDA UNIFAMILIAR AISLADA EN SIERRA DE FUENTES",
+        intervenciones: {},
+      },
+    ].map((r) => ({
+      ...r,
+      createdAt: FECHA,
+      updatedAt: FECHA,
+      deletedAt: null,
+      syncStatus: "synced" as const,
+    }))
+  );
 
   await db.visitas.bulkPut([
     {
@@ -173,20 +257,58 @@ export async function seedDemoSiSePide(): Promise<void> {
     },
   ]);
 
-  await db.puntos.bulkPut([
-    { id: "90410000-0000-4000-8000-000000000001", visitaId: "71510000-0000-4000-8000-000000000001", titulo: "Armado del vaso de la piscina", estado: "pendiente", orden: 0 },
-    { id: "90410000-0000-4000-8000-000000000002", visitaId: "71510000-0000-4000-8000-000000000001", titulo: "Impermeabilización del muro de contención", estado: "pendiente", orden: 1 },
-    { id: "90410000-0000-4000-8000-000000000003", visitaId: "71510000-0000-4000-8000-000000000001", titulo: "Acometida del cuarto de depuradora", estado: "solucionado", orden: 2 },
-    { id: "90410000-0000-4000-8000-000000000004", visitaId: "71510000-0000-4000-8000-000000000002", titulo: "Pasos de instalaciones en tabiquería", estado: "pendiente", orden: 0 },
-    { id: "90410000-0000-4000-8000-000000000005", visitaId: "71510000-0000-4000-8000-000000000002", titulo: "Replanteo de huecos de carpintería", estado: "solucionado", orden: 1 },
-    { id: "90410000-0000-4000-8000-000000000006", visitaId: "71510000-0000-4000-8000-000000000003", titulo: "Juntas de hormigonado", estado: "solucionado", orden: 0 },
-  ].map((p) => ({
-    ...p,
-    estado: p.estado as "pendiente" | "solucionado",
-    descripcion: "",
-    createdAt: FECHA,
-    updatedAt: FECHA,
-    deletedAt: null,
-    syncStatus: "synced" as const,
-  })));
+  await db.puntos.bulkPut(
+    [
+      {
+        id: "90410000-0000-4000-8000-000000000001",
+        visitaId: "71510000-0000-4000-8000-000000000001",
+        titulo: "Armado del vaso de la piscina",
+        estado: "pendiente",
+        orden: 0,
+      },
+      {
+        id: "90410000-0000-4000-8000-000000000002",
+        visitaId: "71510000-0000-4000-8000-000000000001",
+        titulo: "Impermeabilización del muro de contención",
+        estado: "pendiente",
+        orden: 1,
+      },
+      {
+        id: "90410000-0000-4000-8000-000000000003",
+        visitaId: "71510000-0000-4000-8000-000000000001",
+        titulo: "Acometida del cuarto de depuradora",
+        estado: "solucionado",
+        orden: 2,
+      },
+      {
+        id: "90410000-0000-4000-8000-000000000004",
+        visitaId: "71510000-0000-4000-8000-000000000002",
+        titulo: "Pasos de instalaciones en tabiquería",
+        estado: "pendiente",
+        orden: 0,
+      },
+      {
+        id: "90410000-0000-4000-8000-000000000005",
+        visitaId: "71510000-0000-4000-8000-000000000002",
+        titulo: "Replanteo de huecos de carpintería",
+        estado: "solucionado",
+        orden: 1,
+      },
+      {
+        id: "90410000-0000-4000-8000-000000000006",
+        visitaId: "71510000-0000-4000-8000-000000000003",
+        titulo: "Juntas de hormigonado",
+        estado: "solucionado",
+        orden: 0,
+      },
+    ].map((p) => ({
+      ...p,
+      estado: p.estado as "pendiente" | "solucionado",
+      descripcion: "",
+      createdAt: FECHA,
+      updatedAt: FECHA,
+      deletedAt: null,
+      syncStatus: "synced" as const,
+    }))
+  );
 }

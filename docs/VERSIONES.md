@@ -31,6 +31,18 @@ ya ha llegado.
 - **El informe recoge las correcciones**, sin necesidad de volver a abrir la
   obra.
 
+- **Musaat: el control de lo que hay que declarar.** Apartado nuevo con la
+  lista de obras que van a la mutua. De cada una marcas en cuál de las cinco
+  intervenciones participas —proyecto, estudio de seguridad, dirección de
+  obra, dirección aparejador y coordinación— y cada una lleva **su propia
+  fecha de envío**. Un punto por obra resume cómo va: verde si está todo
+  enviado, rojo si falta algo. Arriba, un filtro de *faltan por enviar* y un
+  buscador por nº de expediente o nombre.
+
+  Es una lista independiente de tus obras, a propósito: no todas las obras se
+  declaran, y lo que mandas a la mutua debe quedar como lo mandaste, sin que
+  lo cambie después una edición de la obra. Se apunta a mano.
+
 ### Notas
 
 Nada de lo que ya tenías cambia. Una obra escrita a mano sigue funcionando

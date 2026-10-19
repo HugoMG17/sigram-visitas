@@ -3,11 +3,12 @@ import { apiClient } from "../api/client";
 import { fetchAuthStatus } from "../api/auth";
 import { deleteObra, saveObra } from "../api/obras";
 import { deletePersona, savePersona } from "../api/personas";
+import { deleteMusaat, saveMusaat } from "../api/musaat";
 import { deleteVisita, saveVisita } from "../api/visitas";
 import { deletePunto, savePunto } from "../api/puntos";
 import { uploadAdjunto } from "../api/adjuntos";
 import { db } from "../db/db";
-import type { Adjunto, Obra, Persona, Punto, Visita } from "@sigram/shared";
+import type { Adjunto, Obra, Persona, Punto, RegistroMusaat, Visita } from "@sigram/shared";
 
 let syncing = false;
 let intervalHandle: ReturnType<typeof setInterval> | undefined;
@@ -39,6 +40,24 @@ async function pushPersonas(): Promise<void> {
       await db.personas.update(persona.id, { syncStatus: "synced", syncError: undefined });
     } catch (err) {
       await db.personas.update(persona.id, { syncStatus: "error", syncError: describeError(err) });
+    }
+  }
+}
+
+// El registro de Musaat tampoco cuelga de nada, así que va suelto en el ciclo.
+async function pushMusaat(): Promise<void> {
+  const pendientes = await db.musaat.where("syncStatus").anyOf(["pending", "error"]).toArray();
+  for (const registro of pendientes) {
+    try {
+      if (registro.deletedAt) {
+        await deleteMusaat(registro.id);
+      } else {
+        const { id, syncStatus: _s, syncError: _e, createdAt: _c, updatedAt: _u, deletedAt: _d, ...data } = registro;
+        await saveMusaat(id, data);
+      }
+      await db.musaat.update(registro.id, { syncStatus: "synced", syncError: undefined });
+    } catch (err) {
+      await db.musaat.update(registro.id, { syncStatus: "error", syncError: describeError(err) });
     }
   }
 }
@@ -151,6 +170,14 @@ async function pull(): Promise<void> {
     }
   }
 
+  const remoteMusaat = await apiClient.get<RegistroMusaat[]>("/musaat").then((r) => r.data);
+  for (const remoto of remoteMusaat) {
+    const local = await db.musaat.get(remoto.id);
+    if (!local || local.syncStatus === "synced") {
+      await db.musaat.put({ ...remoto, syncStatus: "synced" });
+    }
+  }
+
   const remoteObras = await apiClient.get<Obra[]>("/obras").then((r) => r.data);
   for (const remota of remoteObras) {
     const local = await db.obras.get(remota.id);
@@ -205,6 +232,7 @@ export async function runSync(): Promise<void> {
   syncing = true;
   try {
     await pushPersonas();
+    await pushMusaat();
     await pushObras();
     await pushVisitas();
     await pushPuntos();
@@ -226,7 +254,7 @@ export async function runSync(): Promise<void> {
 const LAST_USER_EMAIL_KEY = "sigram:lastUserEmail:v2";
 
 async function hasPendingLocalChanges(): Promise<boolean> {
-  const tables = [db.personas, db.obras, db.visitas, db.puntos, db.adjuntos];
+  const tables = [db.personas, db.musaat, db.obras, db.visitas, db.puntos, db.adjuntos];
   for (const table of tables) {
     const count = await table.where("syncStatus").anyOf(["pending", "error"]).count();
     if (count > 0) return true;
@@ -274,6 +302,7 @@ async function resetLocalDataIfUserChanged(): Promise<boolean> {
   // un arquitecto se quedarían a la vista del siguiente en el mismo navegador.
   await Promise.all([
     db.personas.clear(),
+    db.musaat.clear(),
     db.obras.clear(),
     db.visitas.clear(),
     db.puntos.clear(),

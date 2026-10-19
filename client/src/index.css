@@ -333,6 +333,105 @@ time {
   font-weight: 600;
 }
 
+/* ---------- Musaat ----------------------------------------------------- */
+
+/* Filtro de la lista. El activo va en tinta, el otro en gris: se ve lo que
+   estás mirando sin tener que leerlo. */
+.filtros {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.filtro {
+  min-height: var(--touch);
+  padding: 0 14px;
+  border: 1px solid var(--color-control);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-muted);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.filtro--activo {
+  background: var(--color-text);
+  border-color: var(--color-text);
+  color: white;
+}
+
+.intervenciones {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.interv {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.interv-punto {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.interv--enviada .interv-punto {
+  background: var(--color-fin);
+}
+
+.interv--falta .interv-punto {
+  background: var(--color-danger);
+}
+
+.interv-nombre {
+  color: var(--color-text);
+}
+
+.interv-fecha {
+  color: var(--color-muted);
+}
+
+.interv--falta .interv-fecha {
+  color: var(--color-danger);
+}
+
+.intervencion-campo {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--color-rule);
+  padding-top: 10px;
+}
+
+.intervencion-campo .opcion-radio input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--color-ink);
+}
+
+.intervencion-fecha {
+  flex-shrink: 0;
+}
+
+.intervencion-fecha .input {
+  min-width: 150px;
+}
+
 /* ---------- Buscador de fichas de la agenda ---------------------------- */
 
 .combo {
@@ -743,6 +842,31 @@ time {
   font-size: 13px;
   color: var(--color-muted);
   font-variant-numeric: tabular-nums;
+}
+
+.fila--musaat {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+/* El punto de la lista. Verde: todo enviado. Rojo: falta algo. Gris: aún no
+   se ha marcado en qué se interviene, así que no falta nada todavía. */
+.punto-estado {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+  background: var(--color-control);
+}
+
+.punto-estado--enviado {
+  background: var(--color-fin);
+}
+
+.punto-estado--pendiente {
+  background: var(--color-danger);
 }
 
 /* ---------- La barra de fase de la obra -------------------------------- */

@@ -65,6 +65,7 @@ export function Layout({ children }: { children: ReactNode }) {
             Obras
           </NavLink>
           <NavLink to="/personas">Personas</NavLink>
+          <NavLink to="/musaat">Musaat</NavLink>
         </nav>
       </header>
       <SyncErrores />
