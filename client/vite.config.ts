@@ -27,8 +27,10 @@ export default defineConfig({
         name: "SIGRAM APP",
         short_name: "SIGRAM",
         description: "Gestión de obras y visitas para arquitectos",
-        theme_color: "#1e293b",
-        background_color: "#1e293b",
+        // Del color de la barra de estado de Android: tiene que ser el
+        // mismo gris piedra que la cabecera de la app, no el azul de antes.
+        theme_color: "#f4f3f1",
+        background_color: "#f4f3f1",
         display: "standalone",
         start_url: "/",
         icons: [

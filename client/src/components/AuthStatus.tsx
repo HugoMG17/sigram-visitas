@@ -11,17 +11,10 @@ export function AuthStatus() {
   if (!data?.authenticated) return null;
 
   return (
-    <div className="row" style={{ gap: "0.4rem", fontSize: "0.8rem" }}>
-      <span className="muted" style={{ color: "#cbd5e1" }}>
-        {data.email}
-      </span>
-      <button
-        type="button"
-        className="btn btn-secondary"
-        style={{ padding: "0.2rem 0.5rem", fontSize: "0.75rem" }}
-        onClick={() => logout()}
-      >
-        Cerrar sesión
+    <div className="row" style={{ gap: "8px" }}>
+      <span className="app-bar-email">{data.email}</span>
+      <button type="button" className="btn btn-secondary btn-sm" onClick={() => logout()}>
+        Salir
       </button>
     </div>
   );

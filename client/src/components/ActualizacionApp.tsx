@@ -73,11 +73,11 @@ export function ActualizacionApp() {
         display: "flex",
         alignItems: "center",
         gap: "0.75rem",
-        background: "#1e293b",
+        background: "#141414",
         color: "white",
         padding: "0.6rem 0.9rem",
         borderRadius: 8,
-        boxShadow: "0 6px 20px rgba(15, 23, 42, 0.35)",
+        boxShadow: "0 6px 20px rgba(10, 10, 10, 0.28)",
         fontSize: "0.85rem",
         maxWidth: "min(92vw, 520px)",
       }}
@@ -91,7 +91,16 @@ export function ActualizacionApp() {
       <button
         type="button"
         className="btn"
-        style={{ padding: "0.3rem 0.7rem", fontSize: "0.85rem", flexShrink: 0 }}
+        // El aviso va sobre tinta, asi que el boton se invierte: blanco
+        // sobre negro, que es el unico contraste que funciona ahi.
+        style={{
+          background: "white",
+          color: "#141414",
+          minHeight: 34,
+          padding: "0 0.7rem",
+          fontSize: "0.85rem",
+          flexShrink: 0,
+        }}
         onClick={() => void updateServiceWorker(true)}
       >
         Actualizar ahora

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { SyncBadge } from "./SyncBadge";
+import { SyncBadge, SyncErrores } from "./SyncBadge";
 import { AuthStatus } from "./AuthStatus";
 import { etiquetaEntorno } from "../utils/entorno";
 import { ActualizacionApp } from "./ActualizacionApp";
@@ -12,29 +12,36 @@ export function Layout({ children }: { children: ReactNode }) {
 
   return (
     <div>
-      <header className="app-header">
-        {/* La versión va debajo del nombre. Sirve para saber si una
-            actualización ya ha llegado, sin adivinarlo por los cambios. */}
-        <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.15 }}>
-          <Link to="/">SIGRAM APP</Link>
-          <span title="Versión instalada" style={{ fontSize: "0.7rem", opacity: 0.55 }}>
-            v{__APP_VERSION__}
-          </span>
-        </div>
-        {entorno && (
-          <span
-            className="badge"
-            title="Este NO es el sitio real: los datos que metas aquí son de prueba"
-            style={{ background: entorno.color, color: "white", marginLeft: "0.5rem" }}
-          >
-            {entorno.texto}
-          </span>
-        )}
-        <div className="header-right">
-          <AuthStatus />
-          <SyncBadge />
+      {/* La barra va sobre el mismo fondo que la página, separada solo por una
+          línea. Antes era una franja azul oscura que en el móvil se comía los
+          primeros 300 px de pantalla antes de empezar a ver obras. */}
+      <header className="app-bar">
+        <div className="app-bar-inner">
+          <div className="row" style={{ gap: "10px" }}>
+            {/* La versión va debajo del nombre. Sirve para saber si una
+                actualización ya ha llegado, sin adivinarlo por los cambios. */}
+            <Link to="/" className="brand">
+              <span className="brand-name">SIGRAM APP</span>
+              <span className="brand-version" title="Versión instalada">
+                v{__APP_VERSION__}
+              </span>
+            </Link>
+            {entorno && (
+              <span
+                className="chip chip--error"
+                title="Este NO es el sitio real: los datos que metas aquí son de prueba"
+              >
+                {entorno.texto}
+              </span>
+            )}
+          </div>
+          <div className="app-bar-right">
+            <AuthStatus />
+            <SyncBadge />
+          </div>
         </div>
       </header>
+      <SyncErrores />
       <main className="page">{children}</main>
       <ActualizacionApp />
     </div>
