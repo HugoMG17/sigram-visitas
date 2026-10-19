@@ -129,9 +129,15 @@ a {
 /* Saltar al contenido: lo primero que encuentra el tabulador, invisible
    hasta que se enfoca. */
 .saltar {
-  position: absolute;
+  /* Sin tamaño mientras no se enfoca, para que no cuente como contenido ni
+     deje una caja fantasma en el margen de la página. */
+  position: fixed;
   left: 16px;
-  top: -100px;
+  top: 12px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
   z-index: 40;
   background: var(--color-surface);
   border: 1px solid var(--color-text);
@@ -141,11 +147,13 @@ a {
   font-weight: 500;
   text-decoration: none;
   color: var(--color-text);
-  transition: top 0.12s ease;
 }
 
 .saltar:focus {
-  top: 12px;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
 }
 
 /* Lo que solo se lee en voz alta. */
@@ -307,18 +315,23 @@ time {
   color: var(--color-danger-ink);
 }
 
+/* El aviso va dentro de la columna, no como franja de lado a lado: una
+   franja roja a todo lo ancho es una alarma de sistema, y esto es un fallo
+   de un envío concreto. */
 .sync-errores {
-  background: var(--color-danger-bg);
-  border-bottom: 1px solid #f5d6d4;
+  max-width: var(--column);
+  margin: 16px auto 0;
+  padding: 0 max(24px, env(safe-area-inset-right)) 0 max(24px, env(safe-area-inset-left));
 }
 
 .sync-errores-inner {
-  max-width: var(--column);
-  margin: 0 auto;
-  padding: 8px 24px;
+  background: var(--color-danger-bg);
+  border: 1px solid #f1cfcd;
+  border-radius: var(--radius-card);
+  padding: 10px 14px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 /* Dos líneas como mucho por fallo: el mensaje acaba con un consejo largo
@@ -580,6 +593,13 @@ time {
 
 .fase--acabada .fase-nombre {
   color: var(--color-fin);
+}
+
+/* Editar y Eliminar se quedan en la misma línea: partidos en dos, Eliminar
+   quedaba suelto y descolgado debajo. */
+.acciones-obra {
+  flex-wrap: nowrap;
+  align-items: center;
 }
 
 .fase--parada .fase-nombre {
