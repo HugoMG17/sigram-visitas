@@ -29,3 +29,6 @@ client/android/app/src/main/assets/public/
 
 # Los APK generados no van al repositorio: son resultado de compilar
 *.apk
+
+# Las notas de version en PDF se generan cuando hacen falta; no son codigo
+SIGRAM-APP-notas-*.pdf
