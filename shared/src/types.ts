@@ -18,6 +18,35 @@ export type SyncStatus = "synced" | "pending" | "error";
 export interface AgentePersona {
   nombre?: string;
   dni?: string;
+  // Ficha de la agenda (tabla `personas`) de la que salen estos datos.
+  //
+  // Cuando está, los datos VIVOS de la ficha mandan sobre `nombre` y `dni`,
+  // que quedan como copia de respaldo: así corregir un DNI una sola vez lo
+  // corrige en todas las obras y en los informes que se generen después.
+  //
+  // La copia se guarda igualmente a propósito, para que la obra siga
+  // diciendo algo si la ficha se borra de la agenda, y para que las obras
+  // anteriores a la agenda (sin personaId) funcionen exactamente como antes.
+  personaId?: string;
+}
+
+// Una ficha de la agenda: alguien con quien se trabaja a menudo y que se
+// repite en muchas obras. Puede ser una persona o una sociedad (promotor y
+// constructora suelen serlo), y es lo único que distingue `esEmpresa`: el
+// documento se etiqueta CIF en vez de DNI.
+export interface Persona {
+  id: string;
+  nombre: string;
+  dni?: string;
+  esEmpresa?: boolean;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+}
+
+// Etiqueta del documento según el tipo de ficha.
+export function etiquetaDocumento(esEmpresa: boolean | undefined): string {
+  return esEmpresa ? "CIF" : "DNI";
 }
 
 // Los seis roles de la obra. Cada uno admite VARIAS personas.
@@ -208,6 +237,59 @@ export function direccionFacultativaExtraDeObra(obra: Obra): AgenteExtra[] {
   return (obra.direccionFacultativaExtra ?? [])
     .filter((extra) => (extra.rol ?? "").trim() !== "" && personasConNombre(extra.personas).length > 0)
     .map((extra) => ({ rol: extra.rol.trim(), personas: personasConNombre(extra.personas) }));
+}
+
+// --- Resolución del vínculo con la agenda ---------------------------------
+//
+// Estas tres funciones son el ÚNICO sitio donde se decide qué datos de una
+// persona se muestran. Las usan igual la app y el servidor al generar el PDF,
+// para que no puedan divergir.
+
+// Datos a mostrar de una persona de la obra. Si está vinculada a una ficha de
+// la agenda y la ficha existe, ganan los datos de la ficha; si no (ficha
+// borrada, u obra anterior a la agenda), se usa la copia guardada en la obra.
+export function resolverPersona(
+  persona: AgentePersona,
+  agenda: Map<string, Persona>
+): AgentePersona {
+  if (!persona.personaId) return persona;
+  const ficha = agenda.get(persona.personaId);
+  if (!ficha) return persona;
+  return { personaId: persona.personaId, nombre: ficha.nombre, dni: ficha.dni };
+}
+
+// Todos los roles de una obra con sus vínculos ya resueltos. Se copian solo
+// las claves propias, por lo mismo que explica personasDeRol.
+export function resolverAgentes(
+  agentes: ObraAgentes,
+  agenda: Map<string, Persona>
+): ObraAgentes {
+  const origen = agentes as Record<string, AgentePersona[] | undefined>;
+  const resultado: Record<string, AgentePersona[] | undefined> = {};
+  for (const rol of Object.keys(origen)) {
+    resultado[rol] = (origen[rol] ?? []).map((p) => resolverPersona(p, agenda));
+  }
+  return resultado as ObraAgentes;
+}
+
+// Lo mismo para los roles escritos a mano de la Dirección Facultativa.
+export function resolverExtras(
+  extras: AgenteExtra[],
+  agenda: Map<string, Persona>
+): AgenteExtra[] {
+  return extras.map((extra) => ({
+    rol: extra.rol,
+    personas: extra.personas.map((p) => resolverPersona(p, agenda)),
+  }));
+}
+
+// Índice por id para pasar a las funciones de arriba.
+export function indicePersonas(personas: Persona[]): Map<string, Persona> {
+  const indice = new Map<string, Persona>();
+  for (const persona of personas) {
+    if (!persona.deletedAt) indice.set(persona.id, persona);
+  }
+  return indice;
 }
 
 // Accesor de un rol dentro de `agentes` que solo lee claves propias, nunca
