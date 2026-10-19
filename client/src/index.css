@@ -312,6 +312,27 @@ time {
   border-bottom-color: var(--color-text);
 }
 
+/* Aviso de que queda gente por pasar a la agenda. No lleva color: no es un
+   problema, es una sugerencia que se puede ignorar. */
+.aviso-importar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+
+.aviso-titulo {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
 /* ---------- Buscador de fichas de la agenda ---------------------------- */
 
 .combo {
