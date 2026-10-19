@@ -16,48 +16,48 @@ export function VisitaCard({ visita }: { visita: LocalVisita }) {
   const sinEstado = (puntos?.length ?? 0) - pendientes - solucionados;
 
   return (
-    <Link to={`/visitas/${visita.id}`} className="fila fila--visita">
-      <div>
-        <p className="fila-meta" style={{ marginBottom: "2px" }}>
-          <time dateTime={visita.fecha}>{format(new Date(visita.fecha), "dd/MM/yyyy")}</time>
-        </p>
-        <p className="fila-nombre" style={{ margin: 0, fontSize: "16px" }}>
-          {visita.titulo || "Visita de obra"}
-        </p>
-      </div>
+    <li>
+      <Link to={`/visitas/${visita.id}`} className="fila fila--visita">
+        <div>
+          <p className="fila-meta" style={{ marginBottom: "2px" }}>
+            <time dateTime={visita.fecha}>{format(new Date(visita.fecha), "dd/MM/yyyy")}</time>
+          </p>
+          <p className="fila-nombre" style={{ margin: 0, fontSize: "16px" }}>
+            {visita.titulo || "Visita de obra"}
+          </p>
+        </div>
 
-      {/* Se dice lo que hay, incluido el cero: una visita sin puntos lo dice,
+        {/* Se dice lo que hay, incluido el cero: una visita sin puntos lo dice,
           no se queda en blanco como si todavía estuviera cargando. */}
-      <div className="fila-puntos">
-        {sinSubir && (
-          <span className="chip chip--pendiente" title="Todavía no está en el servidor">
-            <span className="chip-dot" />
-            Sin subir
-          </span>
-        )}
-        {puntos !== undefined &&
-          (puntos.length === 0 ? (
-            <span className="fila-puntos-cero">Sin puntos</span>
-          ) : (
-            <>
-              {pendientes > 0 && (
-                <span className="fila-puntos-dato">
-                  {pendientes} pendiente{pendientes === 1 ? "" : "s"}
-                </span>
-              )}
-              {solucionados > 0 && (
-                <span className="fila-puntos-cero">
-                  {solucionados} resuelto{solucionados === 1 ? "" : "s"}
-                </span>
-              )}
-              {pendientes === 0 && solucionados === 0 && (
-                <span className="fila-puntos-cero">
-                  {sinEstado} sin estado
-                </span>
-              )}
-            </>
-          ))}
-      </div>
-    </Link>
+        <div className="fila-puntos">
+          {sinSubir && (
+            <span className="chip chip--pendiente" title="Todavía no está en el servidor">
+              <span className="chip-dot" />
+              Sin subir
+            </span>
+          )}
+          {puntos !== undefined &&
+            (puntos.length === 0 ? (
+              <span className="fila-puntos-cero">Sin puntos</span>
+            ) : (
+              <>
+                {pendientes > 0 && (
+                  <span className="fila-puntos-dato">
+                    {pendientes} pendiente{pendientes === 1 ? "" : "s"}
+                  </span>
+                )}
+                {solucionados > 0 && (
+                  <span className="fila-puntos-cero">
+                    {solucionados} resuelto{solucionados === 1 ? "" : "s"}
+                  </span>
+                )}
+                {pendientes === 0 && solucionados === 0 && (
+                  <span className="fila-puntos-cero">{sinEstado} sin estado</span>
+                )}
+              </>
+            ))}
+        </div>
+      </Link>
+    </li>
   );
 }

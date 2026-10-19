@@ -18,17 +18,25 @@ export function ObraDetailPage() {
   // que se entra en una obra, así que se responde arriba y no hay que abrir
   // la visita para verlo.
   const ultima = visitas?.[0];
-  const pendientesUltima = useLiveQuery(
-    async () => {
-      if (!ultima) return undefined;
-      const puntos = await listPuntosDeVisita(ultima.id);
-      return puntos.filter((p) => p.estado === "pendiente").length;
-    },
-    [ultima?.id]
-  );
+  const pendientesUltima = useLiveQuery(async () => {
+    if (!ultima) return undefined;
+    const puntos = await listPuntosDeVisita(ultima.id);
+    return puntos.filter((p) => p.estado === "pendiente").length;
+  }, [ultima?.id]);
 
-  if (obra === undefined) return <p className="muted">Cargando obra…</p>;
-  if (!obra) return <p className="error-text">Obra no encontrada.</p>;
+  if (obra === undefined)
+    return (
+      <p className="muted" aria-live="polite">
+        Cargando obra…
+      </p>
+    );
+  if (!obra)
+    return (
+      <p className="error-text" role="alert">
+        No se encuentra esta obra. Puede que se haya borrado desde otro dispositivo.{" "}
+        <Link to="/">Volver a todas las obras</Link>.
+      </p>
+    );
 
   const currentObraId = obra.id;
   // Municipio y provincia coinciden en muchas obras (Cáceres, Cáceres):
@@ -59,9 +67,9 @@ export function ObraDetailPage() {
       resumenVisitas =
         pendientesUltima === undefined || pendientesUltima === 0
           ? `${cuantas} · nada pendiente en la última`
-          : `${cuantas} · ${pendientesUltima} punto${
+          : `${cuantas} · ${pendientesUltima} punto${pendientesUltima === 1 ? "" : "s"} pendiente${
               pendientesUltima === 1 ? "" : "s"
-            } pendiente${pendientesUltima === 1 ? "" : "s"} en la última`;
+            } en la última`;
     }
   }
 
@@ -77,7 +85,14 @@ export function ObraDetailPage() {
           para que esta pantalla no resulte abrumadora. */}
       <div className="page-head page-head--obra">
         <div>
-          <p className="fila-meta" style={{ marginBottom: "2px", justifyContent: "flex-start", gap: "10px" }}>
+          <p
+            className="fila-meta"
+            style={{
+              marginBottom: "2px",
+              justifyContent: "flex-start",
+              gap: "10px",
+            }}
+          >
             <span>{obra.numeroExpediente ? `Nº ${obra.numeroExpediente}` : "Sin expediente"}</span>
             {/* Lo mismo que se ve en la lista: si la obra no está subida, se
                 dice aquí también y no solo en el contador de la cabecera. */}
@@ -114,7 +129,11 @@ export function ObraDetailPage() {
         </Link>
       </div>
 
-      {visitas === undefined && <p className="muted">Cargando visitas…</p>}
+      {visitas === undefined && (
+        <p className="muted" aria-live="polite">
+          Cargando visitas…
+        </p>
+      )}
 
       {visitas && visitas.length === 0 && (
         <div className="empty-state">
@@ -125,11 +144,11 @@ export function ObraDetailPage() {
         </div>
       )}
 
-      <div className="lista">
+      <ul className="lista" aria-label="Visitas de esta obra">
         {visitas?.map((visita) => (
           <VisitaCard key={visita.id} visita={visita} />
         ))}
-      </div>
+      </ul>
     </div>
   );
 }

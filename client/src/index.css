@@ -84,6 +84,12 @@
   --color-success: #2e7d32;
 }
 
+html {
+  /* La barra de arriba es pegajosa: sin esto tapa justo lo que acabas de
+     enfocar con el tabulador o lo que trae un enlace interno. */
+  scroll-padding-top: 72px;
+}
+
 * {
   box-sizing: border-box;
   /* Nunca dejar que una palabra larga (nombre de fichero, email, URL...)
@@ -101,6 +107,66 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Quita el retardo de ~300 ms al tocar en Android y el zoom por doble toque
+   encima de una tarjeta o un botón, que en obra se dispara sin querer. */
+.btn,
+.fila,
+.back-link,
+.chip,
+.input,
+a {
+  touch-action: manipulation;
+}
+
+/* El destello gris de Android al tocar, a propósito y del color de la app:
+   por defecto es un azul que no pinta nada aquí. */
+.btn,
+.fila,
+.back-link {
+  -webkit-tap-highlight-color: rgba(11, 93, 107, 0.12);
+}
+
+/* Saltar al contenido: lo primero que encuentra el tabulador, invisible
+   hasta que se enfoca. */
+.saltar {
+  position: absolute;
+  left: 16px;
+  top: -100px;
+  z-index: 40;
+  background: var(--color-surface);
+  border: 1px solid var(--color-text);
+  border-radius: var(--radius-control);
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--color-text);
+  transition: top 0.12s ease;
+}
+
+.saltar:focus {
+  top: 12px;
+}
+
+/* Lo que solo se lee en voz alta. */
+.solo-voz {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
 #root {
   min-height: 100vh;
 }
@@ -114,6 +180,13 @@ h2,
 h3 {
   letter-spacing: -0.015em;
   line-height: 1.2;
+  /* Un nombre de obra largo se reparte entre las líneas en vez de dejar una
+     palabra suelta en la última. */
+  text-wrap: balance;
+}
+
+.fila-nombre {
+  text-wrap: pretty;
 }
 
 /* Todo número que se compara de una fila a otra (fechas, expedientes,
@@ -138,7 +211,9 @@ time {
   max-width: var(--column);
   margin: 0 auto;
   min-height: 52px;
-  padding: 0 24px;
+  /* En el APK con navegación por gestos, la barra del sistema se mete por
+     los lados y por abajo; estos márgenes la esquivan. */
+  padding: 0 max(24px, env(safe-area-inset-right)) 0 max(24px, env(safe-area-inset-left));
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -267,7 +342,8 @@ time {
 .page {
   max-width: var(--column);
   margin: 0 auto;
-  padding: 24px 24px 72px;
+  padding: 24px max(24px, env(safe-area-inset-right))
+    calc(72px + env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
 }
 
 /* Fila de título: el nombre de la pantalla a la izquierda, su única acción
@@ -376,6 +452,10 @@ time {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.lista > li {
+  display: block;
 }
 
 .fila {
@@ -700,8 +780,8 @@ textarea.input {
   .app-bar-inner,
   .sync-errores-inner,
   .page {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
   }
 
   .page {

@@ -31,7 +31,12 @@ export function ObrasListPage() {
       <div className="page-head">
         <div>
           <h1>Obras</h1>
-          {obras !== undefined && obras.length > 0 && <p className="sub">{resumen}</p>}
+          {/* El recuento cambia al escribir en el buscador: se anuncia. */}
+          {obras !== undefined && obras.length > 0 && (
+            <p className="sub" aria-live="polite">
+              {resumen}
+            </p>
+          )}
         </div>
         <Link to="/obras/nueva" className="btn">
           Nueva obra
@@ -39,16 +44,30 @@ export function ObrasListPage() {
       </div>
 
       {obras !== undefined && obras.length > 0 && (
-        <input
-          className="input buscador"
-          type="search"
-          placeholder="Buscar por nº de expediente o nombre…"
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-        />
+        <>
+          {/* El texto de dentro del campo no vale como etiqueta: desaparece
+              al escribir y un lector de pantalla no lo da por nombre. */}
+          <label className="solo-voz" htmlFor="buscar-obra">
+            Buscar una obra por nº de expediente o por nombre
+          </label>
+          <input
+            id="buscar-obra"
+            className="input buscador"
+            type="search"
+            name="buscar-obra"
+            autoComplete="off"
+            placeholder="Buscar por nº de expediente o nombre…"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+          />
+        </>
       )}
 
-      {obras === undefined && <p className="muted">Cargando obras…</p>}
+      {obras === undefined && (
+        <p className="muted" aria-live="polite">
+          Cargando obras…
+        </p>
+      )}
 
       {obras && obras.length === 0 && (
         <div className="empty-state">
@@ -68,11 +87,11 @@ export function ObrasListPage() {
         </div>
       )}
 
-      <div className="lista">
+      <ul className="lista" aria-label="Obras">
         {obrasFiltradas?.map((obra) => (
           <ObraCard key={obra.id} obra={obra} />
         ))}
-      </div>
+      </ul>
     </div>
   );
 }

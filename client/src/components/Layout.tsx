@@ -12,6 +12,10 @@ export function Layout({ children }: { children: ReactNode }) {
 
   return (
     <div>
+      {/* Con el teclado, lo primero es poder saltarse la cabecera entera. */}
+      <a href="#contenido" className="saltar">
+        Saltar al contenido
+      </a>
       {/* La barra va sobre el mismo fondo que la página, separada solo por una
           línea. Antes era una franja azul oscura que en el móvil se comía los
           primeros 300 px de pantalla antes de empezar a ver obras. */}
@@ -54,7 +58,9 @@ export function Layout({ children }: { children: ReactNode }) {
         </div>
       </header>
       <SyncErrores />
-      <main className="page">{children}</main>
+      <main className="page" id="contenido">
+        {children}
+      </main>
       <ActualizacionApp />
     </div>
   );

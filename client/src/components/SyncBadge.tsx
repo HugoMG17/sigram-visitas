@@ -21,7 +21,9 @@ export function SyncBadge() {
   }
 
   return (
-    <div className="row" style={{ gap: "8px" }}>
+    // Los avisos aparecen y desaparecen solos; sin esto, quien usa lector de
+    // pantalla no se entera de que hay algo sin subir.
+    <div className="row" style={{ gap: "8px" }} role="status" aria-live="polite">
       {!online && (
         <span className="chip chip--pendiente" title="No hay conexión: se guarda en el móvil">
           <span className="chip-dot" />
@@ -66,7 +68,7 @@ export function SyncErrores() {
   const resto = errores.length - visibles.length;
 
   return (
-    <div className="sync-errores">
+    <div className="sync-errores" role="status" aria-live="polite">
       <div className="sync-errores-inner">
         {visibles.map((e, i) => (
           <p key={i}>
