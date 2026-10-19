@@ -4,13 +4,14 @@ import { db } from "../db/db";
 
 export function usePendingCount(): number {
   const count = useLiveQuery(async () => {
-    const [o, v, p, a] = await Promise.all([
+    const [per, o, v, p, a] = await Promise.all([
+      db.personas.where("syncStatus").equals("pending").count(),
       db.obras.where("syncStatus").equals("pending").count(),
       db.visitas.where("syncStatus").equals("pending").count(),
       db.puntos.where("syncStatus").equals("pending").count(),
       db.adjuntos.where("syncStatus").equals("pending").count(),
     ]);
-    return o + v + p + a;
+    return per + o + v + p + a;
   }, []);
   return count ?? 0;
 }
@@ -23,13 +24,19 @@ export interface SyncErrorInfo {
 
 export function useSyncErrors(): SyncErrorInfo[] {
   const errores = useLiveQuery(async () => {
-    const [obras, visitas, puntos, adjuntos] = await Promise.all([
+    const [personas, obras, visitas, puntos, adjuntos] = await Promise.all([
+      db.personas.where("syncStatus").equals("error").toArray(),
       db.obras.where("syncStatus").equals("error").toArray(),
       db.visitas.where("syncStatus").equals("error").toArray(),
       db.puntos.where("syncStatus").equals("error").toArray(),
       db.adjuntos.where("syncStatus").equals("error").toArray(),
     ]);
     return [
+      ...personas.map((p) => ({
+        entidad: "Persona",
+        nombre: p.nombre || "Ficha sin nombre",
+        mensaje: p.syncError ?? "Error desconocido",
+      })),
       ...obras.map((o) => ({ entidad: "Obra", nombre: o.nombre, mensaje: o.syncError ?? "Error desconocido" })),
       ...visitas.map((v) => ({
         entidad: "Visita",

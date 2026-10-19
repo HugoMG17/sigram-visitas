@@ -2,11 +2,12 @@ import { isAxiosError } from "axios";
 import { apiClient } from "../api/client";
 import { fetchAuthStatus } from "../api/auth";
 import { deleteObra, saveObra } from "../api/obras";
+import { deletePersona, savePersona } from "../api/personas";
 import { deleteVisita, saveVisita } from "../api/visitas";
 import { deletePunto, savePunto } from "../api/puntos";
 import { uploadAdjunto } from "../api/adjuntos";
 import { db } from "../db/db";
-import type { Adjunto, Obra, Punto, Visita } from "@sigram/shared";
+import type { Adjunto, Obra, Persona, Punto, Visita } from "@sigram/shared";
 
 let syncing = false;
 let intervalHandle: ReturnType<typeof setInterval> | undefined;
@@ -20,6 +21,26 @@ function describeError(err: unknown): string {
     return `HTTP ${err.response.status}: ${data?.error ?? err.message}`;
   }
   return err instanceof Error ? err.message : String(err);
+}
+
+// La agenda no cuelga de nada, así que no hay padre que esperar: es el
+// primer push del ciclo, para que una obra que estrena un vínculo encuentre
+// la ficha ya subida.
+async function pushPersonas(): Promise<void> {
+  const pendientes = await db.personas.where("syncStatus").anyOf(["pending", "error"]).toArray();
+  for (const persona of pendientes) {
+    try {
+      if (persona.deletedAt) {
+        await deletePersona(persona.id);
+      } else {
+        const { id, syncStatus: _s, syncError: _e, createdAt: _c, updatedAt: _u, deletedAt: _d, ...data } = persona;
+        await savePersona(id, data);
+      }
+      await db.personas.update(persona.id, { syncStatus: "synced", syncError: undefined });
+    } catch (err) {
+      await db.personas.update(persona.id, { syncStatus: "error", syncError: describeError(err) });
+    }
+  }
 }
 
 async function pushObras(): Promise<void> {
@@ -122,6 +143,14 @@ async function pushAdjuntos(): Promise<void> {
 }
 
 async function pull(): Promise<void> {
+  const remotePersonas = await apiClient.get<Persona[]>("/personas").then((r) => r.data);
+  for (const remota of remotePersonas) {
+    const local = await db.personas.get(remota.id);
+    if (!local || local.syncStatus === "synced") {
+      await db.personas.put({ ...remota, syncStatus: "synced" });
+    }
+  }
+
   const remoteObras = await apiClient.get<Obra[]>("/obras").then((r) => r.data);
   for (const remota of remoteObras) {
     const local = await db.obras.get(remota.id);
@@ -175,6 +204,7 @@ export async function runSync(): Promise<void> {
 
   syncing = true;
   try {
+    await pushPersonas();
     await pushObras();
     await pushVisitas();
     await pushPuntos();
@@ -196,7 +226,7 @@ export async function runSync(): Promise<void> {
 const LAST_USER_EMAIL_KEY = "sigram:lastUserEmail:v2";
 
 async function hasPendingLocalChanges(): Promise<boolean> {
-  const tables = [db.obras, db.visitas, db.puntos, db.adjuntos];
+  const tables = [db.personas, db.obras, db.visitas, db.puntos, db.adjuntos];
   for (const table of tables) {
     const count = await table.where("syncStatus").anyOf(["pending", "error"]).count();
     if (count > 0) return true;
@@ -240,7 +270,15 @@ async function resetLocalDataIfUserChanged(): Promise<boolean> {
     if (!seguir) return false; // no se borra nada ni se sincroniza hasta que se resuelva
   }
 
-  await Promise.all([db.obras.clear(), db.visitas.clear(), db.puntos.clear(), db.adjuntos.clear()]);
+  // La agenda también se vacía al cambiar de cuenta: si no, los contactos de
+  // un arquitecto se quedarían a la vista del siguiente en el mismo navegador.
+  await Promise.all([
+    db.personas.clear(),
+    db.obras.clear(),
+    db.visitas.clear(),
+    db.puntos.clear(),
+    db.adjuntos.clear(),
+  ]);
   localStorage.setItem(LAST_USER_EMAIL_KEY, status.email);
   return true;
 }

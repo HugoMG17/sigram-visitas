@@ -1,5 +1,5 @@
 import Dexie, { type Table } from "dexie";
-import type { Adjunto, Obra, Punto, SyncStatus, Visita } from "@sigram/shared";
+import type { Adjunto, Obra, Persona, Punto, SyncStatus, Visita } from "@sigram/shared";
 
 export interface LocalObra extends Obra {
   syncStatus: SyncStatus;
@@ -24,11 +24,17 @@ export interface LocalAdjunto extends Adjunto {
   blobLocal?: Blob;
 }
 
+export interface LocalPersona extends Persona {
+  syncStatus: SyncStatus;
+  syncError?: string;
+}
+
 export class AppDB extends Dexie {
   obras!: Table<LocalObra, string>;
   visitas!: Table<LocalVisita, string>;
   puntos!: Table<LocalPunto, string>;
   adjuntos!: Table<LocalAdjunto, string>;
+  personas!: Table<LocalPersona, string>;
 
   constructor() {
     super("sigram-visitas");
@@ -42,6 +48,19 @@ export class AppDB extends Dexie {
       visitas: "id, obraId, syncStatus, updatedAt, fecha, deletedAt",
       puntos: "id, visitaId, syncStatus, orden, deletedAt",
       adjuntos: "id, visitaId, puntoId, syncStatus, orden",
+    });
+    // v3: la agenda de personas. Se repiten los stores anteriores tal cual,
+    // que es como Dexie entiende "esto sigue igual"; editar un bloque de
+    // versión anterior rompería la actualización de los móviles ya instalados.
+    //
+    // `nombre` no se indexa: IndexedDB no busca por trozo de palabra, así que
+    // el filtro del buscador va en JavaScript, como en la lista de obras.
+    this.version(3).stores({
+      obras: "id, syncStatus, updatedAt, deletedAt",
+      visitas: "id, obraId, syncStatus, updatedAt, fecha, deletedAt",
+      puntos: "id, visitaId, syncStatus, orden, deletedAt",
+      adjuntos: "id, visitaId, puntoId, syncStatus, orden",
+      personas: "id, syncStatus, updatedAt, deletedAt",
     });
   }
 }
