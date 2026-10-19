@@ -30,6 +30,7 @@ export default defineConfig({
         "icons/icon-512.png",
         "fonts/archivo-latin.woff2",
         "fonts/archivo-latin-ext.woff2",
+        "brand/sigram-marca.png",
       ],
       manifest: {
         name: "SIGRAM APP",

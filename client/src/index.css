@@ -52,11 +52,16 @@
   --color-text: #0a0a0a;
   --color-muted: #5d5953;
 
-  /* Acciones: la principal en tinta, nunca en color de marca */
-  --color-ink: #141414;
+  /* Acción principal: el teal de la marca, oscurecido hasta 7,5:1 con el
+     texto blanco encima. El cian del logo (#00ecff) da 1,45:1 y es
+     ilegible: sirve para el mark, no para un botón. */
+  --color-ink: #0b5d6b;
+  --color-ink-hover: #0e7484;
 
-  /* Color, solo donde significa algo */
-  --color-phase: #1d5fbf; /* la fase en la que está la obra ahora mismo */
+  /* Color, solo donde significa algo. Los dos tonos salen del logo
+     (cian 184° y verde 159°), bajados de brillo hasta pasar el contraste. */
+  --color-phase: #007b85; /* la fase en la que está la obra ahora mismo */
+  --color-fin: #007d52; /* obra terminada */
   --color-done: #8a8a8a; /* fases ya pasadas */
   --color-danger: #a8191f;
   --color-warning-bg: #fdf4e3;
@@ -142,17 +147,35 @@ time {
 
 .brand {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 9px;
   line-height: 1.05;
   text-decoration: none;
   color: var(--color-text);
   flex-shrink: 0;
 }
 
+/* El mark del logo va con su degradado cian-verde tal cual: a este tamaño
+   es un dibujo, no un elemento de interfaz, y es el único sitio donde esos
+   colores funcionan. */
+.brand-marca {
+  width: 38px;
+  height: 27px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.brand-texto {
+  display: flex;
+  flex-direction: column;
+}
+
+/* El tracking ancho es el del logotipo impreso: lo único que se toma
+   prestado de su letra, que no está disponible como fuente web. */
 .brand-name {
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
 }
 
 .brand-version {
@@ -463,15 +486,20 @@ time {
   background: var(--color-phase);
 }
 
+/* Una obra terminada se dibuja entera en el verde del logo: es el único
+   estado que no pide nada y conviene reconocerlo sin leer. */
+.fase--acabada .fase-tramo {
+  background: var(--color-fin);
+}
+
 .fase-nombre {
   font-size: 13px;
   font-weight: 500;
   color: var(--color-text);
 }
 
-.fase--acabada .fase-nombre,
-.fase--acabada {
-  color: var(--color-muted);
+.fase--acabada .fase-nombre {
+  color: var(--color-fin);
 }
 
 .fase--parada .fase-nombre {
@@ -554,7 +582,7 @@ textarea.input {
 }
 
 .btn:hover {
-  background: #2c2c2c;
+  background: var(--color-ink-hover);
 }
 
 .btn:active {

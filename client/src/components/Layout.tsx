@@ -21,9 +21,21 @@ export function Layout({ children }: { children: ReactNode }) {
             {/* La versión va debajo del nombre. Sirve para saber si una
                 actualización ya ha llegado, sin adivinarlo por los cambios. */}
             <Link to="/" className="brand">
-              <span className="brand-name">SIGRAM APP</span>
-              <span className="brand-version" title="Versión instalada">
-                v{__APP_VERSION__}
+              {/* Decorativo: el nombre va justo al lado, así que repetirlo en
+                  el alt solo haría que se leyera dos veces en voz alta. */}
+              <img
+                className="brand-marca"
+                src="/brand/sigram-marca.png"
+                alt=""
+                width={38}
+                height={27}
+                fetchPriority="high"
+              />
+              <span className="brand-texto">
+                <span className="brand-name" translate="no">
+                  SIGRAM APP
+                </span>
+                <span className="brand-version">v{__APP_VERSION__}</span>
               </span>
             </Link>
             {entorno && (
