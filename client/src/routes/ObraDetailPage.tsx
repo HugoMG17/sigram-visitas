@@ -1,10 +1,11 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
-import { format } from "date-fns";
-import { ESTADO_OBRA_LABELS } from "@sigram/shared";
 import { getObra, softDeleteObraLocal } from "../db/repositories/obraRepo";
 import { listVisitasDeObra } from "../db/repositories/visitaRepo";
+import { listPuntosDeVisita } from "../db/repositories/puntoRepo";
 import { runSync } from "../sync/syncEngine";
+import { FaseObra } from "../components/FaseObra";
+import { VisitaCard } from "../components/VisitaCard";
 
 export function ObraDetailPage() {
   const { obraId } = useParams<{ obraId: string }>();
@@ -13,10 +14,29 @@ export function ObraDetailPage() {
   const obra = useLiveQuery(() => (obraId ? getObra(obraId) : undefined), [obraId]);
   const visitas = useLiveQuery(() => (obraId ? listVisitasDeObra(obraId) : undefined), [obraId]);
 
+  // Los puntos que dejó pendientes la última visita: es la pregunta con la
+  // que se entra en una obra, así que se responde arriba y no hay que abrir
+  // la visita para verlo.
+  const ultima = visitas?.[0];
+  const pendientesUltima = useLiveQuery(
+    async () => {
+      if (!ultima) return undefined;
+      const puntos = await listPuntosDeVisita(ultima.id);
+      return puntos.filter((p) => p.estado === "pendiente").length;
+    },
+    [ultima?.id]
+  );
+
   if (obra === undefined) return <p className="muted">Cargando obra…</p>;
   if (!obra) return <p className="error-text">Obra no encontrada.</p>;
 
   const currentObraId = obra.id;
+  // Municipio y provincia coinciden en muchas obras (Cáceres, Cáceres):
+  // escribirlo dos veces no añade nada y hace la línea más difícil de leer.
+  const donde = [obra.direccion, obra.municipio, obra.provincia]
+    .filter(Boolean)
+    .filter((parte, i, partes) => partes.indexOf(parte) === i)
+    .join(", ");
 
   async function handleEliminarObra() {
     if (
@@ -31,45 +51,58 @@ export function ObraDetailPage() {
     navigate("/");
   }
 
+  let resumenVisitas = "";
+  if (visitas !== undefined) {
+    if (visitas.length === 0) resumenVisitas = "Ninguna todavía";
+    else {
+      const cuantas = `${visitas.length} ${visitas.length === 1 ? "visita" : "visitas"}`;
+      resumenVisitas =
+        pendientesUltima === undefined || pendientesUltima === 0
+          ? `${cuantas} · nada pendiente en la última`
+          : `${cuantas} · ${pendientesUltima} punto${
+              pendientesUltima === 1 ? "" : "s"
+            } pendiente${pendientesUltima === 1 ? "" : "s"} en la última`;
+    }
+  }
+
   return (
-    <div className="stack">
+    <div>
       <Link to="/" className="back-link">
         ← Todas las obras
       </Link>
 
-      <div className="card stack">
-        {obra.numeroExpediente && (
-          <p className="muted" style={{ margin: 0, fontWeight: 600 }}>
-            Nº expediente: {obra.numeroExpediente}
+      {/* La ficha se queda en el expediente, el nombre y la dirección a
+          propósito: la referencia catastral, los roles (que en algunas
+          obras son mucha gente) y las notas se consultan en "Editar obra",
+          para que esta pantalla no resulte abrumadora. */}
+      <div className="page-head">
+        <div>
+          <p className="fila-meta" style={{ marginBottom: "2px" }}>
+            {obra.numeroExpediente ? `Nº ${obra.numeroExpediente}` : "Sin expediente"}
           </p>
-        )}
-        <div className="row-between">
-          <h1 style={{ margin: 0 }}>{obra.nombre || "Obra sin nombre"}</h1>
-          <span className="badge">{ESTADO_OBRA_LABELS[obra.estado]}</span>
+          <h1>{obra.nombre || "Obra sin nombre"}</h1>
+          {donde && <p className="sub">{donde}</p>}
+          <FaseObra estado={obra.estado} />
         </div>
-        {(obra.direccion || obra.municipio || obra.provincia) && (
-          <p className="muted" style={{ margin: 0 }}>
-            {[obra.direccion, obra.municipio, obra.provincia].filter(Boolean).join(", ")}
-          </p>
-        )}
-        {/* La ficha se queda en el expediente, el nombre y la dirección a
-            propósito: la referencia catastral, los roles (que en algunas
-            obras son mucha gente) y las notas se consultan en "Editar obra",
-            para que esta pantalla no resulte abrumadora. */}
-        <div className="row">
+        <div className="row acciones-obra">
           <Link to={`/obras/${obra.id}/editar`} className="btn btn-secondary">
             Editar obra
           </Link>
-          <button type="button" className="btn btn-danger" onClick={handleEliminarObra}>
+          {/* Eliminar va en texto y sin recuadro: es lo que menos se usa y lo
+              que peor se arregla si se toca sin querer. */}
+          <button type="button" className="btn btn-danger btn-sm" onClick={handleEliminarObra}>
             Eliminar obra
           </button>
         </div>
       </div>
 
-      <div className="row-between">
-        <h2 style={{ margin: 0 }}>Visitas</h2>
+      <div className="section-head">
+        <div>
+          <h2>Visitas</h2>
+          {resumenVisitas && <p className="sub">{resumenVisitas}</p>}
+        </div>
         <Link to={`/obras/${obra.id}/visitas/nueva`} className="btn">
-          + Nueva visita
+          Nueva visita
         </Link>
       </div>
 
@@ -77,22 +110,18 @@ export function ObraDetailPage() {
 
       {visitas && visitas.length === 0 && (
         <div className="empty-state">
-          <p>Todavía no hay visitas registradas en esta obra.</p>
+          <p style={{ margin: 0 }}>
+            Todavía no hay visitas en esta obra. Cada visita guarda sus fotos y sus puntos de
+            seguimiento, y de cada una sale el informe en PDF.
+          </p>
         </div>
       )}
 
-      {visitas?.map((visita) => (
-        <Link key={visita.id} to={`/visitas/${visita.id}`} className="card-link">
-          <div className="card row-between">
-            <div>
-              <strong>{visita.titulo || "Visita de obra"}</strong>
-              <p className="muted" style={{ margin: "0.25rem 0 0" }}>
-                {format(new Date(visita.fecha), "dd/MM/yyyy")}
-              </p>
-            </div>
-          </div>
-        </Link>
-      ))}
+      <div className="lista">
+        {visitas?.map((visita) => (
+          <VisitaCard key={visita.id} visita={visita} />
+        ))}
+      </div>
     </div>
   );
 }

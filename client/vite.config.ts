@@ -22,7 +22,15 @@ export default defineConfig({
       // lo hace la propia app; si no, se registraría dos veces.
       registerType: "prompt",
       injectRegister: null,
-      includeAssets: ["icons/icon-192.png", "icons/icon-512.png"],
+      // Las tipografias van aqui a proposito: si no, no entran en la cache
+      // del service worker y la primera carga sin cobertura se quedaria con la
+      // letra del sistema.
+      includeAssets: [
+        "icons/icon-192.png",
+        "icons/icon-512.png",
+        "fonts/archivo-latin.woff2",
+        "fonts/archivo-latin-ext.woff2",
+      ],
       manifest: {
         name: "SIGRAM APP",
         short_name: "SIGRAM",

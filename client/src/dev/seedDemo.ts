@@ -18,7 +18,7 @@ export async function seedDemoSiSePide(): Promise<void> {
   await Promise.all([db.obras.clear(), db.visitas.clear(), db.puntos.clear(), db.adjuntos.clear()]);
 
   const comun = {
-    tipoObra: "obra_nueva" as const,
+    tipoObra: "reforma" as const,
     provincia: "Cáceres",
     createdAt: FECHA,
     updatedAt: FECHA,

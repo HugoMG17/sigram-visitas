@@ -651,9 +651,20 @@ textarea.input {
     align-items: stretch;
   }
 
-  .page-head .btn,
-  .section-head .btn {
+  .page-head > div > .btn,
+  .section-head > .btn,
+  .page-head > .btn {
     width: 100%;
+  }
+
+  /* Editar ocupa la fila; Eliminar no, para que no sea igual de fácil de
+     tocar sin querer que la acción que se usa todos los días. */
+  .acciones-obra {
+    margin-top: 4px;
+  }
+
+  .acciones-obra .btn-secondary {
+    flex: 1;
   }
 
   /* El correo de la cuenta se queda en el ordenador: en el móvil roba la
