@@ -1,5 +1,5 @@
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
-import type { AgenteExtra, ObraAgentes } from "@sigram/shared";
+import type { AgenteExtra, IntervencionesMusaat, ObraAgentes } from "@sigram/shared";
 
 export const obras = sqliteTable("obras", {
   id: text("id").primaryKey(),
@@ -90,6 +90,22 @@ export const personas = sqliteTable("personas", {
   // Una sociedad en vez de una persona: lo único que cambia es que el
   // documento se etiqueta CIF.
   esEmpresa: integer("es_empresa", { mode: "boolean" }),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+  deletedAt: text("deleted_at"),
+});
+
+// Registro de lo que hay que declarar a la mutua (Musaat). Lista aparte de
+// las obras a propósito: no todas las obras se declaran, y lo declarado tiene
+// que quedar como se declaró. Como las personas, no cuelga de ninguna obra,
+// así que lleva su propia columna de propietario.
+export const musaat = sqliteTable("musaat", {
+  id: text("id").primaryKey(),
+  ownerEmail: text("owner_email"),
+  numeroExpediente: text("numero_expediente"),
+  nombre: text("nombre").notNull(),
+  // Hasta cinco intervenciones por obra, cada una con su fecha de envío.
+  intervenciones: text("intervenciones", { mode: "json" }).$type<IntervencionesMusaat>(),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
   deletedAt: text("deleted_at"),

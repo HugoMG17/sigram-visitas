@@ -117,6 +117,23 @@ export async function ensureSchema(): Promise<void> {
     "CREATE INDEX IF NOT EXISTS idx_personas_owner_email ON personas(owner_email);"
   );
 
+  // Registro de Musaat. Tabla nueva: basta con el CREATE TABLE.
+  await sqlClient.execute(`
+    CREATE TABLE IF NOT EXISTS musaat (
+      id TEXT PRIMARY KEY,
+      owner_email TEXT,
+      numero_expediente TEXT,
+      nombre TEXT NOT NULL,
+      intervenciones TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT
+    );
+  `);
+  await sqlClient.execute(
+    "CREATE INDEX IF NOT EXISTS idx_musaat_owner_email ON musaat(owner_email);"
+  );
+
   // Sesiones del login web. Viven en la base de datos y no en la memoria del
   // proceso para que sobrevivan a los despliegues y a que el hosting duerma el
   // servicio; si no, cada reinicio obliga a volver a iniciar sesión.

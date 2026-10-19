@@ -59,6 +59,20 @@ export const personaUpsertSchema = z.object({
   esEmpresa: z.boolean().nullish(),
 });
 
+// Registro de Musaat. Las intervenciones se validan con z.record y no con un
+// z.object de claves fijas, por la misma razón que los roles de la obra:
+// z.record solo mira las claves propias del cuerpo recibido.
+const intervencionSchema = z.object({
+  aplica: z.boolean().nullish(),
+  fechaEnvio: textoOpcional,
+});
+
+export const musaatUpsertSchema = z.object({
+  numeroExpediente: textoOpcional,
+  nombre: textoOpcional,
+  intervenciones: z.record(z.string(), intervencionSchema).nullish(),
+});
+
 // Ningún campo de la obra es obligatorio (petición expresa de Hugo): las
 // columnas NOT NULL históricas se rellenan con "" / valores por defecto en
 // la ruta antes de insertar.

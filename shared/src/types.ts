@@ -44,6 +44,100 @@ export interface Persona {
   deletedAt?: string | null;
 }
 
+// --- Musaat ----------------------------------------------------------------
+//
+// Registro de lo que hay que declarar a la mutua. Es una lista aparte de las
+// obras a propósito: no todas las obras se declaran, y lo que se manda a la
+// mutua tiene que quedar tal y como se mandó, sin que lo cambie después una
+// edición de la obra.
+//
+// De cada obra se declaran por separado hasta cinco intervenciones, y cada
+// una se envía en su momento y tiene su propia fecha.
+export type TipoIntervencionMusaat =
+  | "proyecto"
+  | "estudioSeguridad"
+  | "direccionObra"
+  | "direccionAparejador"
+  | "coordinacion";
+
+export const TIPO_INTERVENCION_MUSAAT_LABELS: Record<TipoIntervencionMusaat, string> = {
+  proyecto: "Proyecto",
+  estudioSeguridad: "Estudio de seguridad",
+  direccionObra: "Dirección de obra",
+  direccionAparejador: "Dirección aparejador",
+  coordinacion: "Coordinación",
+};
+
+// El orden en el que se pintan, que es el de la vida de una obra.
+export const TIPOS_INTERVENCION_MUSAAT: TipoIntervencionMusaat[] = [
+  "proyecto",
+  "estudioSeguridad",
+  "direccionObra",
+  "direccionAparejador",
+  "coordinacion",
+];
+
+// Una intervención tiene tres estados, no dos: no marcada (no se interviene
+// en ese concepto, y por tanto no falta nada), marcada sin fecha (pendiente
+// de enviar) y marcada con fecha (enviada).
+export interface IntervencionMusaat {
+  aplica?: boolean;
+  fechaEnvio?: string | null;
+}
+
+export type IntervencionesMusaat = Partial<
+  Record<TipoIntervencionMusaat, IntervencionMusaat>
+>;
+
+export interface RegistroMusaat {
+  id: string;
+  numeroExpediente?: string;
+  nombre: string;
+  intervenciones?: IntervencionesMusaat;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+}
+
+// Accesor que solo lee claves propias, nunca heredadas del prototipo: la
+// misma precaución que con los roles de la obra.
+export function intervencionDe(
+  intervenciones: IntervencionesMusaat | undefined,
+  tipo: TipoIntervencionMusaat
+): IntervencionMusaat {
+  if (intervenciones && Object.prototype.hasOwnProperty.call(intervenciones, tipo)) {
+    return intervenciones[tipo] ?? {};
+  }
+  return {};
+}
+
+// Las intervenciones marcadas que todavía no tienen fecha de envío.
+export function pendientesDeMusaat(registro: RegistroMusaat): TipoIntervencionMusaat[] {
+  return TIPOS_INTERVENCION_MUSAAT.filter((tipo) => {
+    const i = intervencionDe(registro.intervenciones, tipo);
+    return i.aplica === true && !i.fechaEnvio;
+  });
+}
+
+// Las marcadas que ya se enviaron.
+export function enviadasDeMusaat(registro: RegistroMusaat): TipoIntervencionMusaat[] {
+  return TIPOS_INTERVENCION_MUSAAT.filter((tipo) => {
+    const i = intervencionDe(registro.intervenciones, tipo);
+    return i.aplica === true && Boolean(i.fechaEnvio);
+  });
+}
+
+// El punto de la lista: verde si está todo enviado, rojo si falta algo, y
+// gris si todavía no se ha marcado ninguna intervención (no falta nada
+// porque aún no se ha dicho qué se declara).
+export type EstadoMusaat = "enviado" | "pendiente" | "sin_marcar";
+
+export function estadoMusaat(registro: RegistroMusaat): EstadoMusaat {
+  if (pendientesDeMusaat(registro).length > 0) return "pendiente";
+  if (enviadasDeMusaat(registro).length > 0) return "enviado";
+  return "sin_marcar";
+}
+
 // Etiqueta del documento según el tipo de ficha.
 export function etiquetaDocumento(esEmpresa: boolean | undefined): string {
   return esEmpresa ? "CIF" : "DNI";
