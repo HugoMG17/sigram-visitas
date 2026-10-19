@@ -105,6 +105,7 @@ export interface RegistroMusaat {
   numeroExpediente?: string;
   nombre: string;
   intervenciones?: IntervencionesMusaat;
+  observaciones?: string;
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;

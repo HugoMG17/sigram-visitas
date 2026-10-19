@@ -72,6 +72,7 @@ musaatRouter.put(
       // `nombre` es NOT NULL en la tabla: se rellena con "" como en obras.
       nombre: parsed.nombre ?? "",
       intervenciones: normalizarIntervenciones(parsed.intervenciones),
+      observaciones: parsed.observaciones ?? null,
     };
     const now = new Date().toISOString();
 

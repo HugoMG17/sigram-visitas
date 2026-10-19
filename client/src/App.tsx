@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { ObrasListPage } from "./routes/ObrasListPage";
 import { ObraFormPage } from "./routes/ObraFormPage";
@@ -22,9 +22,13 @@ function App() {
           <Route path="/obras/:obraId/visitas/nueva" element={<VisitaFormPage />} />
           <Route path="/visitas/:visitaId" element={<VisitaDetailPage />} />
           <Route path="/visitas/:visitaId/editar" element={<VisitaFormPage />} />
-          <Route path="/personas" element={<PersonasListPage />} />
-          <Route path="/personas/nueva" element={<PersonaFormPage />} />
-          <Route path="/personas/:personaId/editar" element={<PersonaFormPage />} />
+          <Route path="/agentes" element={<PersonasListPage />} />
+          <Route path="/agentes/nueva" element={<PersonaFormPage />} />
+          <Route path="/agentes/:personaId/editar" element={<PersonaFormPage />} />
+          {/* El apartado se llamaba "Personas". Se mantiene el redirigido por
+              si alguien tiene la dirección vieja guardada. */}
+          <Route path="/personas" element={<Navigate to="/agentes" replace />} />
+          <Route path="/personas/*" element={<Navigate to="/agentes" replace />} />
           <Route path="/musaat" element={<MusaatListPage />} />
           <Route path="/musaat/nueva" element={<MusaatFormPage />} />
           <Route path="/musaat/:musaatId/editar" element={<MusaatFormPage />} />

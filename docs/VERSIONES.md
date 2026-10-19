@@ -13,7 +13,7 @@ ya ha llegado.
 
 ### Novedades
 
-- **Personas: una agenda propia.** Apartado nuevo en la cabecera, junto a
+- **Agentes: una agenda propia.** Apartado nuevo en la cabecera, junto a
   Obras. Guarda de una vez a la gente y a las empresas con las que trabajas,
   con su nombre y su DNI (o su CIF, si marcas que es una empresa).
 - **Buscar en vez de teclear.** En el formulario de obra, la casilla de nombre
@@ -25,7 +25,7 @@ ya ha llegado.
   queda bien en todas las obras, y en los informes que generes a partir de
   entonces.
 - **Importar lo que ya hay.** Mientras quede gente escrita a mano en alguna
-  obra, la pantalla Personas lo avisa y ofrece crear sus fichas y enlazar las
+  obra, la pantalla Agentes lo avisa y ofrece crear sus fichas y enlazar las
   obras de una vez. Antes de tocar nada dice cuántas fichas va a crear y
   cuántas obras va a enlazar.
 - **El informe recoge las correcciones**, sin necesidad de volver a abrir la
@@ -40,6 +40,8 @@ ya ha llegado.
   enviaste algo y falta el resto, verde cuando está todo resuelto. Lo que no
   procede cuenta como resuelto. Arriba, un filtro por cada uno de los tres
   estados con su cuenta, y un buscador por nº de expediente o nombre.
+- **Observaciones** al final de la ficha de cada obra de Musaat, para lo que
+  haga falta recordar de esa declaración.
 - **El estado de Musaat, también en la lista de obras.** Al lado de cada obra
   ves cómo va su declaración sin tener que entrar. Se emparejan por el **nº de
   expediente**; una obra que no esté en Musaat sale en rojo.
@@ -47,6 +49,12 @@ ya ha llegado.
   La lista de Musaat es independiente de tus obras, a propósito: no todas las
   obras se declaran, y lo que mandas a la mutua debe quedar como lo mandaste,
   sin que lo cambie después una edición de la obra. Se apunta a mano.
+
+> El apartado se llama **Agentes** y no *Personas* porque ahí caben también
+> las empresas, que es la mitad de los casos: promotores y constructoras
+> suelen ser sociedades. Por dentro el código y la base de datos siguen
+> diciendo «persona»: renombrarlos obligaría a migrar la base de datos de
+> todos los dispositivos para cambiar una palabra que nadie ve.
 
 ### Notas
 

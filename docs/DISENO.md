@@ -105,7 +105,7 @@ estado de sincronía. Gris el apartado que no estás viendo, tinta y subrayado
 el actual (`aria-current="page"`). Sin color de marca: el teal está reservado
 a la acción principal de cada pantalla.
 
-**El buscador de fichas** (`BuscadorPersona`) es un combobox propio y no un
+**El buscador de agentes** (`BuscadorPersona`) es un combobox propio y no un
 `<datalist>` del navegador, por cuatro motivos que se suman: el datalist no
 puede llevar el id de la ficha (habría que casar por texto, y dos personas con
 el mismo nombre serían indistinguibles), no puede enseñar el documento que es

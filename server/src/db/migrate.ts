@@ -125,6 +125,7 @@ export async function ensureSchema(): Promise<void> {
       numero_expediente TEXT,
       nombre TEXT NOT NULL,
       intervenciones TEXT,
+      observaciones TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
       deleted_at TEXT
@@ -164,6 +165,7 @@ export async function ensureSchema(): Promise<void> {
   await migratePuntosTituloColumn();
   await migrateObrasOwnerEmailColumn();
   await migrateObrasColumnasNuevas();
+  await migrateMusaatObservacionesColumn();
 }
 
 // Columnas de obras añadidas después de la versión inicial (roles de la
@@ -213,6 +215,16 @@ async function migrateObrasOwnerEmailColumn(): Promise<void> {
 // Las bases de datos creadas antes del título de punto no tienen esa
 // columna; al ser nueva y admitir NULL, basta con un ALTER TABLE ADD COLUMN
 // idempotente (sin reconstruir la tabla).
+// La tabla de Musaat ya existe en las bases que se crearon antes de este
+// campo, así que no basta con el CREATE TABLE: hay que añadir la columna.
+// Admite NULL, que es lo único que permite ALTER TABLE ADD COLUMN en SQLite.
+async function migrateMusaatObservacionesColumn(): Promise<void> {
+  const info = await sqlClient.execute("PRAGMA table_info(musaat);");
+  const existe = info.rows.some((row) => row.name === "observaciones");
+  if (existe) return;
+  await sqlClient.execute("ALTER TABLE musaat ADD COLUMN observaciones TEXT;");
+}
+
 async function migratePuntosTituloColumn(): Promise<void> {
   const info = await sqlClient.execute("PRAGMA table_info(puntos);");
   const hasTitulo = info.rows.some((row) => row.name === "titulo");

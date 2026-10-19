@@ -52,7 +52,7 @@ export function EditorFicha({ persona, onCerrar }: { persona: Persona; onCerrar:
 
   return (
     <div className="editor-ficha" onKeyDown={alPulsarTecla}>
-      <p className="editor-ficha-titulo">Editar la ficha de la agenda</p>
+      <p className="editor-ficha-titulo">Editar la ficha del agente</p>
 
       <div className="field">
         <label htmlFor={`${idBase}-nombre`}>Nombre</label>

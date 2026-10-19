@@ -106,6 +106,7 @@ export const musaat = sqliteTable("musaat", {
   nombre: text("nombre").notNull(),
   // Hasta cinco intervenciones por obra, cada una con su fecha de envío.
   intervenciones: text("intervenciones", { mode: "json" }).$type<IntervencionesMusaat>(),
+  observaciones: text("observaciones"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
   deletedAt: text("deleted_at"),

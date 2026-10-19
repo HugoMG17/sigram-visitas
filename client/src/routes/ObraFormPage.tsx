@@ -87,7 +87,7 @@ function FilaVinculada({
       <div>
         <p className="fila-meta" style={{ justifyContent: "flex-start", gap: "8px" }}>
           <span>{etiqueta}</span>
-          <span className="chip">De Personas</span>
+          <span className="chip">De Agentes</span>
         </p>
         <p className="vinculada-nombre">{ficha.nombre || "Ficha sin nombre"}</p>
         <p className="fila-sub" style={{ marginTop: "2px" }}>

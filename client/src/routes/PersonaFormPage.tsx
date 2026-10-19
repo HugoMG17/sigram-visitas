@@ -47,7 +47,7 @@ export function PersonaFormPage() {
     mutationFn: () => savePersonaLocal(personaId ?? generateId(), form),
     onSuccess: () => {
       void runSync();
-      navigate("/personas");
+      navigate("/agentes");
     },
   });
 
@@ -60,27 +60,27 @@ export function PersonaFormPage() {
           "Esas obras seguirán mostrando su nombre y su documento, y seguirán recogiendo las " +
           "correcciones que ya hiciste. Lo que pasa es que la ficha deja de salir al buscar.\n\n" +
           "¿Borrar la ficha?"
-        : `¿Borrar la ficha de “${form.nombre}”?`;
+        : `¿Borrar a “${form.nombre}” de Agentes?`;
     if (!window.confirm(aviso)) return;
     await softDeletePersonaLocal(personaId);
     void runSync();
-    navigate("/personas");
+    navigate("/agentes");
   }
 
   const etiqueta = etiquetaDocumento(form.esEmpresa);
 
   return (
     <div>
-      <Link to="/personas" className="back-link">
-        ← Todas las personas
+      <Link to="/agentes" className="back-link">
+        ← Todos los agentes
       </Link>
 
       <div className="page-head">
         <div>
-          <h1>{isEdit ? "Editar ficha" : "Nueva ficha"}</h1>
+          <h1>{isEdit ? "Editar agente" : "Nuevo agente"}</h1>
           <p className="sub">
-            Lo que guardes aquí sale al buscar en cualquier obra, y corregirlo una vez lo corrige
-            en todas.
+            Lo que guardes aquí sale al buscar en cualquier obra, y corregirlo una vez lo corrige en
+            todas.
           </p>
         </div>
       </div>
@@ -137,7 +137,7 @@ export function PersonaFormPage() {
           />
         </div>
 
-        {mutation.isError && <p className="error-text">No se pudo guardar la ficha.</p>}
+        {mutation.isError && <p className="error-text">No se pudo guardar el agente.</p>}
 
         <div className="row">
           <button type="submit" className="btn" disabled={mutation.isPending}>
@@ -145,7 +145,7 @@ export function PersonaFormPage() {
           </button>
           {isEdit && (
             <button type="button" className="btn btn-danger btn-sm" onClick={handleEliminar}>
-              Eliminar ficha
+              Eliminar agente
             </button>
           )}
         </div>

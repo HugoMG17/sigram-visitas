@@ -64,7 +64,7 @@ export function Layout({ children }: { children: ReactNode }) {
           <NavLink to="/" end>
             Obras
           </NavLink>
-          <NavLink to="/personas">Personas</NavLink>
+          <NavLink to="/agentes">Agentes</NavLink>
           <NavLink to="/musaat">Musaat</NavLink>
         </nav>
       </header>

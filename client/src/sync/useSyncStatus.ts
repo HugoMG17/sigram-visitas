@@ -35,7 +35,7 @@ export function useSyncErrors(): SyncErrorInfo[] {
     ]);
     return [
       ...personas.map((p) => ({
-        entidad: "Persona",
+        entidad: "Agente",
         nombre: p.nombre || "Ficha sin nombre",
         mensaje: p.syncError ?? "Error desconocido",
       })),

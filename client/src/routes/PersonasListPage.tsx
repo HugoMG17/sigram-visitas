@@ -77,22 +77,22 @@ export function PersonasListPage() {
     <div>
       <div className="page-head">
         <div>
-          <h1>Personas</h1>
+          <h1>Agentes</h1>
           {personas !== undefined && total > 0 && (
             <p className="sub" aria-live="polite">
               {resumen}
             </p>
           )}
         </div>
-        <Link to="/personas/nueva" className="btn">
-          Nueva ficha
+        <Link to="/agentes/nueva" className="btn">
+          Nuevo agente
         </Link>
       </div>
 
       {personas !== undefined && total > 0 && (
         <>
           <label className="solo-voz" htmlFor="buscar-persona">
-            Buscar una ficha por nombre o por documento
+            Buscar un agente por nombre o por documento
           </label>
           <input
             id="buscar-persona"
@@ -109,7 +109,7 @@ export function PersonasListPage() {
 
       {personas === undefined && (
         <p className="muted" aria-live="polite">
-          Cargando personas…
+          Cargando agentes…
         </p>
       )}
 
@@ -118,8 +118,8 @@ export function PersonasListPage() {
         <div className="aviso-importar">
           <div>
             <p className="aviso-titulo">
-              Hay {porImportar.fichasNuevas}{" "}
-              {porImportar.fichasNuevas === 1 ? "persona" : "personas"} escritas a mano en tus obras
+              Hay {porImportar.fichasNuevas} {porImportar.fichasNuevas === 1 ? "agente" : "agentes"}{" "}
+              escritos a mano en tus obras
             </p>
             <p className="fila-sub" style={{ marginTop: "2px" }}>
               Puedo crear su ficha y dejar{" "}
@@ -143,11 +143,12 @@ export function PersonasListPage() {
       {personas && total === 0 && (
         <div className="empty-state">
           <p>
-            Todavía no has guardado ninguna ficha. Lo que guardes aquí se rellena solo al crear una
-            obra, y corregir un dato una vez lo corrige en todas.
+            Todavía no has guardado ninguna ficha. Aquí van las personas y las empresas con las que
+            trabajas: lo que guardes se rellena solo al crear una obra, y corregir un dato una vez
+            lo corrige en todas.
           </p>
-          <Link to="/personas/nueva" className="btn">
-            Crear la primera ficha
+          <Link to="/agentes/nueva" className="btn">
+            Crear el primer agente
           </Link>
         </div>
       )}
@@ -155,15 +156,15 @@ export function PersonasListPage() {
       {personas && total > 0 && mostradas === 0 && (
         <div className="empty-state">
           <p style={{ margin: 0 }}>
-            Ninguna ficha coincide con “{busqueda.trim()}”. Se busca por nombre y por documento.
+            Ningún agente coincide con “{busqueda.trim()}”. Se busca por nombre y por documento.
           </p>
         </div>
       )}
 
-      <ul className="lista" aria-label="Personas">
+      <ul className="lista" aria-label="Agentes">
         {filtradas?.map((persona) => (
           <li key={persona.id}>
-            <Link to={`/personas/${persona.id}/editar`} className="fila">
+            <Link to={`/agentes/${persona.id}/editar`} className="fila">
               <div className="fila-meta">
                 {/* Se dice el cero: una ficha sin documento lo dice, no se
                     queda en blanco como si todavía estuviera cargando. */}

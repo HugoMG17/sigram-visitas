@@ -120,7 +120,7 @@ export function BuscadorPersona({
       />
 
       {abierto && totalOpciones > 0 && (
-        <ul className="combo-lista" id={listaId} role="listbox" aria-label="Fichas de la agenda">
+        <ul className="combo-lista" id={listaId} role="listbox" aria-label="Fichas de agentes">
           {coincidencias.map((persona, i) => (
             <li
               key={persona.id}
@@ -153,7 +153,7 @@ export function BuscadorPersona({
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => elegir(coincidencias.length)}
             >
-              <span className="combo-nombre">Guardar “{escrito}” en Personas</span>
+              <span className="combo-nombre">Guardar “{escrito}” en Agentes</span>
               <span className="combo-dato">Se crea la ficha y queda enlazada a esta obra</span>
             </li>
           )}

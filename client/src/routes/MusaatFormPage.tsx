@@ -16,7 +16,12 @@ import { getMusaat, saveMusaatLocal, softDeleteMusaatLocal } from "../db/reposit
 import { runSync } from "../sync/syncEngine";
 import { generateId } from "../utils/id";
 
-const emptyForm: MusaatInput = { numeroExpediente: "", nombre: "", intervenciones: {} };
+const emptyForm: MusaatInput = {
+  numeroExpediente: "",
+  nombre: "",
+  intervenciones: {},
+  observaciones: "",
+};
 
 // Hoy, en el formato que pide el campo de fecha del navegador.
 function hoy(): string {
@@ -45,6 +50,7 @@ export function MusaatFormPage() {
         numeroExpediente: existing.numeroExpediente ?? "",
         nombre: existing.nombre ?? "",
         intervenciones: existing.intervenciones ?? {},
+        observaciones: existing.observaciones ?? "",
       });
       cargadoParaId.current = musaatId;
     }
@@ -192,6 +198,18 @@ export function MusaatFormPage() {
             </div>
           );
         })}
+
+        <div className="field" style={{ marginTop: "8px" }}>
+          <label htmlFor="musaat-observaciones">Observaciones</label>
+          <textarea
+            id="musaat-observaciones"
+            className="input"
+            rows={4}
+            placeholder="Lo que haga falta recordar de esta declaración"
+            value={form.observaciones ?? ""}
+            onChange={(e) => setForm((prev) => ({ ...prev, observaciones: e.target.value }))}
+          />
+        </div>
 
         {mutation.isError && <p className="error-text">No se pudo guardar.</p>}
 

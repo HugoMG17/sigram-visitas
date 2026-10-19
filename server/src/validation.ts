@@ -78,6 +78,7 @@ export const musaatUpsertSchema = z.object({
   numeroExpediente: textoOpcional,
   nombre: textoOpcional,
   intervenciones: z.record(z.string(), intervencionSchema).nullish(),
+  observaciones: textoOpcional,
 });
 
 // Ningún campo de la obra es obligatorio (petición expresa de Hugo): las
