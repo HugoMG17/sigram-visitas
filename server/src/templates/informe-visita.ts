@@ -5,8 +5,10 @@ import {
   isImageMime,
   personasConNombre,
   personasDeRol,
+  resolverAgentes,
+  resolverExtras,
 } from "@sigram/shared";
-import type { Obra } from "@sigram/shared";
+import type { Obra, Persona } from "@sigram/shared";
 import type { adjuntos, obras, puntos, visitas } from "../db/schema.js";
 
 type ObraRow = typeof obras.$inferSelect;
@@ -73,8 +75,11 @@ function renderGaleria(attachments: AdjuntoConDataUri[]): string {
 
 // En el informe los roles se muestran solo con el nombre profesional del rol
 // y los nombres de las personas (sin DNI). Cada rol puede tener varias.
-function renderRoles(obra: ObraRow): string {
-  const agentes = agentesDeObra(obra as unknown as Obra);
+function renderRoles(obra: ObraRow, agenda: Map<string, Persona>): string {
+  // Los roles vinculados a una ficha de la agenda se resuelven ANTES de
+  // filtrar por "tiene nombre": si se filtrara primero, una fila cuya copia
+  // quedó en blanco pero cuya ficha sí tiene nombre se tiraría sin pintarse.
+  const agentes = resolverAgentes(agentesDeObra(obra as unknown as Obra), agenda);
 
   const nombres = (rol: Parameters<typeof personasDeRol>[1]): string =>
     personasConNombre(personasDeRol(agentes, rol))
@@ -83,7 +88,10 @@ function renderRoles(obra: ObraRow): string {
 
   // Roles extra escritos a mano para esta obra (otros profesionales de la
   // Dirección Facultativa), detrás de los tres fijos.
-  const extras = direccionFacultativaExtraDeObra(obra as unknown as Obra).map(
+  const extras = resolverExtras(
+    direccionFacultativaExtraDeObra(obra as unknown as Obra),
+    agenda
+  ).map(
     (extra) => `${esc(extra.rol)}: ${extra.personas.map((p) => esc(p.nombre)).join("<br/>")}`
   );
 
@@ -116,8 +124,9 @@ export function renderInformeVisitaHtml(params: {
   visita: VisitaRow;
   adjuntos: AdjuntoConDataUri[];
   puntos: PuntoRow[];
+  agenda: Map<string, Persona>;
 }): string {
-  const { obra, visita, adjuntos: attachments, puntos: puntosDeVisita } = params;
+  const { obra, visita, adjuntos: attachments, puntos: puntosDeVisita, agenda } = params;
 
   const adjuntosGenerales = attachments.filter((a) => !a.puntoId);
   const adjuntosPorPunto = new Map<string, AdjuntoConDataUri[]>();
@@ -233,7 +242,7 @@ export function renderInformeVisitaHtml(params: {
     ${logoHtml}
   </div>
 
-  ${renderRoles(obra)}
+  ${renderRoles(obra, agenda)}
 
   <div class="cuerpo-visita">
     <div class="notas">

@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import puppeteer, { type Browser } from "puppeteer";
 import { isImageMime } from "@sigram/shared";
+import type { Persona } from "@sigram/shared";
 import { renderInformeVisitaHtml } from "../templates/informe-visita.js";
 import type { adjuntos, obras, puntos, visitas } from "../db/schema.js";
 import { env } from "../env.js";
@@ -63,6 +64,7 @@ export async function generateInformeVisitaPdf(params: {
   visita: VisitaRow;
   adjuntos: AdjuntoRow[];
   puntos: PuntoRow[];
+  agenda: Map<string, Persona>;
   user?: AuthUser;
 }): Promise<Buffer> {
   const auth = params.user ? buildOAuthClient(params.user) : undefined;

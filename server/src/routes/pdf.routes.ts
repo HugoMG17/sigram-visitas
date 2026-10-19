@@ -8,6 +8,8 @@ import { findOwnedVisita } from "../services/obraAccess.js";
 import { idParamSchema } from "../validation.js";
 import { generateInformeVisitaPdf } from "../services/pdfService.js";
 import { slugify } from "../utils/nombreArchivo.js";
+import { indicePersonas } from "@sigram/shared";
+import { listPersonasDeDuenyo } from "../services/personaAccess.js";
 import type { AuthUser } from "../auth/passport.js";
 
 export const pdfRouter = Router();
@@ -37,8 +39,15 @@ pdfRouter.get(
       .where(and(eq(puntos.visitaId, id), isNull(puntos.deletedAt)))
       .orderBy(asc(puntos.orden));
 
+    // Las fichas del dueño de LA OBRA, no de quien pide el PDF: así los datos
+    // siguen pegados a la obra que se está imprimiendo. Entran también las
+    // borradas, para que borrar una ficha no devuelva el informe a los datos
+    // viejos (ver indicePersonas en shared).
+    const agenda = indicePersonas(await listPersonasDeDuenyo(obra.ownerEmail));
+
     const pdfBuffer = await generateInformeVisitaPdf({
       obra,
+      agenda,
       visita,
       adjuntos: attachments,
       puntos: puntosDeVisita,
