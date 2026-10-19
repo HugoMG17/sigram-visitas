@@ -9,7 +9,35 @@ ya ha llegado.
 
 ---
 
-## 1.2.0 — 19 de octubre de 2026
+## 1.3.0 — 19 de octubre de 2026
+
+Esta publicación junta todo lo trabajado desde la 1.1: el cambio de aspecto,
+la agenda de agentes y el control de Musaat. La 1.2 llegó a apuntarse mientras
+se trabajaba, pero nunca se publicó, así que todo sale junto aquí.
+
+### La app cambia de aspecto
+
+- **Se parece a tu estudio.** El logo de SIGRAM está en la cabecera, y los
+  colores de la app salen de él: el teal del botón principal y el de la barra
+  de fase son los tonos del propio logo, bajados de brillo hasta que se leen
+  al sol. El cian y el verde del logo tal cual dan 1,4:1 de contraste: sirven
+  para el dibujo y para nada más.
+- **Fondo gris piedra** en vez del gris azulado, y una tipografía nueva
+  (Archivo) que va **dentro de la app**: se ve igual sin cobertura.
+- **La cabecera azul oscura desaparece.** En el móvil eso devuelve unos 300 px
+  antes de ver la primera obra.
+- **Cada obra lleva su barra de fase**: los cuatro pasos por los que pasa
+  (proyecto, licencia, ejecución, finalizada), con el de ahora marcado. Una
+  obra parada es lo único rojo de la lista, porque es lo único que pide una
+  decisión; una terminada se dibuja entera en verde.
+- **La ficha de obra responde a lo que vas a mirar**: cada visita dice cuántos
+  puntos deja pendientes y cuántos resueltos, y arriba pone cuántos quedan en
+  la última.
+- **La sincronización se vuelve discreta.** Si está todo subido no se pinta
+  nada. Los fallos dejan de ser dos párrafos rojos a pantalla completa.
+- **Se lee y se toca mejor**: textos más grandes y con más contraste, botones
+  de 44 px, se va el retardo de ~300 ms al tocar en Android, y el contenido ya
+  no se mete debajo de las barras del sistema.
 
 ### Novedades
 
@@ -30,7 +58,6 @@ ya ha llegado.
   cuántas obras va a enlazar.
 - **El informe recoge las correcciones**, sin necesidad de volver a abrir la
   obra.
-
 - **Musaat: el control de lo que hay que declarar.** Apartado nuevo con la
   lista de obras que van a la mutua. Cada obra nace con las cinco
   intervenciones por enviar —proyecto, estudio de seguridad, dirección de

@@ -34,11 +34,15 @@ export interface AgentePersona {
 // repite en muchas obras. Puede ser una persona o una sociedad (promotor y
 // constructora suelen serlo), y es lo único que distingue `esEmpresa`: el
 // documento se etiqueta CIF en vez de DNI.
+// Los campos opcionales admiten null además de undefined: las columnas de
+// SQLite devuelven null, y ese null viaja tal cual al bajar los datos y al
+// volver a subirlos. Fingir que solo puede ser undefined hacía que el
+// compilador diera por buenos sitios donde en realidad llega un null.
 export interface Persona {
   id: string;
   nombre: string;
-  dni?: string;
-  esEmpresa?: boolean;
+  dni?: string | null;
+  esEmpresa?: boolean | null;
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;
@@ -102,10 +106,10 @@ export type IntervencionesMusaat = Partial<
 
 export interface RegistroMusaat {
   id: string;
-  numeroExpediente?: string;
+  numeroExpediente?: string | null;
   nombre: string;
-  intervenciones?: IntervencionesMusaat;
-  observaciones?: string;
+  intervenciones?: IntervencionesMusaat | null;
+  observaciones?: string | null;
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;
@@ -114,7 +118,7 @@ export interface RegistroMusaat {
 // Accesor que solo lee claves propias, nunca heredadas del prototipo: la
 // misma precaución que con los roles de la obra.
 export function intervencionDe(
-  intervenciones: IntervencionesMusaat | undefined,
+  intervenciones: IntervencionesMusaat | null | undefined,
   tipo: TipoIntervencionMusaat
 ): IntervencionMusaat {
   if (intervenciones && Object.prototype.hasOwnProperty.call(intervenciones, tipo)) {
@@ -127,7 +131,7 @@ export function intervencionDe(
 // primera versión: lo que entonces se dejaba sin marcar era "no intervengo",
 // que hoy es "No procede"; lo marcado con fecha, enviado.
 export function estadoIntervencion(
-  intervenciones: IntervencionesMusaat | undefined,
+  intervenciones: IntervencionesMusaat | null | undefined,
   tipo: TipoIntervencionMusaat
 ): EstadoIntervencionMusaat {
   const i = intervencionDe(intervenciones, tipo);
@@ -174,12 +178,12 @@ export const ESTADO_MUSAAT_LABELS: Record<EstadoMusaat, string> = {
 // Musaat se apuntan casi siempre antes que la obra, así que se emparejan por
 // el nº de expediente; una obra que no esté en Musaat cuenta como que no se
 // ha enviado nada.
-function expedienteNormalizado(valor: string | undefined): string {
+function expedienteNormalizado(valor: string | null | undefined): string {
   return (valor ?? "").trim().toLowerCase();
 }
 
 export function buscarRegistroMusaat(
-  numeroExpediente: string | undefined,
+  numeroExpediente: string | null | undefined,
   registros: RegistroMusaat[]
 ): RegistroMusaat | undefined {
   const clave = expedienteNormalizado(numeroExpediente);
@@ -188,7 +192,7 @@ export function buscarRegistroMusaat(
 }
 
 export function estadoMusaatDeExpediente(
-  numeroExpediente: string | undefined,
+  numeroExpediente: string | null | undefined,
   registros: RegistroMusaat[]
 ): EstadoMusaat {
   const registro = buscarRegistroMusaat(numeroExpediente, registros);
@@ -196,7 +200,7 @@ export function estadoMusaatDeExpediente(
 }
 
 // Etiqueta del documento según el tipo de ficha.
-export function etiquetaDocumento(esEmpresa: boolean | undefined): string {
+export function etiquetaDocumento(esEmpresa: boolean | null | undefined): string {
   return esEmpresa ? "CIF" : "DNI";
 }
 
@@ -413,7 +417,9 @@ export function resolverPersona(
     nombre: (ficha.nombre ?? "").trim() !== "" ? ficha.nombre : persona.nombre,
     // El documento manda siempre, incluso vacío: si se borra en la ficha,
     // desaparece de todas las obras. Es el sentido de tener una sola fuente.
-    dni: ficha.dni,
+    // El null de la base se guarda como undefined, que es lo que el servidor
+    // escribe en la columna JSON de la obra.
+    dni: ficha.dni ?? undefined,
   };
 }
 
