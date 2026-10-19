@@ -22,6 +22,7 @@ import {
 } from "@sigram/shared";
 import type { ObraInput } from "../api/obras";
 import { BuscadorPersona } from "../components/BuscadorPersona";
+import { EditorFicha } from "../components/EditorFicha";
 import { CampoLogo } from "../components/CampoLogo";
 import { getObra, saveObraLocal } from "../db/repositories/obraRepo";
 import { listPersonas, savePersonaLocal } from "../db/repositories/personaRepo";
@@ -59,6 +60,68 @@ const emptyForm: ObraInput = {
   numeroExpediente: "",
   notas: "",
 };
+
+// Una fila de rol que sale de una ficha de la agenda. Va en su propio
+// componente porque cada fila recuerda si tiene el editor abierto.
+function FilaVinculada({
+  etiqueta,
+  ficha,
+  puedeQuitar,
+  onDesvincular,
+  onQuitar,
+}: {
+  etiqueta: string;
+  ficha: Persona;
+  puedeQuitar: boolean;
+  onDesvincular: () => void;
+  onQuitar: () => void;
+}) {
+  const [editando, setEditando] = useState(false);
+
+  if (editando) {
+    return <EditorFicha persona={ficha} onCerrar={() => setEditando(false)} />;
+  }
+
+  return (
+    <div className="fila-vinculada">
+      <div>
+        <p className="fila-meta" style={{ justifyContent: "flex-start", gap: "8px" }}>
+          <span>{etiqueta}</span>
+          <span className="chip">De Personas</span>
+        </p>
+        <p className="vinculada-nombre">{ficha.nombre || "Ficha sin nombre"}</p>
+        <p className="fila-sub" style={{ marginTop: "2px" }}>
+          {ficha.dni
+            ? `${etiquetaDocumento(ficha.esEmpresa)} ${ficha.dni}`
+            : `Sin ${etiquetaDocumento(ficha.esEmpresa)}`}
+        </p>
+      </div>
+      <div className="row" style={{ gap: "6px" }}>
+        <button
+          type="button"
+          className="btn btn-secondary btn-sm"
+          onClick={() => setEditando(true)}
+        >
+          Editar ficha
+        </button>
+        <button type="button" className="btn btn-secondary btn-sm" onClick={onDesvincular}>
+          Desvincular
+        </button>
+        {puedeQuitar && (
+          <button
+            type="button"
+            className="btn btn-danger btn-sm"
+            title="Quitar esta persona"
+            aria-label="Quitar esta persona"
+            onClick={onQuitar}
+          >
+            ✕
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 // Un rol de la obra admite VARIAS personas (nombre + DNI). Se muestra una fila
 // por persona, con un botón para añadir otra y ✕ para quitar. Si la lista está
@@ -107,40 +170,14 @@ function CamposRolMulti({
         // no se pueden teclear aquí. O se cambia la ficha, o se desvincula.
         if (ficha) {
           return (
-            <div className="fila-vinculada" key={i}>
-              <div>
-                <p className="fila-meta" style={{ justifyContent: "flex-start", gap: "8px" }}>
-                  <span>{etiquetaNombre}</span>
-                  <span className="chip">De Personas</span>
-                </p>
-                <p className="vinculada-nombre">{ficha.nombre || "Ficha sin nombre"}</p>
-                <p className="fila-sub" style={{ marginTop: "2px" }}>
-                  {ficha.dni
-                    ? `${etiquetaDocumento(ficha.esEmpresa)} ${ficha.dni}`
-                    : `Sin ${etiquetaDocumento(ficha.esEmpresa)}`}
-                </p>
-              </div>
-              <div className="row" style={{ gap: "6px" }}>
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  onClick={() => actualizar(i, { personaId: undefined })}
-                >
-                  Desvincular
-                </button>
-                {filas.length > 1 && (
-                  <button
-                    type="button"
-                    className="btn btn-danger btn-sm"
-                    title="Quitar esta persona"
-                    aria-label="Quitar esta persona"
-                    onClick={() => quitar(i)}
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-            </div>
+            <FilaVinculada
+              key={i}
+              etiqueta={etiquetaNombre}
+              ficha={ficha}
+              puedeQuitar={filas.length > 1}
+              onDesvincular={() => actualizar(i, { personaId: undefined })}
+              onQuitar={() => quitar(i)}
+            />
           );
         }
 

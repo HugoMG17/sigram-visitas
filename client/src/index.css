@@ -409,6 +409,29 @@ time {
   font-weight: 600;
 }
 
+/* Editor de una ficha de la agenda, abierto dentro del formulario de obra.
+   Se distingue del resto por el filo de la izquierda: lo que se guarda ahí no
+   es la obra, es la ficha. */
+.editor-ficha {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--color-raised);
+  border-left: 3px solid var(--color-ink);
+  border-radius: 0 var(--radius-card) var(--radius-card) 0;
+  padding: 14px 16px;
+}
+
+.editor-ficha-titulo {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.editor-ficha .input {
+  background: var(--color-surface);
+}
+
 /* ---------- Grupo de opciones (persona / empresa) ---------------------- */
 
 .grupo-radio {
