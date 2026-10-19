@@ -64,6 +64,11 @@
   --color-fin: #007d52; /* obra terminada */
   --color-done: #8a8a8a; /* fases ya pasadas */
   --color-danger: #a8191f;
+  /* Naranja de "falta algo". Solo se usa como punto, nunca como texto, así
+     que la referencia es el 3:1 de un objeto gráfico y no el 4,5:1 de una
+     palabra: da 3,4:1 sobre el fondo piedra y se distingue del rojo a
+     simple vista, que es de lo que se trata. */
+  --color-medio: #d2630a;
   --color-warning-bg: #fdf4e3;
   --color-warning-ink: #7a4a08;
   --color-danger-bg: #fdeceb;
@@ -345,6 +350,9 @@ time {
 }
 
 .filtro {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   min-height: var(--touch);
   padding: 0 14px;
   border: 1px solid var(--color-control);
@@ -362,6 +370,13 @@ time {
   background: var(--color-text);
   border-color: var(--color-text);
   color: white;
+}
+
+/* Dentro del filtro el punto va sin margen: ahí no encabeza una fila. */
+.filtro .punto-estado {
+  margin-top: 0;
+  width: 9px;
+  height: 9px;
 }
 
 .intervenciones {
@@ -388,12 +403,16 @@ time {
   flex-shrink: 0;
 }
 
-.interv--enviada .interv-punto {
+.interv--enviado .interv-punto {
   background: var(--color-fin);
 }
 
-.interv--falta .interv-punto {
+.interv--pendiente .interv-punto {
   background: var(--color-danger);
+}
+
+.interv--no_procede .interv-punto {
+  background: var(--color-control);
 }
 
 .interv-nombre {
@@ -404,18 +423,77 @@ time {
   color: var(--color-muted);
 }
 
-.interv--falta .interv-fecha {
+.interv--pendiente .interv-fecha {
   color: var(--color-danger);
 }
 
 .intervencion-campo {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px 16px;
   flex-wrap: wrap;
   border-top: 1px solid var(--color-rule);
   padding-top: 10px;
+}
+
+.intervencion-nombre {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* Lo que no procede se apaga: sigue a la vista, para saber que está decidido
+   y no olvidado, pero deja de pedir atención. */
+.intervencion-campo--no_procede .intervencion-nombre {
+  color: var(--color-muted);
+  font-weight: 400;
+}
+
+.punto-interv {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-danger);
+}
+
+.punto-interv--enviado {
+  background: var(--color-fin);
+}
+
+.punto-interv--no_procede {
+  background: var(--color-control);
+}
+
+/* El tick va a la derecha, que es donde se busca al repasar la lista. */
+.intervencion-controles {
+  display: flex;
+  align-items: center;
+  gap: 8px 18px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+/* La fecha baja a su propia línea para no apretar los dos ticks. */
+.intervencion-fecha {
+  flex-basis: 100%;
+}
+
+/* El resumen de Musaat al lado de cada obra. */
+.chip-musaat {
+  gap: 6px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-muted);
+}
+
+.chip-musaat .punto-estado {
+  margin-top: 0;
+  width: 8px;
+  height: 8px;
 }
 
 .intervencion-campo .opcion-radio input {
@@ -861,11 +939,15 @@ time {
   background: var(--color-control);
 }
 
-.punto-estado--enviado {
+.punto-estado--completo {
   background: var(--color-fin);
 }
 
-.punto-estado--pendiente {
+.punto-estado--parcial {
+  background: var(--color-medio);
+}
+
+.punto-estado--nada {
   background: var(--color-danger);
 }
 
@@ -1175,6 +1257,14 @@ textarea.input {
 
   .fila-nombre {
     font-size: 16px;
+  }
+
+  /* En el móvil los dos ticks bajan siempre a su propia línea. Dejándolos
+     colgar quedaban unos al lado del nombre y otros debajo, según lo largo
+     que fuera, y la columna no se leía de un vistazo. */
+  .intervencion-controles {
+    margin-left: 0;
+    flex-basis: 100%;
   }
 
   /* En el móvil la fila se pone en columna: la fecha y el título arriba, lo

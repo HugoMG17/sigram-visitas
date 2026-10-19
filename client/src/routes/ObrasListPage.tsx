@@ -2,10 +2,14 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { listObras } from "../db/repositories/obraRepo";
+import { listMusaat } from "../db/repositories/musaatRepo";
 import { ObraCard } from "../components/ObraCard";
 
 export function ObrasListPage() {
   const obras = useLiveQuery(listObras, []);
+  // Una sola consulta para toda la lista, que baja por props: una por fila
+  // serían tantas suscripciones como obras.
+  const registrosMusaat = useLiveQuery(listMusaat, []) ?? [];
   const [busqueda, setBusqueda] = useState("");
 
   const filtro = busqueda.trim().toLowerCase();
@@ -89,7 +93,7 @@ export function ObrasListPage() {
 
       <ul className="lista" aria-label="Obras">
         {obrasFiltradas?.map((obra) => (
-          <ObraCard key={obra.id} obra={obra} />
+          <ObraCard key={obra.id} obra={obra} registrosMusaat={registrosMusaat} />
         ))}
       </ul>
     </div>

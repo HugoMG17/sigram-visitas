@@ -3,9 +3,11 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
+  estadoIntervencion,
   intervencionDe,
   TIPO_INTERVENCION_MUSAAT_LABELS,
   TIPOS_INTERVENCION_MUSAAT,
+  type EstadoIntervencionMusaat,
   type IntervencionesMusaat,
   type TipoIntervencionMusaat,
 } from "@sigram/shared";
@@ -59,16 +61,30 @@ export function MusaatFormPage() {
 
   function cambiarIntervencion(
     tipo: TipoIntervencionMusaat,
-    cambios: Partial<{ aplica: boolean; fechaEnvio: string }>
+    cambios: Partial<{ estado: EstadoIntervencionMusaat; fechaEnvio: string }>
   ) {
     setForm((prev) => {
       const actual = intervencionDe(prev.intervenciones, tipo);
       const intervenciones: IntervencionesMusaat = {
         ...(prev.intervenciones ?? {}),
-        [tipo]: { ...actual, ...cambios },
+        // Se escribe `estado` y se deja de escribir `aplica`, el campo de la
+        // primera versión: así la intervención queda con el estado explícito
+        // y no hay que deducirlo nunca más.
+        [tipo]: { ...actual, estado: estadoIntervencion(prev.intervenciones, tipo), ...cambios },
       };
       return { ...prev, intervenciones };
     });
+  }
+
+  // Al marcar enviado se pone la fecha de hoy si no había ninguna, que es lo
+  // que pasa casi siempre: se marca el día que se envía.
+  function marcarEnviado(tipo: TipoIntervencionMusaat, enviado: boolean) {
+    if (!enviado) {
+      cambiarIntervencion(tipo, { estado: "pendiente" });
+      return;
+    }
+    const fecha = intervencionDe(form.intervenciones, tipo).fechaEnvio;
+    cambiarIntervencion(tipo, { estado: "enviado", fechaEnvio: fecha || hoy() });
   }
 
   async function handleEliminar() {
@@ -123,43 +139,54 @@ export function MusaatFormPage() {
 
         <h2 style={{ margin: "8px 0 0", fontSize: "16px" }}>Intervenciones</h2>
         <p className="fila-sub" style={{ marginTop: "-4px" }}>
-          Lo que no marques no cuenta como pendiente.
+          Todas las obras nacen con las cinco por enviar. Marca lo que ya enviaste, y pon “No
+          procede” en lo que no te corresponde: eso también cuenta como resuelto.
         </p>
 
         {TIPOS_INTERVENCION_MUSAAT.map((tipo) => {
-          const i = intervencionDe(form.intervenciones, tipo);
-          const marcada = i.aplica === true;
+          const estado = estadoIntervencion(form.intervenciones, tipo);
+          const fecha = (intervencionDe(form.intervenciones, tipo).fechaEnvio ?? "").slice(0, 10);
           return (
-            <div className="intervencion-campo" key={tipo}>
-              <label className="opcion-radio">
-                <input
-                  type="checkbox"
-                  checked={marcada}
-                  onChange={(e) => cambiarIntervencion(tipo, { aplica: e.target.checked })}
-                />
+            <div className={`intervencion-campo intervencion-campo--${estado}`} key={tipo}>
+              <div className="intervencion-nombre">
+                <span className={`punto-interv punto-interv--${estado}`} aria-hidden="true" />
                 {TIPO_INTERVENCION_MUSAAT_LABELS[tipo]}
-              </label>
-              {marcada && (
+              </div>
+
+              <div className="intervencion-controles">
+                <label className="opcion-radio">
+                  <input
+                    type="checkbox"
+                    checked={estado === "enviado"}
+                    disabled={estado === "no_procede"}
+                    onChange={(e) => marcarEnviado(tipo, e.target.checked)}
+                  />
+                  Enviado
+                </label>
+                <label className="opcion-radio">
+                  <input
+                    type="checkbox"
+                    checked={estado === "no_procede"}
+                    onChange={(e) =>
+                      cambiarIntervencion(tipo, {
+                        estado: e.target.checked ? "no_procede" : "pendiente",
+                      })
+                    }
+                  />
+                  No procede
+                </label>
+              </div>
+
+              {estado === "enviado" && (
                 <div className="field intervencion-fecha">
                   <label htmlFor={`fecha-${tipo}`}>Enviada el</label>
-                  <div className="row" style={{ gap: "6px", flexWrap: "nowrap" }}>
-                    <input
-                      id={`fecha-${tipo}`}
-                      className="input"
-                      type="date"
-                      value={(i.fechaEnvio ?? "").slice(0, 10)}
-                      onChange={(e) => cambiarIntervencion(tipo, { fechaEnvio: e.target.value })}
-                    />
-                    {!i.fechaEnvio && (
-                      <button
-                        type="button"
-                        className="btn btn-secondary btn-sm"
-                        onClick={() => cambiarIntervencion(tipo, { fechaEnvio: hoy() })}
-                      >
-                        Hoy
-                      </button>
-                    )}
-                  </div>
+                  <input
+                    id={`fecha-${tipo}`}
+                    className="input"
+                    type="date"
+                    value={fecha}
+                    onChange={(e) => cambiarIntervencion(tipo, { fechaEnvio: e.target.value })}
+                  />
                 </div>
               )}
             </div>

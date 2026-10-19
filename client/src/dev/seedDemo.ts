@@ -154,8 +154,9 @@ export async function seedDemoSiSePide(): Promise<void> {
     }))
   );
 
-  // Registro de Musaat: uno con todo enviado, dos con algo pendiente y uno
-  // sin marcar, para ver los tres puntos de la lista.
+  // Registro de Musaat: uno verde (todo resuelto), uno naranja (algo enviado
+  // y algo pendiente), uno rojo (nada) y una obra que NO está en Musaat, para
+  // ver el punto rojo también en la lista de obras.
   await db.musaat.bulkPut(
     [
       {
@@ -163,8 +164,11 @@ export async function seedDemoSiSePide(): Promise<void> {
         numeroExpediente: "2026-014",
         nombre: "REFORMA DE VIVIENDA UNIFAMILIAR Y PISCINA",
         intervenciones: {
-          direccionAparejador: { aplica: true, fechaEnvio: "2026-02-10" },
-          coordinacion: { aplica: true, fechaEnvio: "2026-02-10" },
+          proyecto: { estado: "no_procede" as const },
+          estudioSeguridad: { estado: "no_procede" as const },
+          direccionObra: { estado: "no_procede" as const },
+          direccionAparejador: { estado: "enviado" as const, fechaEnvio: "2026-02-10" },
+          coordinacion: { estado: "enviado" as const, fechaEnvio: "2026-02-10" },
         },
       },
       {
@@ -172,22 +176,17 @@ export async function seedDemoSiSePide(): Promise<void> {
         numeroExpediente: "2026-009",
         nombre: "EDIFICIO DE 12 VIVIENDAS EN AVENIDA DE ESPAÑA",
         intervenciones: {
-          proyecto: { aplica: true, fechaEnvio: "2026-01-15" },
-          estudioSeguridad: { aplica: true, fechaEnvio: "2026-01-15" },
-          direccionObra: { aplica: true },
-          coordinacion: { aplica: true },
+          proyecto: { estado: "enviado" as const, fechaEnvio: "2026-01-15" },
+          estudioSeguridad: { estado: "enviado" as const, fechaEnvio: "2026-01-15" },
+          direccionObra: { estado: "pendiente" as const },
+          direccionAparejador: { estado: "pendiente" as const },
+          coordinacion: { estado: "pendiente" as const },
         },
       },
       {
         id: "3a5a0000-0000-4000-8000-000000000003",
         numeroExpediente: "2026-022",
         nombre: "NAVE INDUSTRIAL EN EL POLÍGONO LAS CAPELLANÍAS",
-        intervenciones: { direccionAparejador: { aplica: true } },
-      },
-      {
-        id: "3a5a0000-0000-4000-8000-000000000004",
-        numeroExpediente: "2026-031",
-        nombre: "VIVIENDA UNIFAMILIAR AISLADA EN SIERRA DE FUENTES",
         intervenciones: {},
       },
     ].map((r) => ({

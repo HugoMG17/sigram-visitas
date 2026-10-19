@@ -62,9 +62,16 @@ export const personaUpsertSchema = z.object({
 // Registro de Musaat. Las intervenciones se validan con z.record y no con un
 // z.object de claves fijas, por la misma razón que los roles de la obra:
 // z.record solo mira las claves propias del cuerpo recibido.
+// CUIDADO: z.object descarta en silencio las claves que no declara, así que
+// todo campo nuevo de IntervencionMusaat hay que añadirlo aquí Y en
+// normalizarIntervenciones (musaat.routes.ts), o se pierde al sincronizar sin
+// dar ningún error. `estado` ya se perdió una vez por esto.
 const intervencionSchema = z.object({
-  aplica: z.boolean().nullish(),
+  estado: z.enum(["pendiente", "enviado", "no_procede"]).nullish(),
   fechaEnvio: textoOpcional,
+  // Campo de la primera versión; se sigue aceptando para no rechazar lo ya
+  // guardado en los dispositivos que aún no se han actualizado.
+  aplica: z.boolean().nullish(),
 });
 
 export const musaatUpsertSchema = z.object({

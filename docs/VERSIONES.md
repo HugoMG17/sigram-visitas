@@ -32,16 +32,21 @@ ya ha llegado.
   obra.
 
 - **Musaat: el control de lo que hay que declarar.** Apartado nuevo con la
-  lista de obras que van a la mutua. De cada una marcas en cuál de las cinco
-  intervenciones participas —proyecto, estudio de seguridad, dirección de
-  obra, dirección aparejador y coordinación— y cada una lleva **su propia
-  fecha de envío**. Un punto por obra resume cómo va: verde si está todo
-  enviado, rojo si falta algo. Arriba, un filtro de *faltan por enviar* y un
-  buscador por nº de expediente o nombre.
+  lista de obras que van a la mutua. Cada obra nace con las cinco
+  intervenciones por enviar —proyecto, estudio de seguridad, dirección de
+  obra, dirección aparejador y coordinación—, y de cada una marcas *Enviado*,
+  con su fecha, o *No procede* cuando el seguro no te corresponde a ti.
+- **Un punto de color por obra**: rojo si no has enviado nada, naranja si
+  enviaste algo y falta el resto, verde cuando está todo resuelto. Lo que no
+  procede cuenta como resuelto. Arriba, un filtro por cada uno de los tres
+  estados con su cuenta, y un buscador por nº de expediente o nombre.
+- **El estado de Musaat, también en la lista de obras.** Al lado de cada obra
+  ves cómo va su declaración sin tener que entrar. Se emparejan por el **nº de
+  expediente**; una obra que no esté en Musaat sale en rojo.
 
-  Es una lista independiente de tus obras, a propósito: no todas las obras se
-  declaran, y lo que mandas a la mutua debe quedar como lo mandaste, sin que
-  lo cambie después una edición de la obra. Se apunta a mano.
+  La lista de Musaat es independiente de tus obras, a propósito: no todas las
+  obras se declaran, y lo que mandas a la mutua debe quedar como lo mandaste,
+  sin que lo cambie después una edición de la obra. Se apunta a mano.
 
 ### Notas
 

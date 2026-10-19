@@ -13,6 +13,11 @@ export const musaatRouter = Router();
 // El validador admite null en los campos (patrón null-tras-pull) y la columna
 // JSON guarda undefined: se normaliza aquí, igual que con los agentes de la
 // obra. Se recorren solo las claves propias del objeto recibido.
+//
+// CUIDADO: esta función reconstruye cada intervención campo a campo, así que
+// todo campo nuevo hay que añadirlo aquí o se pierde al guardar, sin ningún
+// error. Pasó con `estado`: "No procede" se guardaba en el móvil y volvía
+// convertido en "pendiente" después de sincronizar.
 function normalizarIntervenciones(
   intervenciones: ReturnType<typeof musaatUpsertSchema.parse>["intervenciones"]
 ): IntervencionesMusaat | null {
@@ -21,8 +26,9 @@ function normalizarIntervenciones(
   for (const [tipo, valor] of Object.entries(intervenciones)) {
     if (!valor) continue;
     limpio[tipo as TipoIntervencionMusaat] = {
-      aplica: valor.aplica ?? undefined,
+      estado: valor.estado ?? undefined,
       fechaEnvio: valor.fechaEnvio ?? undefined,
+      aplica: valor.aplica ?? undefined,
     };
   }
   return limpio;

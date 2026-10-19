@@ -77,12 +77,23 @@ export const TIPOS_INTERVENCION_MUSAAT: TipoIntervencionMusaat[] = [
   "coordinacion",
 ];
 
-// Una intervención tiene tres estados, no dos: no marcada (no se interviene
-// en ese concepto, y por tanto no falta nada), marcada sin fecha (pendiente
-// de enviar) y marcada con fecha (enviada).
+// Cada intervención está en uno de tres estados. Todas las obras nacen con
+// las cinco pendientes: lo normal es que haya que declararlas, así que lo que
+// no toca se marca a mano como "No procede" en vez de al revés.
+export type EstadoIntervencionMusaat = "pendiente" | "enviado" | "no_procede";
+
+export const ESTADO_INTERVENCION_MUSAAT_LABELS: Record<EstadoIntervencionMusaat, string> = {
+  pendiente: "Sin enviar",
+  enviado: "Enviado",
+  no_procede: "No procede",
+};
+
 export interface IntervencionMusaat {
-  aplica?: boolean;
+  estado?: EstadoIntervencionMusaat;
   fechaEnvio?: string | null;
+  // Campo de la primera versión, cuando había que marcar en qué se intervenía.
+  // Se sigue leyendo para no perder lo ya guardado; no se escribe nunca más.
+  aplica?: boolean;
 }
 
 export type IntervencionesMusaat = Partial<
@@ -111,31 +122,76 @@ export function intervencionDe(
   return {};
 }
 
-// Las intervenciones marcadas que todavía no tienen fecha de envío.
-export function pendientesDeMusaat(registro: RegistroMusaat): TipoIntervencionMusaat[] {
-  return TIPOS_INTERVENCION_MUSAAT.filter((tipo) => {
-    const i = intervencionDe(registro.intervenciones, tipo);
-    return i.aplica === true && !i.fechaEnvio;
-  });
+// El estado de una intervención, con la traducción de lo guardado por la
+// primera versión: lo que entonces se dejaba sin marcar era "no intervengo",
+// que hoy es "No procede"; lo marcado con fecha, enviado.
+export function estadoIntervencion(
+  intervenciones: IntervencionesMusaat | undefined,
+  tipo: TipoIntervencionMusaat
+): EstadoIntervencionMusaat {
+  const i = intervencionDe(intervenciones, tipo);
+  if (i.estado) return i.estado;
+  if (i.aplica === false) return "no_procede";
+  if (i.fechaEnvio) return "enviado";
+  return "pendiente";
 }
 
-// Las marcadas que ya se enviaron.
-export function enviadasDeMusaat(registro: RegistroMusaat): TipoIntervencionMusaat[] {
-  return TIPOS_INTERVENCION_MUSAAT.filter((tipo) => {
-    const i = intervencionDe(registro.intervenciones, tipo);
-    return i.aplica === true && Boolean(i.fechaEnvio);
-  });
+export function intervencionesPorEstado(
+  registro: RegistroMusaat
+): Record<EstadoIntervencionMusaat, TipoIntervencionMusaat[]> {
+  const grupos: Record<EstadoIntervencionMusaat, TipoIntervencionMusaat[]> = {
+    pendiente: [],
+    enviado: [],
+    no_procede: [],
+  };
+  for (const tipo of TIPOS_INTERVENCION_MUSAAT) {
+    grupos[estadoIntervencion(registro.intervenciones, tipo)].push(tipo);
+  }
+  return grupos;
 }
 
-// El punto de la lista: verde si está todo enviado, rojo si falta algo, y
-// gris si todavía no se ha marcado ninguna intervención (no falta nada
-// porque aún no se ha dicho qué se declara).
-export type EstadoMusaat = "enviado" | "pendiente" | "sin_marcar";
+// El resumen que se pinta como punto de color:
+//   verde   todo resuelto (enviado, o no procede, que tampoco hay que enviar)
+//   naranja algo resuelto, pero queda por enviar
+//   rojo    no hay nada enviado todavía
+export type EstadoMusaat = "completo" | "parcial" | "nada";
 
 export function estadoMusaat(registro: RegistroMusaat): EstadoMusaat {
-  if (pendientesDeMusaat(registro).length > 0) return "pendiente";
-  if (enviadasDeMusaat(registro).length > 0) return "enviado";
-  return "sin_marcar";
+  const grupos = intervencionesPorEstado(registro);
+  if (grupos.pendiente.length === 0) return "completo";
+  if (grupos.enviado.length + grupos.no_procede.length === 0) return "nada";
+  return "parcial";
+}
+
+export const ESTADO_MUSAAT_LABELS: Record<EstadoMusaat, string> = {
+  completo: "Todo enviado",
+  parcial: "Falta algo",
+  nada: "Nada enviado",
+};
+
+// Lo que se enseña en la lista de obras, al lado de cada obra. Las obras de
+// Musaat se apuntan casi siempre antes que la obra, así que se emparejan por
+// el nº de expediente; una obra que no esté en Musaat cuenta como que no se
+// ha enviado nada.
+function expedienteNormalizado(valor: string | undefined): string {
+  return (valor ?? "").trim().toLowerCase();
+}
+
+export function buscarRegistroMusaat(
+  numeroExpediente: string | undefined,
+  registros: RegistroMusaat[]
+): RegistroMusaat | undefined {
+  const clave = expedienteNormalizado(numeroExpediente);
+  if (!clave) return undefined;
+  return registros.find((r) => expedienteNormalizado(r.numeroExpediente) === clave);
+}
+
+export function estadoMusaatDeExpediente(
+  numeroExpediente: string | undefined,
+  registros: RegistroMusaat[]
+): EstadoMusaat {
+  const registro = buscarRegistroMusaat(numeroExpediente, registros);
+  return registro ? estadoMusaat(registro) : "nada";
 }
 
 // Etiqueta del documento según el tipo de ficha.
