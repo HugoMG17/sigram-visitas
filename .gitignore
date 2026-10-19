@@ -23,3 +23,6 @@ server/uploads/**
 # Capacitor: assets web copiados dentro del proyecto Android; se regeneran
 # con "npm run build && npx cap sync android", no se versionan.
 client/android/app/src/main/assets/public/
+
+# Carpeta de trabajo del revisor de diseño (capturas y medidas, no es código)
+.taste-skill/

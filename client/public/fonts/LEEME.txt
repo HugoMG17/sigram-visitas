@@ -1,0 +1,10 @@
+Tipografia Archivo (Omnibus-Type), licencia SIL Open Font License 1.1.
+https://fonts.google.com/specimen/Archivo
+
+Se guarda dentro de la app a proposito: cargarla desde Google Fonts
+significaria una peticion a internet en cada arranque, y SIGRAM tiene que
+funcionar a pie de obra sin cobertura. Asi el service worker la guarda con el
+resto de la app y la primera carga sin cobertura ya la tiene.
+
+archivo-latin.woff2      caracteres latinos (incluye tildes y enies)
+archivo-latin-ext.woff2  latino extendido
