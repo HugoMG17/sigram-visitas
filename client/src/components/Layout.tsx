@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { SyncBadge, SyncErrores } from "./SyncBadge";
 import { AuthStatus } from "./AuthStatus";
 import { etiquetaEntorno } from "../utils/entorno";
@@ -56,6 +56,16 @@ export function Layout({ children }: { children: ReactNode }) {
             <SyncBadge />
           </div>
         </div>
+        {/* Segunda fila, y no dentro de la de arriba: en el móvil esa fila
+            ya lleva la marca, la versión, la cuenta y el estado de sincronía,
+            y dos enlaces más la partían. Sin color: el teal está reservado a
+            la acción principal de cada pantalla. */}
+        <nav className="app-bar-nav" aria-label="Secciones">
+          <NavLink to="/" end>
+            Obras
+          </NavLink>
+          <NavLink to="/personas">Personas</NavLink>
+        </nav>
       </header>
       <SyncErrores />
       <main className="page" id="contenido">

@@ -11,11 +11,21 @@ import { db } from "../db/db";
 
 const FECHA = "2026-10-14T08:00:00.000Z";
 
+// Los identificadores son UUID de verdad, no "o1"/"v1": el servidor valida el
+// formato y rechazaba los inventados con un 400, que salía en pantalla como
+// un fallo de sincronización y despistaba al revisar el diseño.
+
 export async function seedDemoSiSePide(): Promise<void> {
   if (!import.meta.env.DEV) return;
   if (!new URLSearchParams(window.location.search).has("seed")) return;
 
-  await Promise.all([db.obras.clear(), db.visitas.clear(), db.puntos.clear(), db.adjuntos.clear()]);
+  await Promise.all([
+    db.personas.clear(),
+    db.obras.clear(),
+    db.visitas.clear(),
+    db.puntos.clear(),
+    db.adjuntos.clear(),
+  ]);
 
   const comun = {
     tipoObra: "reforma" as const,
@@ -29,7 +39,11 @@ export async function seedDemoSiSePide(): Promise<void> {
   await db.obras.bulkPut([
     {
       ...comun,
-      id: "o1",
+      id: "0b4a0000-0000-4000-8000-000000000001",
+      // Pendiente igual que su visita: si la obra no estuviera por subir, la
+      // visita se enviaria sola y el servidor la rechazaria por no encontrar
+      // la obra padre.
+      syncStatus: "pending",
       numeroExpediente: "2026-014",
       nombre: "REFORMA DE VIVIENDA UNIFAMILIAR Y PISCINA",
       direccion: "Calle Gil Cordero 18",
@@ -39,7 +53,7 @@ export async function seedDemoSiSePide(): Promise<void> {
     },
     {
       ...comun,
-      id: "o2",
+      id: "0b4a0000-0000-4000-8000-000000000002",
       numeroExpediente: "2026-009",
       nombre: "EDIFICIO DE 12 VIVIENDAS EN AVENIDA DE ESPAÑA",
       direccion: "Avenida de España 44",
@@ -49,7 +63,7 @@ export async function seedDemoSiSePide(): Promise<void> {
     },
     {
       ...comun,
-      id: "o3",
+      id: "0b4a0000-0000-4000-8000-000000000003",
       numeroExpediente: "2026-022",
       nombre: "NAVE INDUSTRIAL EN EL POLÍGONO LAS CAPELLANÍAS",
       direccion: "Parcela 118, Polígono Las Capellanías",
@@ -60,7 +74,7 @@ export async function seedDemoSiSePide(): Promise<void> {
     },
     {
       ...comun,
-      id: "o4",
+      id: "0b4a0000-0000-4000-8000-000000000004",
       numeroExpediente: "2025-187",
       nombre: "REHABILITACIÓN DE CUBIERTA EN LA CASA DE LOS OVANDO",
       direccion: "Plaza de San Mateo 3",
@@ -70,7 +84,7 @@ export async function seedDemoSiSePide(): Promise<void> {
     },
     {
       ...comun,
-      id: "o5",
+      id: "0b4a0000-0000-4000-8000-000000000005",
       numeroExpediente: "2025-203",
       nombre: "ADECUACIÓN DE LOCAL PARA CAFETERÍA",
       direccion: "Calle Pintores 27",
@@ -80,7 +94,7 @@ export async function seedDemoSiSePide(): Promise<void> {
     },
     {
       ...comun,
-      id: "o6",
+      id: "0b4a0000-0000-4000-8000-000000000006",
       numeroExpediente: "2026-031",
       nombre: "VIVIENDA UNIFAMILIAR AISLADA EN SIERRA DE FUENTES",
       direccion: "Camino de la Dehesa 7",
@@ -90,10 +104,21 @@ export async function seedDemoSiSePide(): Promise<void> {
     },
   ]);
 
+  // Fichas de la agenda. A proposito NO se enlazan con las obras: asi se
+  // puede probar tanto el buscador del formulario como el importador.
+  await db.personas.bulkPut([
+    { id: "c0a10000-0000-4000-8000-000000000001", nombre: "María Jesús Pizarro Hurtado", dni: "76123456Z", esEmpresa: false },
+    { id: "c0a10000-0000-4000-8000-000000000002", nombre: "Promociones Norba S.L.", dni: "B10234567", esEmpresa: true },
+    { id: "c0a10000-0000-4000-8000-000000000003", nombre: "Hugo Martín Gabriel", dni: "44987654Q", esEmpresa: false },
+    { id: "c0a10000-0000-4000-8000-000000000004", nombre: "Talleres Monfragüe S.L.", dni: "B10987654", esEmpresa: true },
+    { id: "c0a10000-0000-4000-8000-000000000005", nombre: "Lucía Benítez Tovar", dni: "28112233D", esEmpresa: false },
+    { id: "c0a10000-0000-4000-8000-000000000006", nombre: "Álvaro Rey Cordero", dni: "", esEmpresa: false },
+  ].map((f) => ({ ...f, createdAt: FECHA, updatedAt: FECHA, deletedAt: null, syncStatus: "synced" as const })));
+
   await db.visitas.bulkPut([
     {
-      id: "v1",
-      obraId: "o1",
+      id: "71510000-0000-4000-8000-000000000001",
+      obraId: "0b4a0000-0000-4000-8000-000000000001",
       fecha: "2026-10-14T09:30:00.000Z",
       titulo: "Replanteo del vaso de la piscina",
       notas: "",
@@ -103,8 +128,8 @@ export async function seedDemoSiSePide(): Promise<void> {
       syncStatus: "pending",
     },
     {
-      id: "v2",
-      obraId: "o1",
+      id: "71510000-0000-4000-8000-000000000002",
+      obraId: "0b4a0000-0000-4000-8000-000000000001",
       fecha: "2026-09-30T09:00:00.000Z",
       titulo: "Tabiquería y pasos de instalaciones",
       notas: "",
@@ -114,8 +139,8 @@ export async function seedDemoSiSePide(): Promise<void> {
       syncStatus: "synced",
     },
     {
-      id: "v3",
-      obraId: "o1",
+      id: "71510000-0000-4000-8000-000000000003",
+      obraId: "0b4a0000-0000-4000-8000-000000000001",
       fecha: "2026-09-16T08:45:00.000Z",
       titulo: "Forjado de la planta primera",
       notas: "",
@@ -125,8 +150,8 @@ export async function seedDemoSiSePide(): Promise<void> {
       syncStatus: "synced",
     },
     {
-      id: "v4",
-      obraId: "o1",
+      id: "71510000-0000-4000-8000-000000000004",
+      obraId: "0b4a0000-0000-4000-8000-000000000001",
       fecha: "2026-09-02T09:15:00.000Z",
       titulo: "Armado de pilares y estructura",
       notas: "",
@@ -136,8 +161,8 @@ export async function seedDemoSiSePide(): Promise<void> {
       syncStatus: "synced",
     },
     {
-      id: "v5",
-      obraId: "o2",
+      id: "71510000-0000-4000-8000-000000000005",
+      obraId: "0b4a0000-0000-4000-8000-000000000002",
       fecha: "2026-10-07T10:00:00.000Z",
       titulo: "Saneamiento enterrado",
       notas: "",
@@ -149,12 +174,12 @@ export async function seedDemoSiSePide(): Promise<void> {
   ]);
 
   await db.puntos.bulkPut([
-    { id: "p1", visitaId: "v1", titulo: "Armado del vaso de la piscina", estado: "pendiente", orden: 0 },
-    { id: "p2", visitaId: "v1", titulo: "Impermeabilización del muro de contención", estado: "pendiente", orden: 1 },
-    { id: "p3", visitaId: "v1", titulo: "Acometida del cuarto de depuradora", estado: "solucionado", orden: 2 },
-    { id: "p4", visitaId: "v2", titulo: "Pasos de instalaciones en tabiquería", estado: "pendiente", orden: 0 },
-    { id: "p5", visitaId: "v2", titulo: "Replanteo de huecos de carpintería", estado: "solucionado", orden: 1 },
-    { id: "p6", visitaId: "v3", titulo: "Juntas de hormigonado", estado: "solucionado", orden: 0 },
+    { id: "90410000-0000-4000-8000-000000000001", visitaId: "71510000-0000-4000-8000-000000000001", titulo: "Armado del vaso de la piscina", estado: "pendiente", orden: 0 },
+    { id: "90410000-0000-4000-8000-000000000002", visitaId: "71510000-0000-4000-8000-000000000001", titulo: "Impermeabilización del muro de contención", estado: "pendiente", orden: 1 },
+    { id: "90410000-0000-4000-8000-000000000003", visitaId: "71510000-0000-4000-8000-000000000001", titulo: "Acometida del cuarto de depuradora", estado: "solucionado", orden: 2 },
+    { id: "90410000-0000-4000-8000-000000000004", visitaId: "71510000-0000-4000-8000-000000000002", titulo: "Pasos de instalaciones en tabiquería", estado: "pendiente", orden: 0 },
+    { id: "90410000-0000-4000-8000-000000000005", visitaId: "71510000-0000-4000-8000-000000000002", titulo: "Replanteo de huecos de carpintería", estado: "solucionado", orden: 1 },
+    { id: "90410000-0000-4000-8000-000000000006", visitaId: "71510000-0000-4000-8000-000000000003", titulo: "Juntas de hormigonado", estado: "solucionado", orden: 0 },
   ].map((p) => ({
     ...p,
     estado: p.estado as "pendiente" | "solucionado",

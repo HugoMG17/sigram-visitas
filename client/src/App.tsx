@@ -5,6 +5,8 @@ import { ObraFormPage } from "./routes/ObraFormPage";
 import { ObraDetailPage } from "./routes/ObraDetailPage";
 import { VisitaFormPage } from "./routes/VisitaFormPage";
 import { VisitaDetailPage } from "./routes/VisitaDetailPage";
+import { PersonasListPage } from "./routes/PersonasListPage";
+import { PersonaFormPage } from "./routes/PersonaFormPage";
 
 function App() {
   return (
@@ -18,6 +20,9 @@ function App() {
           <Route path="/obras/:obraId/visitas/nueva" element={<VisitaFormPage />} />
           <Route path="/visitas/:visitaId" element={<VisitaDetailPage />} />
           <Route path="/visitas/:visitaId/editar" element={<VisitaFormPage />} />
+          <Route path="/personas" element={<PersonasListPage />} />
+          <Route path="/personas/nueva" element={<PersonaFormPage />} />
+          <Route path="/personas/:personaId/editar" element={<PersonaFormPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>

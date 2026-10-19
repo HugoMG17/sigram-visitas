@@ -280,6 +280,84 @@ time {
   color: var(--color-muted);
 }
 
+/* Navegación entre apartados. Gris el que no estás viendo, tinta y subrayado
+   el actual: el color de marca está reservado a la acción principal. */
+.app-bar-nav {
+  max-width: var(--column);
+  margin: 0 auto;
+  padding: 0 max(24px, env(safe-area-inset-right)) 0 max(24px, env(safe-area-inset-left));
+  display: flex;
+  gap: 20px;
+}
+
+.app-bar-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-bottom: 2px;
+  border-bottom: 2px solid transparent;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-muted);
+  touch-action: manipulation;
+}
+
+.app-bar-nav a:hover {
+  color: var(--color-text);
+}
+
+.app-bar-nav a[aria-current="page"] {
+  color: var(--color-text);
+  border-bottom-color: var(--color-text);
+}
+
+/* ---------- Grupo de opciones (persona / empresa) ---------------------- */
+
+.grupo-radio {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.grupo-radio legend {
+  padding: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-muted);
+}
+
+.opcion-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--touch);
+  font-size: 15px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.opcion-radio input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--color-ink);
+}
+
+.grupo-radio {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  align-items: center;
+}
+
+.grupo-radio legend {
+  float: left;
+  width: 100%;
+}
+
 /* ---------- Avisos de sincronización ---------------------------------- */
 
 /* Discretos a propósito: si todo está sincronizado no se pinta nada. Solo
