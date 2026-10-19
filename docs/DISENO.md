@@ -97,6 +97,23 @@ dirían lo mismo.
 - **Los márgenes usan `env(safe-area-inset-*)`**, o en el APK con navegación
   por gestos el contenido se mete bajo las barras del sistema.
 
+## Patrones nuevos
+
+**La navegación entre apartados** va en una segunda fila de la cabecera, no
+dentro de la primera: a 390 px esa fila ya lleva marca, versión, cuenta y
+estado de sincronía. Gris el apartado que no estás viendo, tinta y subrayado
+el actual (`aria-current="page"`). Sin color de marca: el teal está reservado
+a la acción principal de cada pantalla.
+
+**El buscador de fichas** (`BuscadorPersona`) es un combobox propio y no un
+`<datalist>` del navegador, por cuatro motivos que se suman: el datalist no
+puede llevar el id de la ficha (habría que casar por texto, y dos personas con
+el mismo nombre serían indistinguibles), no puede enseñar el documento que es
+justo lo que las distingue, no puede ofrecer la opción de crear una ficha
+nueva, y su desplegable lo pinta Android a su manera, sin la zona táctil que
+hace falta en obra. Teclado: flechas, Enter y Escape. Enter con la lista
+abierta no envía el formulario.
+
 ## Probar el diseño
 
 El revisor abre un navegador limpio, con la base de datos vacía. Para ver las

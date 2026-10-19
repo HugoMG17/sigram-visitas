@@ -9,6 +9,41 @@ ya ha llegado.
 
 ---
 
+## 1.2.0 — 19 de octubre de 2026
+
+### Novedades
+
+- **Personas: una agenda propia.** Apartado nuevo en la cabecera, junto a
+  Obras. Guarda de una vez a la gente y a las empresas con las que trabajas,
+  con su nombre y su DNI (o su CIF, si marcas que es una empresa).
+- **Buscar en vez de teclear.** En el formulario de obra, la casilla de nombre
+  de cada rol busca en la agenda: eliges y se rellena sola. Vale para los seis
+  roles de siempre y también para los roles que escribes a mano. Si quien
+  buscas no está, lo guardas en la agenda sin salir del formulario.
+- **Corregir una vez, corregido en todas.** Una obra que usa una ficha muestra
+  siempre lo que dice la ficha. Arreglas un DNI mal escrito en un sitio y
+  queda bien en todas las obras, y en los informes que generes a partir de
+  entonces.
+- **Importar lo que ya hay.** Mientras quede gente escrita a mano en alguna
+  obra, la pantalla Personas lo avisa y ofrece crear sus fichas y enlazar las
+  obras de una vez. Antes de tocar nada dice cuántas fichas va a crear y
+  cuántas obras va a enlazar.
+- **El informe recoge las correcciones**, sin necesidad de volver a abrir la
+  obra.
+
+### Notas
+
+Nada de lo que ya tenías cambia. Una obra escrita a mano sigue funcionando
+exactamente igual; el vínculo con la agenda es opcional y se añade cuando tú
+quieras. Si borras una ficha de la agenda, las obras que la usaban conservan
+el nombre y las correcciones que ya habías hecho: lo que pierden es poder
+encontrarla al buscar.
+
+El informe PDF sigue imprimiendo solo los nombres de los agentes, no sus
+documentos. Lo que se corrige en todas, por tanto, es el nombre.
+
+---
+
 ## 1.1.0 — 1 de agosto de 2026
 
 ### Novedades
