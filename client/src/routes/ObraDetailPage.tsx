@@ -75,7 +75,7 @@ export function ObraDetailPage() {
           propósito: la referencia catastral, los roles (que en algunas
           obras son mucha gente) y las notas se consultan en "Editar obra",
           para que esta pantalla no resulte abrumadora. */}
-      <div className="page-head">
+      <div className="page-head page-head--obra">
         <div>
           <p className="fila-meta" style={{ marginBottom: "2px" }}>
             {obra.numeroExpediente ? `Nº ${obra.numeroExpediente}` : "Sin expediente"}

@@ -20,12 +20,14 @@ export function entornoActual(): Entorno {
 }
 
 // Etiqueta a mostrar, o undefined en producción (donde no se pinta nada).
-export function etiquetaEntorno(): { texto: string; color: string } | undefined {
+// El color ya no viaja aquí: la etiqueta usa el mismo rojo de aviso que el
+// resto de la app, para que no haya dos rojos distintos en la misma barra.
+export function etiquetaEntorno(): { texto: string } | undefined {
   switch (entornoActual()) {
     case "pruebas":
-      return { texto: "PRUEBAS", color: "#dc2626" };
+      return { texto: "PRUEBAS" };
     case "local":
-      return { texto: "LOCAL", color: "#7c3aed" };
+      return { texto: "LOCAL" };
     default:
       return undefined;
   }

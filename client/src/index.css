@@ -223,11 +223,20 @@ time {
   gap: 2px;
 }
 
+/* Dos líneas como mucho por fallo: el mensaje acaba con un consejo largo
+   ("comprueba tu conexión...") que es siempre el mismo, y repetido tres veces
+   convertía el aviso en una mancha roja a pantalla completa. Lo que importa
+   (qué obra y qué ha pasado) va al principio y se sigue viendo entero. */
 .sync-errores p {
   margin: 0;
   font-size: 12.5px;
   line-height: 1.45;
   color: var(--color-danger-ink);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
 }
 
 /* ---------- La columna de contenido ------------------------------------ */
@@ -388,6 +397,38 @@ time {
   margin: 4px 0 0;
   font-size: 14px;
   color: var(--color-muted);
+}
+
+/* La fila de una visita se lee en dos: la fecha y de qué iba a la izquierda,
+   lo que dejó pendiente a la derecha. Así la fila usa el ancho que ocupa en
+   vez de dejar medio metro de blanco en el ordenador. */
+.fila--visita {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.fila-puntos {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.fila-puntos-dato {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.fila-puntos-cero {
+  font-size: 13px;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---------- La barra de fase de la obra -------------------------------- */
@@ -645,16 +686,25 @@ textarea.input {
     font-size: 19px;
   }
 
+  /* El botón de la acción principal se queda en la misma línea del título,
+     no en una franja negra a todo lo ancho: cada franja de esas empujaba la
+     primera obra (o la primera visita) fuera de la primera pantalla, que es
+     justo lo que se viene a mirar. */
   .page-head,
   .section-head {
-    flex-direction: column;
-    align-items: stretch;
+    gap: 12px;
   }
 
-  .page-head > div > .btn,
-  .section-head > .btn,
-  .page-head > .btn {
-    width: 100%;
+  .page-head > .btn,
+  .section-head > .btn {
+    flex-shrink: 0;
+    padding: 0 12px;
+  }
+
+  /* La ficha de obra sí baja los botones: son dos, y uno borra la obra. */
+  .page-head--obra {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   /* Editar ocupa la fila; Eliminar no, para que no sea igual de fácil de
@@ -675,6 +725,23 @@ textarea.input {
 
   .fila-nombre {
     font-size: 16px;
+  }
+
+  /* En el móvil la fila se pone en columna: la fecha y el título arriba, lo
+     pendiente debajo, en una línea y no en una columna de palabras sueltas. */
+  .fila--visita {
+    flex-direction: column;
+    /* En columna, "center" centraría el texto: todo vuelve al margen
+       izquierdo, que es por donde se lee. */
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .fila-puntos {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
   }
 }
 
