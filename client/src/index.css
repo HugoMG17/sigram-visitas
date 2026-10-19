@@ -312,6 +312,63 @@ time {
   border-bottom-color: var(--color-text);
 }
 
+/* ---------- Buscador de fichas de la agenda ---------------------------- */
+
+.combo {
+  position: relative;
+}
+
+/* La lista flota sobre el formulario, así que aquí sí lleva sombra: es de lo
+   poco que de verdad está por encima del resto. */
+.combo-lista {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-control);
+  border-radius: var(--radius-card);
+  box-shadow: 0 8px 24px rgba(10, 10, 10, 0.12);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.combo-opcion {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-height: var(--touch);
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.combo-opcion--activa,
+.combo-opcion:hover {
+  background: var(--color-raised);
+}
+
+.combo-nombre {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.combo-dato {
+  font-size: 13px;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.combo-opcion--crear .combo-nombre {
+  color: var(--color-ink);
+}
+
 /* ---------- Grupo de opciones (persona / empresa) ---------------------- */
 
 .grupo-radio {
