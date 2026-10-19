@@ -77,8 +77,16 @@ export function ObraDetailPage() {
           para que esta pantalla no resulte abrumadora. */}
       <div className="page-head page-head--obra">
         <div>
-          <p className="fila-meta" style={{ marginBottom: "2px" }}>
-            {obra.numeroExpediente ? `Nº ${obra.numeroExpediente}` : "Sin expediente"}
+          <p className="fila-meta" style={{ marginBottom: "2px", justifyContent: "flex-start", gap: "10px" }}>
+            <span>{obra.numeroExpediente ? `Nº ${obra.numeroExpediente}` : "Sin expediente"}</span>
+            {/* Lo mismo que se ve en la lista: si la obra no está subida, se
+                dice aquí también y no solo en el contador de la cabecera. */}
+            {(obra.syncStatus === "pending" || obra.syncStatus === "error") && (
+              <span className="chip chip--pendiente" title="Todavía no está en el servidor">
+                <span className="chip-dot" />
+                Sin subir
+              </span>
+            )}
           </p>
           <h1>{obra.nombre || "Obra sin nombre"}</h1>
           {donde && <p className="sub">{donde}</p>}
