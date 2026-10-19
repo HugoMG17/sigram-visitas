@@ -9,9 +9,11 @@ composición todavía es la de antes.
 
 ## La idea
 
-**El cromo no lleva color.** Botones, bordes y texto en tinta; el color queda
-reservado para lo que significa algo. Si todo está bien, la pantalla es gris,
-blanca y negra. Cuando aparece un color, es porque hay algo que saber.
+**El color significa algo o no está.** Bordes y texto en gris y tinta; el
+color aparece en tres sitios y solo en tres: el mark de la marca, la acción
+principal de la pantalla, y lo que pide que te enteres (una obra parada, algo
+sin subir, un fallo). Si todo va bien y no hay nada que hacer, la pantalla es
+casi toda piedra, blanco y negro.
 
 Los colores salen del logo, y cada uno tiene un trabajo:
 
@@ -34,8 +36,9 @@ a pleno sol en el móvil directamente invisibles.
 Así que el mark va con su degradado tal cual, y todo lo demás usa **el mismo
 tono bajado de brillo** hasta pasar el contraste. Son los de la tabla.
 
-Nada más lleva color. Un botón azul "porque es un botón" rompe el sistema: en
-cuanto todo es color, el color deja de avisar de nada.
+Nada más lleva color. Pintar de teal cada botón "porque es el color de la
+marca" rompe el sistema: en cuanto todo es color, el color deja de avisar de
+nada, y además baja el contraste justo donde más falta hace.
 
 ## El fondo y la letra
 
