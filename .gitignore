@@ -26,3 +26,6 @@ client/android/app/src/main/assets/public/
 
 # Carpeta de trabajo del revisor de diseño (capturas y medidas, no es código)
 .taste-skill/
+
+# Los APK generados no van al repositorio: son resultado de compilar
+*.apk
