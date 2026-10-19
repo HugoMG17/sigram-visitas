@@ -255,7 +255,15 @@ export function resolverPersona(
   if (!persona.personaId) return persona;
   const ficha = agenda.get(persona.personaId);
   if (!ficha) return persona;
-  return { personaId: persona.personaId, nombre: ficha.nombre, dni: ficha.dni };
+  return {
+    personaId: persona.personaId,
+    // El nombre de la ficha manda salvo que esté vacío: una ficha a medio
+    // rellenar no debe dejar al promotor en blanco en un informe.
+    nombre: (ficha.nombre ?? "").trim() !== "" ? ficha.nombre : persona.nombre,
+    // El documento manda siempre, incluso vacío: si se borra en la ficha,
+    // desaparece de todas las obras. Es el sentido de tener una sola fuente.
+    dni: ficha.dni,
+  };
 }
 
 // Todos los roles de una obra con sus vínculos ya resueltos. Se copian solo
@@ -284,10 +292,18 @@ export function resolverExtras(
 }
 
 // Índice por id para pasar a las funciones de arriba.
+//
+// Entran TAMBIÉN las fichas borradas, a propósito. Si no, pasaría esto:
+// corrijo un DNI, se arregla en siete obras, borro la ficha de la agenda y
+// las siete obras vuelven al DNI viejo sin avisar. `deletedAt` solo saca la
+// ficha del buscador y de la lista; lo que ya se corrigió, queda corregido.
+//
+// Es un Map y no un objeto indexado por id por la misma disciplina que llevó
+// a renombrar el rol "constructor": ninguna clave de objeto sale de datos.
 export function indicePersonas(personas: Persona[]): Map<string, Persona> {
   const indice = new Map<string, Persona>();
   for (const persona of personas) {
-    if (!persona.deletedAt) indice.set(persona.id, persona);
+    indice.set(persona.id, persona);
   }
   return indice;
 }

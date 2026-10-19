@@ -13,6 +13,7 @@ import { requireAuth } from "./middleware/requireAuth.js";
 import { DbSessionStore } from "./auth/sessionStore.js";
 import { authRouter } from "./routes/auth.routes.js";
 import { obrasRouter } from "./routes/obras.routes.js";
+import { personasRouter } from "./routes/personas.routes.js";
 import { visitasRouter } from "./routes/visitas.routes.js";
 import { puntosRouter } from "./routes/puntos.routes.js";
 import { adjuntosRouter } from "./routes/adjuntos.routes.js";
@@ -126,6 +127,7 @@ app.use(requireAuth);
 
 app.use("/uploads", express.static(env.uploadsDir));
 app.use("/api/obras", obrasRouter);
+app.use("/api/personas", personasRouter);
 app.use("/api", visitasRouter);
 app.use("/api", puntosRouter);
 app.use("/api", adjuntosRouter);

@@ -33,7 +33,14 @@ const textoOpcional = z.string().nullish();
 // claves propias del body, así que ningún nombre de rol puede colisionar con
 // algo heredado de Object.prototype (ver el comentario de RolAgente sobre por
 // qué el rol del constructor se llama "constructora").
-const personaSchema = z.object({ nombre: textoOpcional, dni: textoOpcional });
+// `personaId` es el vínculo con la ficha de la agenda (ver AgentePersona en
+// shared). Va .nullish() como todo lo demás: una obra guardada antes de la
+// agenda lo reenvía como null tras el pull.
+const personaSchema = z.object({
+  nombre: textoOpcional,
+  dni: textoOpcional,
+  personaId: uuidSchema.nullish(),
+});
 const agentesSchema = z.record(z.string(), personaSchema.array()).nullish();
 
 // Roles extra de la Dirección Facultativa: aquí el nombre del rol es un valor
@@ -42,6 +49,15 @@ const agentesExtraSchema = z
   .object({ rol: textoOpcional, personas: personaSchema.array() })
   .array()
   .nullish();
+
+// Una ficha de la agenda. El nombre es lo único que la identifica, pero va
+// igualmente .nullish() y se rellena con "" en la ruta: el mismo patrón que
+// las columnas NOT NULL de obra, para que una fila antigua nunca se atasque.
+export const personaUpsertSchema = z.object({
+  nombre: textoOpcional,
+  dni: textoOpcional,
+  esEmpresa: z.boolean().nullish(),
+});
 
 // Ningún campo de la obra es obligatorio (petición expresa de Hugo): las
 // columnas NOT NULL históricas se rellenan con "" / valores por defecto en

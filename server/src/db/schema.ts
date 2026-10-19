@@ -77,6 +77,24 @@ export const puntos = sqliteTable("puntos", {
   deletedAt: text("deleted_at"),
 });
 
+// Agenda de personas y empresas con las que se trabaja a menudo, para no
+// volver a teclear el mismo nombre y DNI en cada obra. Es la única entidad
+// que NO cuelga de una obra, así que lleva su propia columna de propietario
+// en vez de heredarla por las claves foráneas como visitas, puntos y
+// adjuntos.
+export const personas = sqliteTable("personas", {
+  id: text("id").primaryKey(),
+  ownerEmail: text("owner_email"),
+  nombre: text("nombre").notNull(),
+  dni: text("dni"),
+  // Una sociedad en vez de una persona: lo único que cambia es que el
+  // documento se etiqueta CIF.
+  esEmpresa: integer("es_empresa", { mode: "boolean" }),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+  deletedAt: text("deleted_at"),
+});
+
 // Sesiones de la app Android nativa (Capacitor). El APK no puede usar la
 // cookie de sesión (el login corre en el navegador del sistema, cuyas
 // cookies no llegan al WebView de la app), así que se autentica con un

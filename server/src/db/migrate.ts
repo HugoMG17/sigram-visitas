@@ -98,6 +98,25 @@ export async function ensureSchema(): Promise<void> {
     "CREATE INDEX IF NOT EXISTS idx_adjuntos_visita_id ON adjuntos(visita_id);"
   );
 
+  // Agenda de personas. Tabla nueva, así que basta con el CREATE TABLE: se
+  // crea sola en el siguiente arranque, tanto en una base vacía como en una
+  // que ya tenga obras.
+  await sqlClient.execute(`
+    CREATE TABLE IF NOT EXISTS personas (
+      id TEXT PRIMARY KEY,
+      owner_email TEXT,
+      nombre TEXT NOT NULL,
+      dni TEXT,
+      es_empresa INTEGER,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT
+    );
+  `);
+  await sqlClient.execute(
+    "CREATE INDEX IF NOT EXISTS idx_personas_owner_email ON personas(owner_email);"
+  );
+
   // Sesiones del login web. Viven en la base de datos y no en la memoria del
   // proceso para que sobrevivan a los despliegues y a que el hosting duerma el
   // servicio; si no, cada reinicio obliga a volver a iniciar sesión.

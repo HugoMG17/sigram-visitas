@@ -14,6 +14,10 @@ export const obrasRouter = Router();
 // El validador permite null en nombre/dni de cada persona (patrón null-tras-pull),
 // pero la columna JSON guarda AgentePersona (string | undefined): se normaliza
 // aquí, convirtiendo null en undefined y descartando roles vacíos.
+//
+// CUIDADO: estas dos funciones reconstruyen cada persona campo a campo, así
+// que todo campo nuevo de AgentePersona hay que añadirlo aquí o se pierde al
+// guardar, sin dar ningún error. Es lo que pasó con la clave "constructor".
 function normalizarAgentes(
   agentes: ReturnType<typeof obraUpsertSchema.parse>["agentes"]
 ): ObraAgentes | null {
@@ -24,6 +28,7 @@ function normalizarAgentes(
     limpio[rol as RolAgente] = personas.map((p) => ({
       nombre: p.nombre ?? undefined,
       dni: p.dni ?? undefined,
+      personaId: p.personaId ?? undefined,
     }));
   }
   return limpio;
@@ -40,6 +45,7 @@ function normalizarAgentesExtra(
     personas: (item.personas ?? []).map((p) => ({
       nombre: p.nombre ?? undefined,
       dni: p.dni ?? undefined,
+      personaId: p.personaId ?? undefined,
     })),
   }));
 }
