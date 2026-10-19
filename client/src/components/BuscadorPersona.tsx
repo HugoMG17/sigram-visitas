@@ -38,9 +38,7 @@ export function BuscadorPersona({
   const escrito = valor.trim();
   const filtro = escrito.toLowerCase();
   const coincidencias = filtro
-    ? personas
-        .filter((p) => p.nombre.toLowerCase().includes(filtro))
-        .slice(0, MAX_SUGERENCIAS)
+    ? personas.filter((p) => p.nombre.toLowerCase().includes(filtro)).slice(0, MAX_SUGERENCIAS)
     : personas.slice(0, MAX_SUGERENCIAS);
 
   // La última opción ofrece guardar lo escrito como ficha nueva, salvo que ya

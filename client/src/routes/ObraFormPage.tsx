@@ -1,12 +1,30 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { useLiveQuery } from "dexie-react-hooks";
-import type { AgenteExtra, AgentePersona, EstadoObra, ObraAgentes, RolAgente } from "@sigram/shared";
-import { agentesDeObra, ESTADO_OBRA_LABELS, personasDeRol, ROL_AGENTE_LABELS } from "@sigram/shared";
+import type {
+  AgenteExtra,
+  AgentePersona,
+  EstadoObra,
+  ObraAgentes,
+  Persona,
+  RolAgente,
+} from "@sigram/shared";
+import {
+  agentesDeObra,
+  ESTADO_OBRA_LABELS,
+  etiquetaDocumento,
+  indicePersonas,
+  personasDeRol,
+  resolverAgentes,
+  resolverExtras,
+  ROL_AGENTE_LABELS,
+} from "@sigram/shared";
 import type { ObraInput } from "../api/obras";
+import { BuscadorPersona } from "../components/BuscadorPersona";
 import { CampoLogo } from "../components/CampoLogo";
 import { getObra, saveObraLocal } from "../db/repositories/obraRepo";
+import { listPersonas, savePersonaLocal } from "../db/repositories/personaRepo";
 import { runSync } from "../sync/syncEngine";
 import { generateId } from "../utils/id";
 
@@ -47,65 +65,132 @@ const emptyForm: ObraInput = {
 // vacía se pinta igualmente una fila en blanco para poder empezar a escribir.
 function CamposRolMulti({
   label,
+  campoId,
   personas,
+  agenda,
   onChange,
+  onCrearFicha,
 }: {
   label: string;
+  campoId: string;
   personas: AgentePersona[];
+  agenda: Persona[];
   onChange: (personas: AgentePersona[]) => void;
+  onCrearFicha: (nombre: string, dni: string) => Promise<Persona>;
 }) {
   const filas = personas.length > 0 ? personas : [{ nombre: "", dni: "" }];
+  const indice = indicePersonas(agenda);
 
-  function actualizar(indice: number, campo: keyof AgentePersona, valor: string) {
+  function actualizar(i: number, cambios: Partial<AgentePersona>) {
     const copia = filas.map((p) => ({ ...p }));
-    copia[indice] = { ...copia[indice], [campo]: valor };
+    copia[i] = { ...copia[i], ...cambios };
     onChange(copia);
   }
 
-  function quitar(indice: number) {
-    onChange(filas.filter((_, i) => i !== indice));
+  function quitar(i: number) {
+    onChange(filas.filter((_, j) => j !== i));
+  }
+
+  async function crearYEnlazar(i: number, nombre: string) {
+    const ficha = await onCrearFicha(nombre, filas[i].dni ?? "");
+    actualizar(i, { personaId: ficha.id, nombre: ficha.nombre, dni: ficha.dni ?? "" });
   }
 
   return (
     <div className="stack" style={{ gap: "0.4rem" }}>
-      {filas.map((persona, indice) => (
-        <div className="row" key={indice} style={{ alignItems: "flex-end" }}>
-          <div className="field" style={{ flex: 2, minWidth: 180 }}>
-            <label>
-              {label} — Nombre{filas.length > 1 ? ` (${indice + 1})` : ""}
-            </label>
-            <input
-              className="input"
-              value={persona.nombre ?? ""}
-              onChange={(e) => actualizar(indice, "nombre", e.target.value)}
-            />
+      {filas.map((persona, i) => {
+        const ficha = persona.personaId ? indice.get(persona.personaId) : undefined;
+        const id = `${campoId}-${i}`;
+        const etiquetaNombre = `${label} — Nombre${filas.length > 1 ? ` (${i + 1})` : ""}`;
+
+        // Fila vinculada: los datos los manda la ficha de la agenda, así que
+        // no se pueden teclear aquí. O se cambia la ficha, o se desvincula.
+        if (ficha) {
+          return (
+            <div className="fila-vinculada" key={i}>
+              <div>
+                <p className="fila-meta" style={{ justifyContent: "flex-start", gap: "8px" }}>
+                  <span>{etiquetaNombre}</span>
+                  <span className="chip">De Personas</span>
+                </p>
+                <p className="vinculada-nombre">{ficha.nombre || "Ficha sin nombre"}</p>
+                <p className="fila-sub" style={{ marginTop: "2px" }}>
+                  {ficha.dni
+                    ? `${etiquetaDocumento(ficha.esEmpresa)} ${ficha.dni}`
+                    : `Sin ${etiquetaDocumento(ficha.esEmpresa)}`}
+                </p>
+              </div>
+              <div className="row" style={{ gap: "6px" }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => actualizar(i, { personaId: undefined })}
+                >
+                  Desvincular
+                </button>
+                {filas.length > 1 && (
+                  <button
+                    type="button"
+                    className="btn btn-danger btn-sm"
+                    title="Quitar esta persona"
+                    aria-label="Quitar esta persona"
+                    onClick={() => quitar(i)}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+        return (
+          <div className="row" key={i} style={{ alignItems: "flex-end" }}>
+            <div className="field" style={{ flex: 2, minWidth: 180 }}>
+              <label htmlFor={id}>{etiquetaNombre}</label>
+              <BuscadorPersona
+                id={id}
+                valor={persona.nombre ?? ""}
+                personas={agenda}
+                onEscribir={(nombre) => actualizar(i, { nombre })}
+                onElegir={(elegida) =>
+                  actualizar(i, {
+                    personaId: elegida.id,
+                    nombre: elegida.nombre,
+                    dni: elegida.dni ?? "",
+                  })
+                }
+                onCrearFicha={(nombre) => void crearYEnlazar(i, nombre)}
+              />
+            </div>
+            <div className="field" style={{ flex: 1, minWidth: 110 }}>
+              <label htmlFor={`${id}-dni`}>DNI</label>
+              <input
+                id={`${id}-dni`}
+                className="input"
+                value={persona.dni ?? ""}
+                onChange={(e) => actualizar(i, { dni: e.target.value })}
+              />
+            </div>
+            {filas.length > 1 && (
+              <button
+                type="button"
+                className="btn btn-danger"
+                title="Quitar esta persona"
+                aria-label="Quitar esta persona"
+                style={{ padding: "0.3rem 0.6rem", marginBottom: "0.15rem" }}
+                onClick={() => quitar(i)}
+              >
+                ✕
+              </button>
+            )}
           </div>
-          <div className="field" style={{ flex: 1, minWidth: 110 }}>
-            <label>DNI</label>
-            <input
-              className="input"
-              value={persona.dni ?? ""}
-              onChange={(e) => actualizar(indice, "dni", e.target.value)}
-            />
-          </div>
-          {filas.length > 1 && (
-            <button
-              type="button"
-              className="btn btn-danger"
-              title="Quitar esta persona"
-              style={{ padding: "0.3rem 0.6rem", marginBottom: "0.15rem" }}
-              onClick={() => quitar(indice)}
-            >
-              ✕
-            </button>
-          )}
-        </div>
-      ))}
+        );
+      })}
       <div>
         <button
           type="button"
-          className="btn btn-secondary"
-          style={{ padding: "0.3rem 0.7rem", fontSize: "0.85rem" }}
+          className="btn btn-secondary btn-sm"
           onClick={() => onChange([...filas, { nombre: "", dni: "" }])}
         >
           + Añadir persona
@@ -136,8 +221,14 @@ export function ObraFormPage() {
 
   useEffect(() => {
     if (existing && cargadoParaObraId.current !== obraId) {
-      const { id: _id, createdAt: _c, updatedAt: _u, deletedAt: _d, syncStatus: _s, ...rest } =
-        existing;
+      const {
+        id: _id,
+        createdAt: _c,
+        updatedAt: _u,
+        deletedAt: _d,
+        syncStatus: _s,
+        ...rest
+      } = existing;
       // agentesDeObra rehidrata los roles: usa `agentes` si la obra ya lo
       // tiene, o lo reconstruye desde los campos escalares antiguos (obras
       // creadas antes de soportar varias personas por rol).
@@ -154,11 +245,38 @@ export function ObraFormPage() {
     }
   }, [existing, obraId]);
 
+  // Una sola consulta de la agenda para todo el formulario, que baja por
+  // props: una por fila serían doce suscripciones y doce repintados por cada
+  // tecla que se pulsa.
+  const agenda = useLiveQuery(listPersonas, []) ?? [];
+  const indiceAgenda = useMemo(() => indicePersonas(agenda), [agenda]);
+
+  // Crea una ficha desde el propio formulario, sin salir de él.
+  async function crearFicha(nombre: string, dni: string): Promise<Persona> {
+    return savePersonaLocal(generateId(), {
+      nombre: nombre.trim(),
+      dni: dni.trim(),
+      esEmpresa: false,
+    });
+  }
+
   const mutation = useMutation({
     // Escritura local en Dexie: debe ejecutarse aunque TanStack Query crea
     // que estamos offline (por defecto pausaría la mutación hasta reconectar).
     networkMode: "always",
-    mutationFn: () => saveObraLocal(obraId ?? generateId(), form),
+    mutationFn: () => {
+      // Al guardar se refresca la copia de respaldo de las filas vinculadas,
+      // para que no quede congelada en lo que la ficha decía hace dos años.
+      const aGuardar: ObraInput = {
+        ...form,
+        agentes: resolverAgentes(form.agentes ?? {}, indiceAgenda),
+        direccionFacultativaExtra: resolverExtras(
+          form.direccionFacultativaExtra ?? [],
+          indiceAgenda
+        ),
+      };
+      return saveObraLocal(obraId ?? generateId(), aGuardar);
+    },
     onSuccess: (obra) => {
       void runSync();
       navigate(`/obras/${obra.id}`);
@@ -310,6 +428,9 @@ export function ObraFormPage() {
         <CamposRolMulti
           label={ROL_AGENTE_LABELS.promotor}
           personas={personasDe("promotor")}
+          campoId="rol-promotor"
+          agenda={agenda}
+          onCrearFicha={crearFicha}
           onChange={(p) => updateAgente("promotor", p)}
         />
 
@@ -317,16 +438,25 @@ export function ObraFormPage() {
         <CamposRolMulti
           label={ROL_AGENTE_LABELS.directorObra}
           personas={personasDe("directorObra")}
+          campoId="rol-directorObra"
+          agenda={agenda}
+          onCrearFicha={crearFicha}
           onChange={(p) => updateAgente("directorObra", p)}
         />
         <CamposRolMulti
           label={ROL_AGENTE_LABELS.directorEjecucion}
           personas={personasDe("directorEjecucion")}
+          campoId="rol-directorEjecucion"
+          agenda={agenda}
+          onCrearFicha={crearFicha}
           onChange={(p) => updateAgente("directorEjecucion", p)}
         />
         <CamposRolMulti
           label={ROL_AGENTE_LABELS.coordinadorSS}
           personas={personasDe("coordinadorSS")}
+          campoId="rol-coordinadorSS"
+          agenda={agenda}
+          onCrearFicha={crearFicha}
           onChange={(p) => updateAgente("coordinadorSS", p)}
         />
 
@@ -364,7 +494,10 @@ export function ObraFormPage() {
             </div>
             <CamposRolMulti
               label={extra.rol.trim() || "Rol sin nombre"}
+              campoId={`rol-extra-${indice}`}
               personas={extra.personas}
+              agenda={agenda}
+              onCrearFicha={crearFicha}
               onChange={(personas) => actualizarExtra(indice, { personas })}
             />
           </div>
@@ -392,6 +525,9 @@ export function ObraFormPage() {
         <CamposRolMulti
           label={ROL_AGENTE_LABELS.constructora}
           personas={personasDe("constructora")}
+          campoId="rol-constructora"
+          agenda={agenda}
+          onCrearFicha={crearFicha}
           onChange={(p) => updateAgente("constructora", p)}
         />
 
@@ -399,6 +535,9 @@ export function ObraFormPage() {
         <CamposRolMulti
           label={ROL_AGENTE_LABELS.proyectista}
           personas={personasDe("proyectista")}
+          campoId="rol-proyectista"
+          agenda={agenda}
+          onCrearFicha={crearFicha}
           onChange={(p) => updateAgente("proyectista", p)}
         />
 

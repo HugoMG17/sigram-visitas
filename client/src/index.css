@@ -369,6 +369,25 @@ time {
   color: var(--color-ink);
 }
 
+/* Una fila de rol que viene de una ficha de la agenda. Los datos no se
+   teclean aquí: o se cambia la ficha, o se desvincula. */
+.fila-vinculada {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--color-raised);
+  border-radius: var(--radius-card);
+  padding: 10px 12px;
+}
+
+.vinculada-nombre {
+  margin: 2px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
 /* ---------- Grupo de opciones (persona / empresa) ---------------------- */
 
 .grupo-radio {
