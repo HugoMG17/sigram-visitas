@@ -9,6 +9,36 @@ ya ha llegado.
 
 ---
 
+## 1.3.1 — 20 de octubre de 2026
+
+### Arreglos
+
+- **La app del móvil parpadeaba al abrirla y se quedaba en blanco tras
+  iniciar sesión.** No era un problema de dibujo: la app se estaba
+  reiniciando varias veces por segundo.
+
+  Al arrancar se ponía a sincronizar aunque todavía no hubiera sesión. Sin
+  sesión, el servidor contesta «no autenticado» a la primera petición; la app
+  lo entendía como una sesión caducada, borraba el token y se recargaba. Al
+  volver a arrancar hacía lo mismo, y así sin parar.
+
+  Se arregla por los dos lados: la app ya no sincroniza si no hay sesión, y
+  una sesión caducada provoca **una sola** recarga por arranque. Si después de
+  recargar el servidor sigue diciendo que no, la app se queda quieta en la
+  pantalla de login en vez de parpadear.
+
+  El fallo también podía saltar con la sesión puesta: bastaba un «no
+  autenticado» suelto —por ejemplo justo después de entrar, mientras el
+  servidor despertaba— para quedarse sin token y entrar en el bucle.
+
+### Nota
+
+El servidor duerme cuando no se usa, así que la primera entrada del día puede
+tardar entre 30 y 60 segundos. Eso es normal y no es este fallo: lo que no era
+normal es que la app parpadeara mientras tanto.
+
+---
+
 ## 1.3.0 — 19 de octubre de 2026
 
 Esta publicación junta todo lo trabajado desde la 1.1: el cambio de aspecto,

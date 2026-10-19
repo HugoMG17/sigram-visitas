@@ -8,6 +8,8 @@ import { deleteVisita, saveVisita } from "../api/visitas";
 import { deletePunto, savePunto } from "../api/puntos";
 import { uploadAdjunto } from "../api/adjuntos";
 import { db } from "../db/db";
+import { getNativeToken } from "../native/auth";
+import { isNative } from "../native/platform";
 import type { Adjunto, Obra, Persona, Punto, RegistroMusaat, Visita } from "@sigram/shared";
 
 let syncing = false;
@@ -222,6 +224,12 @@ const MIN_INTERVAL_MS = 5_000;
 
 export async function runSync(): Promise<void> {
   if (syncing || !navigator.onLine) return;
+  // En el APK, sin token no hay sesión posible: TODAS las peticiones
+  // responderían "no autenticado", y el interceptor de la API entiende eso
+  // como sesión caducada, borra el token y recarga la app. Al volver a
+  // arrancar se sincronizaba otra vez y vuelta a empezar: un bucle de
+  // recargas que se veía como la pantalla de login parpadeando sin parar.
+  if (isNative && !getNativeToken()) return;
   // Límite de seguridad: pase lo que pase disparando "online"/clics repetidos
   // (algunas extensiones del navegador emiten ese evento en ráfaga), nunca
   // se martillea el servidor más de una vez cada pocos segundos.

@@ -1,6 +1,7 @@
 import axios from "axios";
 import { clearNativeToken, getNativeToken } from "../native/auth";
 import { isNative, nativeServerUrl } from "../native/platform";
+import { marcarRecargaPorSesion, yaSeRecargoPorSesion } from "../native/recargaSesion";
 
 // En dev el cliente Vite corre en :5173 y el servidor en :4000 aparte (por
 // eso, al abrir desde el móvil por IP local, apuntamos al mismo host pero
@@ -39,6 +40,12 @@ apiClient.interceptors.request.use((config) => {
 // vez: el flag evita bucles si varias peticiones fallan a la vez). En el APK
 // no hay redirección posible: se descarta el token revocado/caducado y se
 // recarga, con lo que la pantalla de login nativa vuelve a aparecer.
+//
+// La recarga se hace UNA SOLA VEZ por arranque de la app (ver
+// native/recargaSesion). Si al volver a cargar el servidor sigue
+// respondiendo 401, recargar otra vez no arregla nada y convierte la
+// pantalla en un parpadeo continuo; es mejor dejar la app quieta en la
+// pantalla de login.
 let redirectingToLogin = false;
 apiClient.interceptors.response.use(
   (response) => response,
@@ -46,7 +53,10 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && !redirectingToLogin) {
       redirectingToLogin = true;
       if (isNative) {
-        void clearNativeToken().then(() => window.location.reload());
+        if (!yaSeRecargoPorSesion()) {
+          marcarRecargaPorSesion();
+          void clearNativeToken().then(() => window.location.reload());
+        }
       } else {
         window.location.assign("/auth/google");
       }

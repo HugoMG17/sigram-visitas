@@ -2,6 +2,7 @@ import { App as CapacitorApp } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { Preferences } from "@capacitor/preferences";
 import { isNative, nativeServerUrl } from "./platform";
+import { olvidarRecargaPorSesion } from "./recargaSesion";
 
 const TOKEN_KEY = "sigram:nativeToken";
 
@@ -39,6 +40,9 @@ export async function initNativeAuth(): Promise<void> {
     void (async () => {
       cachedToken = match[1];
       await Preferences.set({ key: TOKEN_KEY, value: match[1] });
+      // Sesión nueva: se olvida que ya hubo una recarga por sesión caducada,
+      // o la app no podría recuperarse si este token volviera a fallar.
+      olvidarRecargaPorSesion();
       await Browser.close().catch(() => undefined);
       // Arranque limpio con el token ya cargado: el gate de login deja pasar
       // y el motor de sync hace el primer pull con la sesión nueva.
