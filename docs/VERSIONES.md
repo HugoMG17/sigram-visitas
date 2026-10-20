@@ -22,6 +22,14 @@ ya ha llegado.
   a la derecha, el recuento y la fecha en que se generó.
 - Las observaciones de cada obra salen en una línea bajo su nombre.
 
+### Arreglos
+
+- **La casilla del nombre de cada agente se quedaba estrecha** en el
+  formulario de obra, con un hueco en blanco a su derecha: un nombre largo
+  como “DIPUTACIÓN PROVINCIAL DE CÁCERES” salía cortado teniendo sitio de
+  sobra al lado. Ahora ocupa todo el ancho que le queda, y la casilla del
+  documento se queda en el suyo, que es de largo conocido.
+
 ### Nota
 
 El PDF lo genera el servidor a partir de sus propios datos, así que hace falta

@@ -183,7 +183,7 @@ function CamposRolMulti({
 
         return (
           <div className="row" key={i} style={{ alignItems: "flex-end" }}>
-            <div className="field" style={{ flex: 2, minWidth: 180 }}>
+            <div className="field" style={{ flex: "1 1 260px", minWidth: 180 }}>
               <label htmlFor={id}>{etiquetaNombre}</label>
               <BuscadorPersona
                 id={id}
@@ -200,7 +200,7 @@ function CamposRolMulti({
                 onCrearFicha={(nombre) => void crearYEnlazar(i, nombre)}
               />
             </div>
-            <div className="field" style={{ flex: 1, minWidth: 110 }}>
+            <div className="field" style={{ flex: "0 1 170px", minWidth: 110 }}>
               <label htmlFor={`${id}-dni`}>DNI</label>
               <input
                 id={`${id}-dni`}

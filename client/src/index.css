@@ -512,8 +512,17 @@ time {
 
 /* ---------- Buscador de fichas de la agenda ---------------------------- */
 
+/* El cuadro de texto va dentro de este contenedor, no suelto en el .field.
+   Sin estos anchos se queda con el suyo por defecto (unos 170 px) y deja un
+   hueco en blanco a su derecha: un nombre largo salía cortado teniendo sitio
+   de sobra al lado. */
 .combo {
   position: relative;
+  width: 100%;
+}
+
+.combo .input {
+  width: 100%;
 }
 
 /* La lista flota sobre el formulario, así que aquí sí lleva sombra: es de lo
