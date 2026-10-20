@@ -12,7 +12,10 @@ import {
   type EstadoMusaat,
   type RegistroMusaat,
 } from "@sigram/shared";
+import { musaatPdfUrl } from "../api/musaat";
 import { listMusaat } from "../db/repositories/musaatRepo";
+import { descargarYAbrirListaMusaat } from "../native/pdf";
+import { isNative } from "../native/platform";
 
 // Las cinco intervenciones con su estado. Las que no proceden se dejan en
 // gris y sin fecha: no hay nada que enviar, pero conviene verlas para saber
@@ -56,6 +59,23 @@ export function MusaatListPage() {
   const registros = useLiveQuery(listMusaat, []);
   const [busqueda, setBusqueda] = useState("");
   const [filtroEstado, setFiltroEstado] = useState<Filtro>("todas");
+  const [exportando, setExportando] = useState(false);
+
+  // El PDF lo genera el servidor a partir de SUS filas, así que un cambio que
+  // todavía no se haya subido saldría sin reflejar y sin avisar. Es el mismo
+  // criterio que el informe de una visita.
+  const sinSubir = (registros ?? []).some((r) => r.syncStatus !== "synced");
+
+  async function handleExportar() {
+    setExportando(true);
+    try {
+      await descargarYAbrirListaMusaat({ estado: filtroEstado, busqueda });
+    } catch {
+      window.alert("No se pudo generar el PDF. Comprueba la conexión e inténtalo de nuevo.");
+    } finally {
+      setExportando(false);
+    }
+  }
 
   const texto = busqueda.trim().toLowerCase();
   const visibles = registros
@@ -90,10 +110,41 @@ export function MusaatListPage() {
             </p>
           )}
         </div>
-        <Link to="/musaat/nueva" className="btn">
-          Nueva obra
-        </Link>
+        <div className="row">
+          {registros !== undefined &&
+            total > 0 &&
+            !sinSubir &&
+            (isNative ? (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => void handleExportar()}
+                disabled={exportando}
+              >
+                {exportando ? "Generando…" : "Exportar PDF"}
+              </button>
+            ) : (
+              <a
+                href={musaatPdfUrl({ estado: filtroEstado, busqueda })}
+                className="btn btn-secondary"
+                style={{ textDecoration: "none" }}
+              >
+                Exportar PDF
+              </a>
+            ))}
+          <Link to="/musaat/nueva" className="btn">
+            Nueva obra
+          </Link>
+        </div>
       </div>
+
+      {/* El PDF sale de los datos del servidor: con algo sin subir, saldría
+          desfasado sin avisar. */}
+      {sinSubir && registros !== undefined && total > 0 && (
+        <p className="fila-sub" style={{ marginBottom: "12px" }}>
+          Hay cambios sin subir. Pulsa “Sincronizar” arriba y podrás exportar el PDF.
+        </p>
+      )}
 
       {registros !== undefined && total > 0 && (
         <>

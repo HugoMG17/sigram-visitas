@@ -16,3 +16,12 @@ export async function saveMusaat(id: string, data: MusaatInput): Promise<Registr
 export async function deleteMusaat(id: string): Promise<void> {
   await apiClient.delete(`/musaat/${id}`);
 }
+
+// El PDF de la lista, con el filtro y la búsqueda que se estén viendo.
+export function musaatPdfUrl(opciones: { estado?: string; busqueda?: string }): string {
+  const params = new URLSearchParams();
+  if (opciones.estado && opciones.estado !== "todas") params.set("estado", opciones.estado);
+  if (opciones.busqueda?.trim()) params.set("q", opciones.busqueda.trim());
+  const cola = params.toString();
+  return `${apiClient.defaults.baseURL}/musaat/pdf${cola ? `?${cola}` : ""}`;
+}

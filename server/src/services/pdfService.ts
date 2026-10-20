@@ -4,7 +4,8 @@ import puppeteer, { type Browser } from "puppeteer";
 import { isImageMime } from "@sigram/shared";
 import type { Persona } from "@sigram/shared";
 import { renderInformeVisitaHtml } from "../templates/informe-visita.js";
-import type { adjuntos, obras, puntos, visitas } from "../db/schema.js";
+import { renderListaMusaatHtml } from "../templates/lista-musaat.js";
+import type { adjuntos, musaat, obras, puntos, visitas } from "../db/schema.js";
 import { env } from "../env.js";
 import { buildOAuthClient, downloadFromDrive } from "./driveService.js";
 import type { AuthUser } from "../auth/passport.js";
@@ -13,6 +14,7 @@ type ObraRow = typeof obras.$inferSelect;
 type VisitaRow = typeof visitas.$inferSelect;
 type AdjuntoRow = typeof adjuntos.$inferSelect;
 type PuntoRow = typeof puntos.$inferSelect;
+type MusaatRow = typeof musaat.$inferSelect;
 
 let browserPromise: Promise<Browser> | null = null;
 
@@ -96,6 +98,35 @@ export async function generateInformeVisitaPdf(params: {
       margin: { top: "20mm", bottom: "20mm", left: "16mm", right: "16mm" },
       // Pie con numeración "Página X de Y" en todas las páginas; el header
       // se deja vacío (sin él, Puppeteer pintaría fecha y título por defecto).
+      displayHeaderFooter: true,
+      headerTemplate: "<span></span>",
+      footerTemplate: `
+        <div style="width: 100%; font-size: 9px; color: #94a3b8; text-align: center; font-family: 'Segoe UI', Arial, sans-serif;">
+          Página <span class="pageNumber"></span> de <span class="totalPages"></span>
+        </div>`,
+    });
+    return Buffer.from(pdf);
+  } finally {
+    await page.close();
+  }
+}
+
+// La lista de Musaat, en horizontal: son siete columnas y en vertical las
+// fechas se apretarían hasta partirse.
+export async function generateListaMusaatPdf(params: {
+  registros: MusaatRow[];
+  descripcion: string;
+}): Promise<Buffer> {
+  const html = renderListaMusaatHtml({ ...params, generadoEn: new Date() });
+  const browser = await getBrowser();
+  const page = await browser.newPage();
+  try {
+    await page.setContent(html, { waitUntil: "load" });
+    const pdf = await page.pdf({
+      format: "A4",
+      landscape: true,
+      printBackground: true,
+      margin: { top: "14mm", bottom: "16mm", left: "12mm", right: "12mm" },
       displayHeaderFooter: true,
       headerTemplate: "<span></span>",
       footerTemplate: `

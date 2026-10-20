@@ -9,6 +9,27 @@ ya ha llegado.
 
 ---
 
+## 1.4.0 — 20 de octubre de 2026
+
+### Novedades
+
+- **Exportar la lista de Musaat a PDF.** Botón *Exportar PDF* en el apartado
+  Musaat, al lado de *Nueva obra*. Sale una hoja apaisada con una fila por
+  obra y una columna por intervención: la fecha si está enviada, *No procede*
+  en gris si no te corresponde, y **Falta** en rojo si está pendiente.
+- **Exporta lo que estás viendo.** Si tienes puesto el filtro de *Falta algo*
+  o una búsqueda, el PDF sale con eso mismo, y lo dice bajo el título. Arriba
+  a la derecha, el recuento y la fecha en que se generó.
+- Las observaciones de cada obra salen en una línea bajo su nombre.
+
+### Nota
+
+El PDF lo genera el servidor a partir de sus propios datos, así que hace falta
+tener todo sincronizado. Si queda algo sin subir, el botón no aparece y la
+pantalla te lo dice.
+
+---
+
 ## 1.3.1 — 20 de octubre de 2026
 
 ### Arreglos

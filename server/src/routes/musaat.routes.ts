@@ -5,7 +5,9 @@ import { db } from "../db/client.js";
 import { musaat } from "../db/schema.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { currentUserEmail } from "../middleware/currentUser.js";
+import { estadoMusaat, ESTADO_MUSAAT_LABELS, type EstadoMusaat } from "@sigram/shared";
 import { findOwnedMusaat, listMusaatVivos } from "../services/musaatAccess.js";
+import { generateListaMusaatPdf } from "../services/pdfService.js";
 import { idParamSchema, musaatUpsertSchema } from "../validation.js";
 
 export const musaatRouter = Router();
@@ -43,6 +45,49 @@ musaatRouter.get(
     // español y la eñe y las tildes quedarían fuera de sitio.
     filas.sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
     res.json(filas);
+  })
+);
+
+// Exporta la lista a PDF, con el mismo filtro y la misma búsqueda que se
+// estén viendo en la app (llegan por la URL).
+//
+// Va declarada ANTES de "/:id" a propósito: si fuera después, Express
+// intentaría leer "pdf" como si fuera un identificador y respondería 400.
+musaatRouter.get(
+  "/pdf",
+  asyncHandler(async (req, res) => {
+    const email = currentUserEmail(req);
+    const estado = typeof req.query.estado === "string" ? req.query.estado : "";
+    const texto = (typeof req.query.q === "string" ? req.query.q : "").trim().toLowerCase();
+
+    let registros = await listMusaatVivos(email);
+    registros.sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+
+    const esEstado = (v: string): v is EstadoMusaat =>
+      v === "nada" || v === "parcial" || v === "completo";
+
+    const partes: string[] = [];
+    if (esEstado(estado)) {
+      registros = registros.filter((r) => estadoMusaat(r) === estado);
+      partes.push(ESTADO_MUSAAT_LABELS[estado]);
+    }
+    if (texto) {
+      registros = registros.filter(
+        (r) =>
+          r.nombre.toLowerCase().includes(texto) ||
+          (r.numeroExpediente ?? "").toLowerCase().includes(texto)
+      );
+      partes.push(`búsqueda: “${req.query.q as string}”`);
+    }
+
+    const descripcion = partes.length ? partes.join(" · ") : "Todas las obras";
+    const pdf = await generateListaMusaatPdf({ registros, descripcion });
+
+    // Fecha delante para que el explorador los ordene solos, como el informe.
+    const fecha = new Date().toISOString().slice(0, 10);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${fecha}_Musaat.pdf"`);
+    res.send(pdf);
   })
 );
 
