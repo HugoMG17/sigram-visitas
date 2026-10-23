@@ -31,10 +31,7 @@ export function VisitaDetailPage() {
 
   const visita = useLiveQuery(() => (visitaId ? getVisita(visitaId) : undefined), [visitaId]);
   const obra = useLiveQuery(() => (visita ? getObra(visita.obraId) : undefined), [visita]);
-  const adjuntos = useLiveQuery(
-    () => (visitaId ? listAdjuntos(visitaId) : undefined),
-    [visitaId]
-  );
+  const adjuntos = useLiveQuery(() => (visitaId ? listAdjuntos(visitaId) : undefined), [visitaId]);
   const puntos = useLiveQuery(
     () => (visitaId ? listPuntosDeVisita(visitaId) : undefined),
     [visitaId]
@@ -87,7 +84,9 @@ export function VisitaDetailPage() {
         .replace(/^_+|_+$/g, "");
       await downloadFromUrl(fotosZipUrl(currentVisitaId), `${fecha}_Fotos_${nombreObra}.zip`);
     } catch {
-      window.alert("No se pudieron descargar las fotos. Comprueba la conexión e inténtalo de nuevo.");
+      window.alert(
+        "No se pudieron descargar las fotos. Comprueba la conexión e inténtalo de nuevo."
+      );
     } finally {
       setDescargandoFotos(false);
     }
@@ -119,7 +118,11 @@ export function VisitaDetailPage() {
   }
 
   async function handleEliminarVisita() {
-    if (!window.confirm("¿Eliminar esta visita, con todos sus puntos y adjuntos? No se puede deshacer.")) {
+    if (
+      !window.confirm(
+        "¿Eliminar esta visita, con todos sus puntos y adjuntos? No se puede deshacer."
+      )
+    ) {
       return;
     }
     await softDeleteVisitaLocal(currentVisitaId);
@@ -139,18 +142,33 @@ export function VisitaDetailPage() {
           <div className="row">
             {puedeExportar ? (
               isNative ? (
+                // En el móvil el acta se abre siempre en el visor del
+                // sistema, que ya ES la vista previa: desde ahí se guarda o
+                // se comparte. Dos botones harían exactamente lo mismo.
                 <button
                   type="button"
                   className="btn"
                   onClick={handleExportarPdf}
                   disabled={exportando}
                 >
-                  {exportando ? "Generando…" : "Exportar PDF"}
+                  {exportando ? "Generando…" : "Ver el acta en PDF"}
                 </button>
               ) : (
-                <a href={pdfUrl(visita.id)} className="btn" style={{ textDecoration: "none" }}>
-                  Exportar PDF
-                </a>
+                <>
+                  <a
+                    href={pdfUrl(visita.id, true)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btn-secondary"
+                    style={{ textDecoration: "none" }}
+                    title="Abre el acta en una pestaña nueva sin descargarla"
+                  >
+                    Vista previa
+                  </a>
+                  <a href={pdfUrl(visita.id)} className="btn" style={{ textDecoration: "none" }}>
+                    Exportar PDF
+                  </a>
+                </>
               )
             ) : null}
             {puedeExportar && tieneFotos && (
@@ -217,7 +235,13 @@ export function VisitaDetailPage() {
                 {foto.syncStatus === "pending" && (
                   <span
                     className="badge"
-                    style={{ position: "absolute", bottom: 4, left: 4, background: "#f59e0b", color: "white" }}
+                    style={{
+                      position: "absolute",
+                      bottom: 4,
+                      left: 4,
+                      background: "#f59e0b",
+                      color: "white",
+                    }}
                   >
                     pendiente
                   </span>

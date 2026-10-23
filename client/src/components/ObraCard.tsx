@@ -27,7 +27,9 @@ export function ObraCard({
     <li>
       <Link to={`/obras/${obra.id}`} className="fila">
         <div className="fila-meta">
-          <span>{obra.numeroExpediente ? `Nº ${obra.numeroExpediente}` : "Sin expediente"}</span>
+          <span className={obra.numeroExpediente ? "expediente" : "expediente expediente--vacio"}>
+            {obra.numeroExpediente ? `Nº ${obra.numeroExpediente}` : "Sin expediente"}
+          </span>
           <span className="row" style={{ gap: "8px" }}>
             {sinSubir && (
               <span className="chip chip--pendiente" title="Todavía no está en el servidor">

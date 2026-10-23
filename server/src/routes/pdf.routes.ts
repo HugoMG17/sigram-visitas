@@ -58,8 +58,17 @@ pdfRouter.get(
     const fecha = visita.fecha.slice(0, 10);
     const fileName = `${fecha}_Informe_Visita_${slugify(obra.nombre)}.pdf`;
 
+    // Con ?vista=previa el acta se abre en el visor del navegador en vez de
+    // descargarse. Es exactamente el mismo documento: lo que cambia es solo
+    // esta cabecera, así que la vista previa no puede diferir de lo que
+    // luego se exporta.
+    const previa = req.query.vista === "previa";
+
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+    res.setHeader(
+      "Content-Disposition",
+      `${previa ? "inline" : "attachment"}; filename="${fileName}"`
+    );
     res.send(pdfBuffer);
   })
 );

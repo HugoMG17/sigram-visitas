@@ -198,6 +198,25 @@ h3 {
   text-wrap: balance;
 }
 
+/* El nº de expediente es por lo que se busca una obra, en la app y en el
+   papel que tienes delante. Va más grande que el resto de la línea y en
+   tinta, no en gris, para encontrarlo recorriendo la lista con la vista. */
+.expediente {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+/* Una obra sin expediente no compite por la atención: ahí no hay nada que
+   localizar. */
+.expediente--vacio {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-muted);
+}
+
 .fila-nombre {
   text-wrap: pretty;
 }
@@ -886,6 +905,25 @@ time {
 }
 
 /* El nombre de la obra es lo único por lo que se busca: manda él. */
+/* El nº de expediente es por lo que se busca una obra, en la app y en el
+   papel que tienes delante. Va más grande que el resto de la línea y en
+   tinta, no en gris, para encontrarlo recorriendo la lista con la vista. */
+.expediente {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+/* Una obra sin expediente no compite por la atención: ahí no hay nada que
+   localizar. */
+.expediente--vacio {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-muted);
+}
+
 .fila-nombre {
   margin: 3px 0 0;
   font-size: 17px;
@@ -1264,7 +1302,26 @@ textarea.input {
     display: none;
   }
 
-  .fila-nombre {
+  /* El nº de expediente es por lo que se busca una obra, en la app y en el
+   papel que tienes delante. Va más grande que el resto de la línea y en
+   tinta, no en gris, para encontrarlo recorriendo la lista con la vista. */
+.expediente {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+/* Una obra sin expediente no compite por la atención: ahí no hay nada que
+   localizar. */
+.expediente--vacio {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-muted);
+}
+
+.fila-nombre {
     font-size: 16px;
   }
 

@@ -33,6 +33,8 @@ export function fotosZipUrl(id: string): string {
   return `${apiClient.defaults.baseURL}/visitas/${id}/fotos.zip`;
 }
 
-export function pdfUrl(id: string): string {
-  return `${apiClient.defaults.baseURL}/visitas/${id}/pdf`;
+// Con `previa` el acta se abre en el visor en vez de descargarse. Es el mismo
+// documento: solo cambia una cabecera en el servidor.
+export function pdfUrl(id: string, previa = false): string {
+  return `${apiClient.defaults.baseURL}/visitas/${id}/pdf${previa ? "?vista=previa" : ""}`;
 }

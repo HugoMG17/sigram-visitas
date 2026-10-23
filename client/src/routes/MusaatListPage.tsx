@@ -224,7 +224,11 @@ export function MusaatListPage() {
                 />
                 <div style={{ minWidth: 0 }}>
                   <p className="fila-meta" style={{ justifyContent: "flex-start" }}>
-                    <span>
+                    <span
+                      className={
+                        registro.numeroExpediente ? "expediente" : "expediente expediente--vacio"
+                      }
+                    >
                       {registro.numeroExpediente
                         ? `Nº ${registro.numeroExpediente}`
                         : "Sin expediente"}

@@ -93,7 +93,9 @@ export function ObraDetailPage() {
               gap: "10px",
             }}
           >
-            <span>{obra.numeroExpediente ? `Nº ${obra.numeroExpediente}` : "Sin expediente"}</span>
+            <span className={obra.numeroExpediente ? "expediente" : "expediente expediente--vacio"}>
+              {obra.numeroExpediente ? `Nº ${obra.numeroExpediente}` : "Sin expediente"}
+            </span>
             {/* Lo mismo que se ve en la lista: si la obra no está subida, se
                 dice aquí también y no solo en el contador de la cabecera. */}
             {(obra.syncStatus === "pending" || obra.syncStatus === "error") && (

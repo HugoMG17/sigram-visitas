@@ -9,6 +9,27 @@ ya ha llegado.
 
 ---
 
+## 1.5.0 — 23 de octubre de 2026
+
+### Novedades
+
+- **Vista previa del acta antes de exportarla.** Botón *Vista previa* junto a
+  *Exportar PDF*: el acta se abre en una pestaña, para repasarla sin dejarte
+  el fichero en Descargas. Es **el mismo documento** que luego exportas, no
+  una aproximación.
+- **El nº de expediente se ve mucho mejor.** Más grande y en negro en lugar de
+  gris pequeño, en la lista de obras, en la ficha y en Musaat: es por lo que
+  buscas una obra cuando tienes el papel delante. Una obra sin expediente se
+  queda discreta, que ahí no hay nada que localizar.
+
+### Nota
+
+En el móvil el acta se abre siempre en el visor del sistema, que ya hace de
+vista previa: desde ahí la guardas o la compartes. Por eso allí hay un solo
+botón, *Ver el acta en PDF*, y no dos que harían lo mismo.
+
+---
+
 ## 1.4.0 — 20 de octubre de 2026
 
 ### Novedades
